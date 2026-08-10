@@ -243,6 +243,7 @@ model ContactRequest {
   email         String
   projects      Json
   privacyAgreed Boolean  @default(false)
+  handled       Boolean  @default(false)
   createdAt     DateTime @default(now())
 }
 

@@ -117,6 +117,13 @@ export default async function DashboardPage() {
         <p className="text-gray-600">{user.name ?? user.email}님, 환영합니다.</p>
         <p className="text-sm text-gray-400">권한: {user.role}</p>
 
+        <a
+          href="/dashboard/settings"
+          className="block w-full rounded-md border border-gray-300 py-2 text-sm font-medium"
+        >
+          계정 설정
+        </a>
+
         <form
           action={async () => {
             "use server";

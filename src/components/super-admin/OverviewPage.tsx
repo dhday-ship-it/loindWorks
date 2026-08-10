@@ -24,12 +24,16 @@ export function OverviewPage({
   stats,
   inProgressProjects,
   unhandledRequests,
+  unhandledContacts,
   onNavigateProjects,
+  onNavigateContacts,
 }: {
   stats: AdminStats;
   inProgressProjects: AdminProjectItem[];
   unhandledRequests: UnhandledRequestItem[];
+  unhandledContacts: number;
   onNavigateProjects: () => void;
+  onNavigateContacts: () => void;
 }) {
   return (
     <div>
@@ -40,7 +44,7 @@ export function OverviewPage({
         </div>
       </div>
 
-      <div className="mb-7 grid grid-cols-2 gap-3.5 md:grid-cols-4">
+      <div className="mb-7 grid grid-cols-2 gap-3.5 md:grid-cols-5">
         <div className="admin-stat-card px-5 py-4">
           <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
             진행 중 프로젝트
@@ -83,6 +87,20 @@ export function OverviewPage({
           </div>
           <div className="mt-1 font-mono text-[10px] text-white/28">
             이번 주 신규 {stats.newRequestsThisWeek}건
+          </div>
+        </div>
+        <div
+          className="admin-stat-card cursor-pointer px-5 py-4"
+          onClick={onNavigateContacts}
+        >
+          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+            미확인 문의
+          </div>
+          <div className="my-1 text-3xl tracking-wide text-purple-300">
+            {unhandledContacts}
+          </div>
+          <div className="mt-1 font-mono text-[10px] text-white/28">
+            Contact 폼으로 접수된 신규 문의
           </div>
         </div>
       </div>

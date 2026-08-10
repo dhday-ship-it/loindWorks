@@ -56,3 +56,24 @@ export interface StaffOption {
   name: string | null;
   email: string;
 }
+
+export interface ContactProjectInquiry {
+  category: string;
+  purpose: string;
+  painPoint: string;
+  targetAudience: string;
+  successCriteria: string;
+  launchDate: string;
+  budget: string;
+}
+
+export interface ContactRequestItem {
+  id: string;
+  companyName: string;
+  contactName: string;
+  phone: string;
+  email: string;
+  projects: ContactProjectInquiry[];
+  handled: boolean;
+  createdAt: string;
+}

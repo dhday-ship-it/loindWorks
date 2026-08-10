@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { SuperAdminDashboard } from "@/components/super-admin/SuperAdminDashboard";
 import type {
   AdminProjectItem,
+  ContactRequestItem,
   UnhandledRequestItem,
 } from "@/components/super-admin/types";
 
@@ -24,6 +25,7 @@ export default async function AdminPage() {
     allProjects,
     staff,
     openRequests,
+    contactRequests,
   ] = await Promise.all([
     prisma.project.count({ where: { status: "IN_PROGRESS" } }),
     prisma.project.count(),
@@ -72,7 +74,16 @@ export default async function AdminPage() {
       },
       orderBy: { createdAt: "desc" },
     }),
+    prisma.contactRequest.findMany({
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
+
+  const contacts: ContactRequestItem[] = contactRequests.map((c) => ({
+    ...c,
+    projects: c.projects as unknown as ContactRequestItem["projects"],
+    createdAt: c.createdAt.toISOString(),
+  }));
 
   const projects: AdminProjectItem[] = allProjects.map((p) => {
     const phases = p.phases as string[];
@@ -135,6 +146,7 @@ export default async function AdminPage() {
       }))}
       initialCompanies={companies}
       initialProjects={projects}
+      initialContacts={contacts}
       staff={staff}
     />
   );
