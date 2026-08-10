@@ -3,6 +3,11 @@ import type { Person, CalendarEventItem } from "@/components/calendar/types";
 
 export type { Person, CalendarEventItem };
 
+export interface ProjectSummary {
+  id: string;
+  name: string;
+}
+
 export interface TaskItem {
   id: string;
   title: string;

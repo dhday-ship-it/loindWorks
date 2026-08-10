@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import type { TaskItem } from "@/components/staff-home/types";
+import type { ProjectSummary } from "@/components/staff-home/types";
 import type { CalendarEventItem } from "./types";
 
 const MONTH_NAMES = [
@@ -28,10 +29,12 @@ export function CalendarPanel({
   initialEvents,
   tasks = [],
   projectId,
+  myProjects = [],
 }: {
   initialEvents: CalendarEventItem[];
   tasks?: TaskItem[];
   projectId?: string;
+  myProjects?: ProjectSummary[];
 }) {
   const [events, setEvents] = useState(initialEvents);
   const [now, setNow] = useState(new Date());
@@ -45,6 +48,8 @@ export function CalendarPanel({
   const [hour, setHour] = useState(now.getHours());
   const [minute, setMinute] = useState(0);
   const [share, setShare] = useState("");
+  // 대시보드 모드(myProjects 있을 때)에서 선택한 프로젝트
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000 * 30);
@@ -91,6 +96,7 @@ export function CalendarPanel({
     setMinute(0);
     setShare("");
     setTitle("");
+    setSelectedProjectId(myProjects[0]?.id ?? "");
     setShowForm(true);
   };
 
@@ -102,10 +108,21 @@ export function CalendarPanel({
       .map((s) => s.trim())
       .filter(Boolean);
 
+    // 대시보드 모드: selectedProjectId 우선, 프로젝트 페이지 모드: prop의 projectId 사용
+    const resolvedProjectId =
+      myProjects.length > 0
+        ? selectedProjectId || undefined
+        : projectId || undefined;
+
     const res = await fetch("/api/calendar-events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, startAt, sharedWith, projectId }),
+      body: JSON.stringify({
+        title,
+        startAt,
+        sharedWith,
+        projectId: resolvedProjectId,
+      }),
     });
 
     if (res.ok) {
@@ -262,6 +279,26 @@ export function CalendarPanel({
               className="mb-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white outline-none placeholder:text-white/20"
               placeholder="일정 명칭 및 세부 내용..."
             />
+            {/* 대시보드 모드: 프로젝트 선택 */}
+            {myProjects.length > 0 && (
+              <div className="mb-2 flex items-center gap-1.5 rounded-lg border border-white/5 bg-black/30 px-2 py-1.5">
+                <span className="shrink-0 text-[10px] font-medium text-white/40">
+                  📁 프로젝트:
+                </span>
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="flex-1 border-none bg-transparent text-xs text-white outline-none"
+                >
+                  <option value="">연결 안 함</option>
+                  {myProjects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex items-center gap-1.5 rounded-lg border border-white/5 bg-black/30 px-2 py-1">
               <span className="shrink-0 text-[10px] font-medium text-white/40">
                 공유 대상:
@@ -302,6 +339,7 @@ export function CalendarPanel({
         )}
         {sortedEvents.map((e) => {
           const d = new Date(e.startAt);
+          const projName = myProjects.find((p) => p.id === e.projectId)?.name;
           return (
             <div
               key={e.id}
@@ -311,6 +349,11 @@ export function CalendarPanel({
                 <span className="shrink-0 rounded border border-emerald-500/20 bg-emerald-500/5 px-1 text-[9px] font-bold text-emerald-400">
                   {pad(d.getMonth() + 1)}.{pad(d.getDate())} {pad(d.getHours())}:{pad(d.getMinutes())}
                 </span>
+                {projName && (
+                  <span className="shrink-0 rounded border border-blue-400/20 bg-blue-400/5 px-1 text-[9px] font-bold text-blue-300">
+                    {projName}
+                  </span>
+                )}
                 <span className="flex-1 truncate font-medium text-white/80">
                   {e.title}
                 </span>
@@ -358,13 +401,21 @@ export function CalendarPanel({
               )}
               {dayEvents.map((e) => {
                 const d = new Date(e.startAt);
+                const projName = myProjects.find((p) => p.id === e.projectId)?.name;
                 return (
                   <div
                     key={e.id}
                     className="flex flex-col gap-1 rounded-xl border border-white/5 bg-white/5 p-2.5"
                   >
-                    <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold text-emerald-400">
-                      {pad(d.getHours())}:{pad(d.getMinutes())}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold text-emerald-400">
+                        {pad(d.getHours())}:{pad(d.getMinutes())}
+                      </div>
+                      {projName && (
+                        <span className="rounded border border-blue-400/20 bg-blue-400/5 px-1.5 text-[9px] font-bold text-blue-300">
+                          📁 {projName}
+                        </span>
+                      )}
                     </div>
                     <div className="break-all text-xs font-medium leading-relaxed text-white/90">
                       {e.title}

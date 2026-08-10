@@ -15,6 +15,7 @@ import type {
   CalendarEventItem,
   MemoFolderItem,
   MemoItem,
+  ProjectSummary,
   TaskItem,
 } from "./types";
 
@@ -37,12 +38,14 @@ export function StaffHome({
   initialEvents,
   initialMemos,
   initialFolders,
+  myProjects,
 }: {
   currentUser: { id: string; name: string | null; email: string; role: Role };
   initialTasks: TaskItem[];
   initialEvents: CalendarEventItem[];
   initialMemos: MemoItem[];
   initialFolders: MemoFolderItem[];
+  myProjects: ProjectSummary[];
 }) {
   const [tasks, setTasks] = useState(initialTasks);
   const displayName = currentUser.name ?? currentUser.email;
@@ -162,11 +165,12 @@ export function StaffHome({
           </div>
 
           <div className="grid min-h-[460px] grid-cols-1 gap-y-8 divide-y divide-white/10 md:grid-cols-3 md:gap-y-0 md:divide-x md:divide-y-0">
-            <CalendarPanel initialEvents={initialEvents} tasks={tasks} />
+            <CalendarPanel initialEvents={initialEvents} tasks={tasks} myProjects={myProjects} />
             <WorkStationPanel
               tasks={tasks}
               onTasksChange={setTasks}
               currentUserId={currentUser.id}
+              myProjects={myProjects}
             />
             <MemoPanel
               initialMemos={initialMemos}

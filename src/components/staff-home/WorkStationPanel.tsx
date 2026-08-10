@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import type { TaskStatus } from "@/generated/prisma/enums";
-import type { TaskItem } from "./types";
+import type { ProjectSummary, TaskItem } from "./types";
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
   PENDING: "대기",
@@ -30,26 +30,45 @@ export function WorkStationPanel({
   tasks,
   onTasksChange,
   currentUserId,
+  myProjects = [],
 }: {
   tasks: TaskItem[];
   onTasksChange: (next: TaskItem[]) => void;
   currentUserId: string;
+  myProjects?: ProjectSummary[];
 }) {
   const myTasks = useMemo(
     () => tasks.filter((t) => t.assignee.id === currentUserId),
     [tasks, currentUserId]
   );
 
-  const tags = useMemo(() => {
+  // 태그 필터: 내 프로젝트명 + 기존 태그(프로젝트 외 커스텀)
+  const projectNames = useMemo(
+    () => myProjects.map((p) => p.name),
+    [myProjects]
+  );
+
+  const extraTags = useMemo(() => {
     const set = new Set<string>();
-    for (const t of myTasks) if (t.tag) set.add(t.tag);
+    for (const t of myTasks) {
+      if (t.tag && !projectNames.includes(t.tag)) set.add(t.tag);
+    }
     return Array.from(set);
-  }, [myTasks]);
+  }, [myTasks, projectNames]);
+
+  // 필터 목록: 프로젝트 + 기타 태그
+  const filterOptions = useMemo(
+    () => [...projectNames, ...extraTags],
+    [projectNames, extraTags]
+  );
 
   const [filterTag, setFilterTag] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [text, setText] = useState("");
-  const [tag, setTag] = useState(tags[0] ?? "");
+  // 할일 생성 시 선택한 프로젝트 (없으면 "")
+  const [selectedProject, setSelectedProject] = useState(
+    myProjects[0]?.name ?? ""
+  );
   const [startDay, setStartDay] = useState(new Date().getDate());
   const [dueDay, setDueDay] = useState(new Date().getDate());
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -75,7 +94,7 @@ export function WorkStationPanel({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: text,
-        tag,
+        tag: selectedProject || undefined,
         startDate: dayToDate(startDay),
         dueDate: dayToDate(dueDay),
       }),
@@ -90,9 +109,7 @@ export function WorkStationPanel({
   };
 
   const changeStatus = async (id: string, status: TaskStatus) => {
-    onTasksChange(
-      tasks.map((t) => (t.id === id ? { ...t, status } : t))
-    );
+    onTasksChange(tasks.map((t) => (t.id === id ? { ...t, status } : t)));
     setOpenDropdownId(null);
     await fetch(`/api/tasks/${id}`, {
       method: "PATCH",
@@ -113,13 +130,17 @@ export function WorkStationPanel({
           </span>
         </div>
         <button
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() => {
+            setSelectedProject(myProjects[0]?.name ?? "");
+            setShowForm((v) => !v);
+          }}
           className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs text-white transition-all hover:bg-white/10"
         >
           +
         </button>
       </div>
 
+      {/* 태그/프로젝트 필터 */}
       <div className="mb-3 flex flex-wrap gap-1 font-mono text-[10px]">
         <button
           onClick={() => setFilterTag("all")}
@@ -131,21 +152,27 @@ export function WorkStationPanel({
         >
           #ALL
         </button>
-        {tags.map((t) => (
-          <button
-            key={t}
-            onClick={() => setFilterTag(t)}
-            className={`cursor-pointer rounded border px-2.5 py-0.5 font-bold ${
-              filterTag === t
-                ? "border-white/10 bg-white text-slate-900"
-                : "border-white/5 bg-white/5 font-medium text-white/40 hover:text-white"
-            }`}
-          >
-            #{t}
-          </button>
-        ))}
+        {filterOptions.map((tag) => {
+          const isProject = projectNames.includes(tag);
+          return (
+            <button
+              key={tag}
+              onClick={() => setFilterTag(tag)}
+              className={`cursor-pointer rounded border px-2.5 py-0.5 font-bold transition-all ${
+                filterTag === tag
+                  ? "border-white/10 bg-white text-slate-900"
+                  : isProject
+                    ? "border-blue-400/20 bg-blue-400/5 font-medium text-blue-300/70 hover:text-blue-200"
+                    : "border-white/5 bg-white/5 font-medium text-white/40 hover:text-white"
+              }`}
+            >
+              {isProject ? "📁 " : "#"}{tag}
+            </button>
+          );
+        })}
       </div>
 
+      {/* 할일 생성 폼 */}
       {showForm && (
         <div className="glass-input animate-fade-up mb-3 rounded-xl p-3">
           <input
@@ -178,23 +205,25 @@ export function WorkStationPanel({
               />
             </div>
           </div>
-          <div className="mb-2 flex items-center gap-1.5">
-            <span className="text-[10px] text-white/40">태그:</span>
-            <select
-              value={tag}
-              onChange={(e) => setTag(e.target.value)}
-              className="rounded border border-white/10 bg-black/60 px-1.5 py-0.5 text-[10px] text-white/80 outline-none"
-            >
-              {tags.length > 0 ? (
-                tags.map((t) => (
-                  <option key={t} value={t}>
-                    #{t}
+          {/* 프로젝트 선택 */}
+          <div className="mb-2 flex items-center gap-1.5 rounded-lg border border-white/5 bg-black/30 px-2 py-1.5">
+            <span className="shrink-0 text-[10px] text-white/40">📁 프로젝트:</span>
+            {myProjects.length > 0 ? (
+              <select
+                value={selectedProject}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                className="flex-1 border-none bg-transparent text-xs text-white outline-none"
+              >
+                <option value="">연결 안 함</option>
+                {myProjects.map((p) => (
+                  <option key={p.id} value={p.name}>
+                    {p.name}
                   </option>
-                ))
-              ) : (
-                <option value="">태그 없음</option>
-              )}
-            </select>
+                ))}
+              </select>
+            ) : (
+              <span className="text-[10px] text-white/25">배정된 프로젝트 없음</span>
+            )}
           </div>
           <div className="flex justify-end gap-1.5 text-xs font-bold">
             <button
@@ -213,63 +242,73 @@ export function WorkStationPanel({
         </div>
       )}
 
+      {/* 태스크 목록 */}
       <div className="max-h-[250px] flex-1 space-y-1.5 overflow-y-auto pr-1">
         {visible.length === 0 && (
           <div className="select-none py-5 text-center text-xs text-white/20">
             No active tasks in this scope
           </div>
         )}
-        {visible.map((t) => (
-          <div
-            key={t.id}
-            className="flex items-center justify-between rounded-xl p-2 transition-all hover:bg-white/5"
-          >
-            <div className="flex flex-1 items-start gap-3 min-w-0">
-              <button
-                onClick={() =>
-                  setOpenDropdownId((cur) => (cur === t.id ? null : t.id))
-                }
-                className={`cursor-pointer select-none whitespace-nowrap rounded-md border px-2 py-0.5 text-[10px] font-bold transition-all ${STATUS_STYLE[t.status]}`}
-              >
-                {STATUS_LABEL[t.status]} ▾
-              </button>
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center gap-2">
-                  {t.tag && (
-                    <span className="rounded border border-white/5 bg-white/5 px-1.5 py-[1px] font-mono text-[9px] font-bold text-white/40">
-                      #{t.tag}
-                    </span>
-                  )}
-                  {t.dueDate && (
-                    <span className="rounded border border-emerald-500/10 bg-emerald-500/5 px-1 font-mono text-[9px] font-medium text-emerald-400">
-                      📅 {fmtDay(t.startDate)}일 ~ {fmtDay(t.dueDate)}일
-                    </span>
-                  )}
-                </div>
-                <div className="truncate text-xs font-medium text-white/90">
-                  {t.title}
+        {visible.map((t) => {
+          const isProject = t.tag ? projectNames.includes(t.tag) : false;
+          return (
+            <div
+              key={t.id}
+              className="flex items-center justify-between rounded-xl p-2 transition-all hover:bg-white/5"
+            >
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                <button
+                  onClick={() =>
+                    setOpenDropdownId((cur) => (cur === t.id ? null : t.id))
+                  }
+                  className={`cursor-pointer select-none whitespace-nowrap rounded-md border px-2 py-0.5 text-[10px] font-bold transition-all ${STATUS_STYLE[t.status]}`}
+                >
+                  {STATUS_LABEL[t.status]} ▾
+                </button>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center gap-2">
+                    {t.tag && (
+                      <span
+                        className={`rounded border px-1.5 py-[1px] font-mono text-[9px] font-bold ${
+                          isProject
+                            ? "border-blue-400/20 bg-blue-400/5 text-blue-300"
+                            : "border-white/5 bg-white/5 text-white/40"
+                        }`}
+                      >
+                        {isProject ? "📁 " : "#"}{t.tag}
+                      </span>
+                    )}
+                    {t.dueDate && (
+                      <span className="rounded border border-emerald-500/10 bg-emerald-500/5 px-1 font-mono text-[9px] font-medium text-emerald-400">
+                        📅 {fmtDay(t.startDate)}일 ~ {fmtDay(t.dueDate)}일
+                      </span>
+                    )}
+                  </div>
+                  <div className="truncate text-xs font-medium text-white/90">
+                    {t.title}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {openDropdownId === t.id && (
-              <div className="glass-card absolute right-4 z-30 mt-1 flex flex-col gap-0.5 rounded-xl p-1.5 shadow-2xl">
-                {STATUS_ORDER.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => changeStatus(t.id, s)}
-                    className={`cursor-pointer whitespace-nowrap rounded px-3 py-1 text-left text-[10px] font-bold hover:bg-white/10 ${
-                      s === "DONE" ? "border-t border-white/10 pt-1.5" : ""
-                    }`}
-                  >
-                    {STATUS_LABEL[s]}
-                    {s === "DONE" ? " (목록 제외)" : ""}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+              {openDropdownId === t.id && (
+                <div className="glass-card absolute right-4 z-30 mt-1 flex flex-col gap-0.5 rounded-xl p-1.5 shadow-2xl">
+                  {STATUS_ORDER.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => changeStatus(t.id, s)}
+                      className={`cursor-pointer whitespace-nowrap rounded px-3 py-1 text-left text-[10px] font-bold hover:bg-white/10 ${
+                        s === "DONE" ? "border-t border-white/10 pt-1.5" : ""
+                      }`}
+                    >
+                      {STATUS_LABEL[s]}
+                      {s === "DONE" ? " (목록 제외)" : ""}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3">

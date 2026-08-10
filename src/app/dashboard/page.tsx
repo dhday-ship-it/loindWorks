@@ -21,12 +21,22 @@ export default async function DashboardPage() {
   const user = await requireUser();
 
   if (user.role === "STAFF" || user.role === "SUPER_ADMIN") {
-    const [tasks, events, memos, folders] = await Promise.all([
+    const [tasks, events, memos, folders, myProjects] = await Promise.all([
       prisma.task.findMany({
         select: taskSelect,
         orderBy: { createdAt: "desc" },
       }),
       prisma.calendarEvent.findMany({
+        where: {
+          OR: [
+            { ownerId: user.id },
+            {
+              project: {
+                members: { some: { userId: user.id } },
+              },
+            },
+          ],
+        },
         orderBy: { startAt: "asc" },
         include: { owner: { select: { id: true, name: true, email: true } } },
       }),
@@ -37,6 +47,16 @@ export default async function DashboardPage() {
       }),
       prisma.memoFolder.findMany({
         where: { ownerId: user.id },
+        orderBy: { createdAt: "asc" },
+      }),
+      prisma.project.findMany({
+        where: {
+          OR: [
+            { pmId: user.id },
+            { members: { some: { userId: user.id } } },
+          ],
+        },
+        select: { id: true, name: true },
         orderBy: { createdAt: "asc" },
       }),
     ]);
@@ -64,6 +84,7 @@ export default async function DashboardPage() {
           createdAt: m.createdAt.toISOString(),
         }))}
         initialFolders={folders}
+        myProjects={myProjects}
       />
     );
   }
