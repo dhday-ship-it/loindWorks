@@ -1,0 +1,285 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  BRAND_ADMIN
+  STAFF
+  CLIENT
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum ProjectStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+enum RequestStatus {
+  WAIT
+  CHECK
+  WIP
+  DONE
+}
+
+enum LogType {
+  CALL
+  MEET
+  MSG
+  EMAIL
+  NOTE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  passwordHash  String?
+  role          Role      @default(CLIENT)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  assignedTasks  Task[]          @relation("AssignedTasks")
+  createdTasks   Task[]          @relation("CreatedTasks")
+  calendarEvents CalendarEvent[]
+  memoFolders    MemoFolder[]
+  memos          Memo[]
+
+  projectMemberships ProjectMember[]
+  projectRequests    ProjectRequest[]
+  requestAssignments RequestAssignee[]
+  activityLogs       ActivityLog[]
+  pmProjects         Project[]         @relation("ProjectPM")
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+}
+
+model Company {
+  id           String   @id @default(cuid())
+  name         String
+  companyId    String   @unique
+  contactName  String?
+  contactEmail String?
+  createdAt    DateTime @default(now())
+
+  users    User[]
+  projects Project[]
+}
+
+model Project {
+  id           String        @id @default(cuid())
+  name         String
+  status       ProjectStatus @default(PENDING)
+  summary      String?
+  statusNote   String?
+  phases       Json
+  currentPhase Int           @default(0)
+  startDate    DateTime?
+  endDate      DateTime?
+  brandColors  String[]      @default([])
+  keywords     String[]      @default([])
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  pmId String?
+  pm   User?   @relation("ProjectPM", fields: [pmId], references: [id], onDelete: SetNull)
+
+  members        ProjectMember[]
+  requests       ProjectRequest[]
+  logs           ActivityLog[]
+  calendarEvents CalendarEvent[]
+}
+
+model ProjectMember {
+  id        String @id @default(cuid())
+  roleLabel String
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model ProjectRequest {
+  id        String   @id @default(cuid())
+  title     String?
+  body      String
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  assignees RequestAssignee[]
+}
+
+model RequestAssignee {
+  id       String         @id @default(cuid())
+  status   RequestStatus  @default(WAIT)
+  comments Json           @default("[]")
+
+  requestId String
+  request   ProjectRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, userId])
+}
+
+model ActivityLog {
+  id         String    @id @default(cuid())
+  type       LogType
+  title      String
+  body       String?
+  withPerson String?
+  logDate    DateTime?
+  edits      Json      @default("[]")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(PENDING)
+  tag         String?
+  startDate   DateTime?
+  dueDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  assigneeId String
+  assignee   User   @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Cascade)
+}
+
+model CalendarEvent {
+  id         String   @id @default(cuid())
+  title      String
+  startAt    DateTime
+  sharedWith String[] @default([])
+  createdAt  DateTime @default(now())
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model MemoFolder {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  memos Memo[]
+
+  @@unique([ownerId, name])
+}
+
+model Memo {
+  id        String   @id @default(cuid())
+  title     String
+  body      String?
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  folderId String?
+  folder   MemoFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+}
+
+model ContactRequest {
+  id            String   @id @default(cuid())
+  companyName   String
+  contactName   String
+  phone         String
+  email         String
+  projects      Json
+  privacyAgreed Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+// --- Auth.js (NextAuth) required models ---
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
