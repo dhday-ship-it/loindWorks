@@ -5,13 +5,6 @@ import { useMemo, useState } from "react";
 import type { TaskStatus } from "@/generated/prisma/enums";
 import type { TaskItem } from "./types";
 
-const DEFAULT_TAGS = [
-  "LOIND_Web",
-  "Platform_App",
-  "Brand_Identity",
-  "NAS_System",
-];
-
 const STATUS_LABEL: Record<TaskStatus, string> = {
   PENDING: "대기",
   IN_PROGRESS: "진행",
@@ -48,7 +41,7 @@ export function WorkStationPanel({
   );
 
   const tags = useMemo(() => {
-    const set = new Set<string>(DEFAULT_TAGS);
+    const set = new Set<string>();
     for (const t of myTasks) if (t.tag) set.add(t.tag);
     return Array.from(set);
   }, [myTasks]);
@@ -56,7 +49,7 @@ export function WorkStationPanel({
   const [filterTag, setFilterTag] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [text, setText] = useState("");
-  const [tag, setTag] = useState(DEFAULT_TAGS[0]);
+  const [tag, setTag] = useState(tags[0] ?? "");
   const [startDay, setStartDay] = useState(new Date().getDate());
   const [dueDay, setDueDay] = useState(new Date().getDate());
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -186,17 +179,21 @@ export function WorkStationPanel({
             </div>
           </div>
           <div className="mb-2 flex items-center gap-1.5">
-            <span className="text-[10px] text-white/40">배정 프로젝트:</span>
+            <span className="text-[10px] text-white/40">태그:</span>
             <select
               value={tag}
               onChange={(e) => setTag(e.target.value)}
               className="rounded border border-white/10 bg-black/60 px-1.5 py-0.5 text-[10px] text-white/80 outline-none"
             >
-              {DEFAULT_TAGS.map((t) => (
-                <option key={t} value={t}>
-                  #{t}
-                </option>
-              ))}
+              {tags.length > 0 ? (
+                tags.map((t) => (
+                  <option key={t} value={t}>
+                    #{t}
+                  </option>
+                ))
+              ) : (
+                <option value="">태그 없음</option>
+              )}
             </select>
           </div>
           <div className="flex justify-end gap-1.5 text-xs font-bold">

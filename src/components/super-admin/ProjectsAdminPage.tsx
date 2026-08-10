@@ -143,68 +143,70 @@ export function ProjectsAdminPage({
                   <td className="font-semibold text-white">{p.name}</td>
                   <td>{p.company?.name ?? "-"}</td>
                   <td>{p.pm?.name ?? p.pm?.email ?? "-"}</td>
-                  <td style={{ minWidth: 170 }}>
-                    <div className="flex items-center gap-1.5">
-                      <div className="admin-prog-track flex-1">
-                        <div
-                          className="admin-prog-fill"
-                          style={
-                            p.status === "DONE"
-                              ? {
-                                  width: "100%",
-                                  background:
-                                    "linear-gradient(90deg,#34d399,#6ee7b7)",
-                                }
-                              : { width: `${progressOf(p)}%` }
-                          }
-                        />
+                  <td>
+                    <div className="flex min-w-[160px] flex-col gap-1.5 py-1">
+                      <div className="flex items-center gap-1.5">
+                        <div className="admin-prog-track flex-1">
+                          <div
+                            className="admin-prog-fill"
+                            style={
+                              p.status === "DONE"
+                                ? {
+                                    width: "100%",
+                                    background:
+                                      "linear-gradient(90deg,#34d399,#6ee7b7)",
+                                  }
+                                : { width: `${progressOf(p)}%` }
+                            }
+                          />
+                        </div>
+                        <span
+                          className={`whitespace-nowrap font-mono text-[10px] font-bold ${p.status === "DONE" ? "text-emerald-300" : "text-white/60"}`}
+                        >
+                          {progressOf(p)}%
+                        </span>
                       </div>
-                      <span
-                        className={`font-mono text-[10px] font-bold ${p.status === "DONE" ? "text-emerald-300" : "text-white/60"}`}
-                      >
-                        {progressOf(p)}%
-                      </span>
-                    </div>
-                    {p.phaseCount > 0 && (
-                      <div className="mt-1.5 flex items-center gap-1">
-                        {p.status === "DONE" ? (
-                          <button
-                            onClick={() => reopenProject(p)}
-                            disabled={savingId === p.id}
-                            className="cursor-pointer rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white/45 transition-all hover:text-white disabled:opacity-40"
-                          >
-                            재오픈
-                          </button>
-                        ) : (
-                          <>
+                      {p.phaseCount > 0 && (
+                        <div className="flex items-center gap-1">
+                          {p.status === "DONE" ? (
                             <button
-                              onClick={() => revertPhase(p)}
-                              disabled={savingId === p.id || p.currentPhase === 0}
-                              className="cursor-pointer rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white/45 transition-all hover:text-white disabled:opacity-25"
+                              onClick={() => reopenProject(p)}
+                              disabled={savingId === p.id}
+                              className="cursor-pointer whitespace-nowrap rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white/45 transition-all hover:text-white disabled:opacity-40"
                             >
-                              ◀
+                              재오픈
                             </button>
-                            {p.currentPhase < p.phaseCount - 1 ? (
+                          ) : (
+                            <>
                               <button
-                                onClick={() => advancePhase(p)}
-                                disabled={savingId === p.id}
-                                className="cursor-pointer rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white/45 transition-all hover:text-white disabled:opacity-40"
+                                onClick={() => revertPhase(p)}
+                                disabled={savingId === p.id || p.currentPhase === 0}
+                                className="cursor-pointer rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white/45 transition-all hover:text-white disabled:opacity-25"
                               >
-                                다음 단계 ▶
+                                ◀
                               </button>
-                            ) : (
-                              <button
-                                onClick={() => completeProject(p)}
-                                disabled={savingId === p.id}
-                                className="cursor-pointer rounded border border-emerald-400/30 bg-emerald-400/10 px-1.5 py-0.5 font-mono text-[9px] font-bold text-emerald-300 transition-all hover:bg-emerald-400/20 disabled:opacity-40"
-                              >
-                                완료 처리 ✓
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    )}
+                              {p.currentPhase < p.phaseCount - 1 ? (
+                                <button
+                                  onClick={() => advancePhase(p)}
+                                  disabled={savingId === p.id}
+                                  className="cursor-pointer whitespace-nowrap rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white/45 transition-all hover:text-white disabled:opacity-40"
+                                >
+                                  다음 단계 ▶
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => completeProject(p)}
+                                  disabled={savingId === p.id}
+                                  className="cursor-pointer whitespace-nowrap rounded border border-emerald-400/30 bg-emerald-400/10 px-1.5 py-0.5 font-mono text-[9px] font-bold text-emerald-300 transition-all hover:bg-emerald-400/20 disabled:opacity-40"
+                                >
+                                  완료 처리 ✓
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="font-mono text-[11px] text-white/50">
                     {fmtPeriod(p)}

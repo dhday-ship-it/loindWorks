@@ -4,6 +4,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { Bebas_Neue, DM_Sans } from "next/font/google";
 
+import { ParticleBackground } from "@/components/ParticleBackground";
 import { colorForId } from "@/components/staff-projects/types";
 import { progressPercent } from "@/lib/project-progress";
 import type { ClientProjectCard } from "./types";
@@ -63,12 +64,9 @@ export function ClientHome({
 
   return (
     <div
-      className={`${dmSans.className} relative flex min-h-screen flex-col bg-fixed bg-cover bg-center bg-no-repeat text-white`}
-      style={{
-        backgroundImage:
-          "linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.38)), url('https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=2000&q=80')",
-      }}
+      className={`${dmSans.className} relative flex min-h-screen flex-col text-white`}
     >
+      <ParticleBackground />
       <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-white/10 bg-black/30 px-6 backdrop-blur-2xl md:px-10">
         <div className="flex items-center gap-5">
           <span

@@ -6,6 +6,7 @@ import { Bebas_Neue, DM_Sans } from "next/font/google";
 
 import { signOut } from "next-auth/react";
 import type { Role } from "@/generated/prisma/enums";
+import { ParticleBackground } from "@/components/ParticleBackground";
 import { CalendarPanel } from "@/components/calendar/CalendarPanel";
 import { WorkStationPanel } from "./WorkStationPanel";
 import { MemoPanel } from "./MemoPanel";
@@ -49,33 +50,30 @@ export function StaffHome({
 
   return (
     <div
-      className={`${dmSans.className} relative flex min-h-screen flex-col justify-between bg-fixed bg-cover bg-center bg-no-repeat text-white`}
-      style={{
-        backgroundImage:
-          "linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.45)), url('https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=2000&q=80')",
-      }}
+      className={`${dmSans.className} relative flex min-h-screen flex-col justify-between text-white`}
     >
-      <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-white/10 bg-black/20 px-6 backdrop-blur-xl md:px-10">
-        <div className="flex items-center gap-6">
+      <ParticleBackground />
+      <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-white/10 bg-black/20 px-4 backdrop-blur-xl md:px-10">
+        <div className="flex shrink-0 items-center gap-3 md:gap-6">
           <div
-            className={`${bebasNeue.className} cursor-pointer border-r border-white/10 pr-5 text-xl tracking-widest text-white transition-all hover:opacity-60`}
+            className={`${bebasNeue.className} cursor-pointer border-r border-white/10 pr-3 text-xl tracking-widest text-white transition-all hover:opacity-60 md:pr-5`}
           >
             LOIND
           </div>
-          <div className="flex gap-2">
-            <button className="cursor-pointer rounded-sm bg-white px-4 py-1.5 text-xs font-semibold text-slate-900">
+          <div className="flex gap-1 md:gap-2">
+            <button className="cursor-pointer rounded-sm bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 md:px-4">
               홈
             </button>
             <Link
               href="/dashboard/projects"
-              className="cursor-pointer rounded-sm px-4 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white"
+              className="cursor-pointer rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
             >
               프로젝트
             </Link>
             {currentUser.role === "SUPER_ADMIN" && (
               <Link
                 href="/admin"
-                className="cursor-pointer rounded-sm px-4 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white"
+                className="cursor-pointer rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
               >
                 관리자
               </Link>
@@ -83,17 +81,19 @@ export function StaffHome({
           </div>
         </div>
 
-        <div className="flex items-center gap-5">
-          <div className="hidden items-center gap-2 border-r border-white/10 pr-5 text-xs sm:flex">
+        <div className="flex shrink-0 items-center gap-2 md:gap-5">
+          <div className="hidden items-center gap-2 border-r border-white/10 pr-5 text-xs lg:flex">
             <span className="text-sm">☀️</span>
             <span className="font-bold text-white/90">Seoul</span>
             <span className="text-white/60">16° / 23°</span>
           </div>
 
-          <MusicWidget />
+          <div className="hidden md:block">
+            <MusicWidget />
+          </div>
 
-          <div className="flex items-center gap-3 border-l border-white/10 pl-5">
-            <div className="flex flex-col text-right leading-tight">
+          <div className="flex items-center gap-2 border-l border-white/10 pl-3 md:gap-3 md:pl-5">
+            <div className="hidden flex-col text-right leading-tight sm:flex">
               <span className="text-xs font-bold text-white">
                 {displayName}
               </span>
@@ -101,13 +101,13 @@ export function StaffHome({
                 {ROLE_LABEL[currentUser.role]}
               </span>
             </div>
-            <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1 text-xs font-medium text-white/80 md:flex">
+            <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1 text-xs font-medium text-white/80 xl:flex">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
               워크스테이션 가동 중
             </div>
             <Link
               href="/dashboard/settings"
-              className="cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
+              className="hidden cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white sm:block"
             >
               설정
             </Link>
@@ -202,11 +202,26 @@ export function StaffHome({
             </div>
 
             <div className="my-2 w-full border-t border-white/10" />
-            <div className="max-w-[240px] text-[11px] leading-relaxed text-white/30">
-              개인화 대시보드 모듈 연동 대기 중입니다.
-              <br />
-              다음 지시 사항에 맞춰 커스텀 위젯 및 독립 워크스페이스 공간이
-              확장됩니다.
+
+            <div className="flex w-full flex-col gap-2.5">
+              <Link
+                href="/dashboard/projects"
+                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/70 transition-all hover:bg-white/10 hover:text-white"
+              >
+                <span>📁</span> 프로젝트 워크스테이션
+              </Link>
+              <Link
+                href="/dashboard/settings"
+                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/70 transition-all hover:bg-white/10 hover:text-white"
+              >
+                <span>⚙️</span> 계정 설정
+              </Link>
+              <button
+                onClick={() => signOut({ redirectTo: "/login" })}
+                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-2.5 text-xs font-semibold text-red-400/70 transition-all hover:bg-red-400/15 hover:text-red-300"
+              >
+                <span>→</span> 로그아웃
+              </button>
             </div>
           </div>
         </div>

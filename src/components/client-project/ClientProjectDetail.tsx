@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { Bebas_Neue, DM_Sans } from "next/font/google";
 
 import type { LogType, ProjectStatus } from "@/generated/prisma/enums";
+import { ParticleBackground } from "@/components/ParticleBackground";
 import { progressPercent } from "@/lib/project-progress";
 import { colorForId, type Person, type ProjectDetail, type ProjectRequestItem } from "@/components/staff-projects/types";
 
@@ -108,12 +110,9 @@ export function ClientProjectDetail({
 
   return (
     <div
-      className={`${dmSans.className} relative flex h-screen flex-col overflow-hidden bg-fixed bg-cover bg-center bg-no-repeat text-white`}
-      style={{
-        backgroundImage:
-          "linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.42)), url('https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=2000&q=80')",
-      }}
+      className={`${dmSans.className} relative flex h-screen flex-col overflow-hidden text-white`}
     >
+      <ParticleBackground />
       <nav className="flex h-14 w-full shrink-0 items-center border-b border-white/10 bg-black/40 backdrop-blur-2xl">
         <div className="flex h-full items-center gap-3.5 border-r border-white/10 px-6">
           <span className={`${bebasNeue.className} text-xl tracking-widest text-white/95`}>
@@ -155,6 +154,18 @@ export function ClientProjectDetail({
               {(currentUser.name ?? currentUser.email).charAt(0).toUpperCase()}
             </span>
           </div>
+          <Link
+            href="/dashboard/settings"
+            className="hidden cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white sm:block"
+          >
+            설정
+          </Link>
+          <button
+            onClick={() => signOut({ redirectTo: "/login" })}
+            className="cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
+          >
+            로그아웃
+          </button>
         </div>
       </nav>
 

@@ -44,8 +44,8 @@ export function OverviewPage({
         </div>
       </div>
 
-      <div className="mb-7 grid grid-cols-2 gap-3.5 md:grid-cols-5">
-        <div className="admin-stat-card px-5 py-4">
+      <div className="mb-7 grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="admin-stat-card px-4 py-4">
           <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
             진행 중 프로젝트
           </div>
@@ -56,7 +56,7 @@ export function OverviewPage({
             전체 {stats.totalProjects}개 중
           </div>
         </div>
-        <div className="admin-stat-card px-5 py-4">
+        <div className="admin-stat-card px-4 py-4">
           <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
             전체 계정
           </div>
@@ -67,7 +67,7 @@ export function OverviewPage({
             Staff {stats.staffCount} · Client {stats.clientCount}
           </div>
         </div>
-        <div className="admin-stat-card px-5 py-4">
+        <div className="admin-stat-card px-4 py-4">
           <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
             고객사
           </div>
@@ -78,7 +78,7 @@ export function OverviewPage({
             활성 {stats.companyCount}개
           </div>
         </div>
-        <div className="admin-stat-card px-5 py-4">
+        <div className="admin-stat-card px-4 py-4">
           <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
             미처리 요청
           </div>
@@ -90,7 +90,7 @@ export function OverviewPage({
           </div>
         </div>
         <div
-          className="admin-stat-card cursor-pointer px-5 py-4"
+          className="admin-stat-card cursor-pointer px-4 py-4"
           onClick={onNavigateContacts}
         >
           <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
@@ -100,7 +100,7 @@ export function OverviewPage({
             {unhandledContacts}
           </div>
           <div className="mt-1 font-mono text-[10px] text-white/28">
-            Contact 폼으로 접수된 신규 문의
+            Contact 폼 신규 문의
           </div>
         </div>
       </div>
@@ -182,41 +182,40 @@ export function OverviewPage({
             상태가 &apos;대기&apos;인 담당자가 남아있는 요청
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="admin-tbl w-full border-collapse">
-            <thead>
-              <tr>
-                <th>요청자</th>
-                <th>프로젝트</th>
-                <th>내용</th>
-                <th>등록일</th>
-              </tr>
-            </thead>
-            <tbody>
-              {unhandledRequests.length === 0 && (
+        {unhandledRequests.length === 0 ? (
+          <div className="flex items-center justify-center rounded-xl border border-white/5 bg-black/10 py-10 font-mono text-xs text-white/25">
+            미처리 요청이 없습니다.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="admin-tbl w-full border-collapse">
+              <thead>
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-white/30">
-                    미처리 요청이 없습니다.
-                  </td>
+                  <th>요청자</th>
+                  <th>프로젝트</th>
+                  <th>내용</th>
+                  <th>등록일</th>
                 </tr>
-              )}
-              {unhandledRequests.map((r) => (
-                <tr key={r.id}>
-                  <td className="font-medium text-white/90">
-                    {r.authorName}
-                  </td>
-                  <td>{r.projectName}</td>
-                  <td className="max-w-[320px] truncate text-white/75">
-                    {r.body}
-                  </td>
-                  <td className="font-mono text-[11px] text-white/40">
-                    {new Date(r.createdAt).toLocaleDateString("ko-KR")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {unhandledRequests.map((r) => (
+                  <tr key={r.id}>
+                    <td className="font-medium text-white/90">
+                      {r.authorName}
+                    </td>
+                    <td>{r.projectName}</td>
+                    <td className="max-w-[320px] truncate text-white/75">
+                      {r.body}
+                    </td>
+                    <td className="font-mono text-[11px] text-white/40">
+                      {new Date(r.createdAt).toLocaleDateString("ko-KR")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

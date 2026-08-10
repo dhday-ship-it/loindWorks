@@ -146,8 +146,8 @@ export default function LoginPage() {
           />
         </div>
         <div className="animate-fade-up flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-white/20">
-          <span>LOER agency</span>
-          <span>LODEN creative tech studio</span>
+          <span>LOIND Corporation</span>
+          <span>Creative Tech Studio</span>
         </div>
       </div>
 

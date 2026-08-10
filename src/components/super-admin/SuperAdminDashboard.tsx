@@ -5,6 +5,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { Bebas_Neue, DM_Sans } from "next/font/google";
 
+import { ParticleBackground } from "@/components/ParticleBackground";
 import { OverviewPage } from "./OverviewPage";
 import { AccountsPage } from "./AccountsPage";
 import { CompaniesPage } from "./CompaniesPage";
@@ -75,11 +76,8 @@ export function SuperAdminDashboard({
   return (
     <div
       className={`${dmSans.className} flex h-screen flex-col overflow-hidden text-white`}
-      style={{
-        background:
-          "linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.48)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=2000&q=80') center/cover fixed",
-      }}
     >
+      <ParticleBackground />
       <Toast message={toast} />
 
       <div className="flex h-[54px] shrink-0 items-center justify-between border-b border-white/9 bg-[rgba(6,8,10,0.78)] px-6 backdrop-blur-2xl">

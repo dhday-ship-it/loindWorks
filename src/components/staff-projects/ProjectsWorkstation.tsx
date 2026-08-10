@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import { Bebas_Neue, DM_Sans } from "next/font/google";
 
 import type { Role } from "@/generated/prisma/enums";
+import { ParticleBackground } from "@/components/ParticleBackground";
 import { MusicWidget } from "@/components/staff-home/MusicWidget";
 import { CalendarPanel } from "@/components/calendar/CalendarPanel";
 import { ProjectSummaryCard } from "./ProjectSummaryCard";
@@ -84,35 +85,32 @@ export function ProjectsWorkstation({
 
   return (
     <div
-      className={`${dmSans.className} relative flex min-h-screen flex-col justify-between bg-fixed bg-cover bg-center bg-no-repeat text-white`}
-      style={{
-        backgroundImage:
-          "linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.45)), url('https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=2000&q=80')",
-      }}
+      className={`${dmSans.className} relative flex min-h-screen flex-col justify-between text-white`}
     >
-      <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-white/10 bg-black/20 px-6 backdrop-blur-xl md:px-10">
-        <div className="flex min-w-0 flex-1 items-center gap-6">
+      <ParticleBackground />
+      <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-white/10 bg-black/20 px-4 backdrop-blur-xl md:px-10">
+        <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-6">
           <Link
             href="/dashboard"
-            className={`${bebasNeue.className} shrink-0 cursor-pointer border-r border-white/10 pr-5 text-xl tracking-widest text-white transition-all hover:opacity-60`}
+            className={`${bebasNeue.className} shrink-0 cursor-pointer border-r border-white/10 pr-3 text-xl tracking-widest text-white transition-all hover:opacity-60 md:pr-5`}
           >
             LOIND
           </Link>
 
-          <div className="flex shrink-0 gap-1.5 border-r border-white/10 pr-4">
+          <div className="flex shrink-0 gap-1 border-r border-white/10 pr-3 md:gap-1.5 md:pr-4">
             <Link
               href="/dashboard"
-              className="cursor-pointer rounded-sm px-3 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white"
+              className="cursor-pointer rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-3"
             >
               홈
             </Link>
-            <button className="cursor-pointer rounded-sm bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 transition-all">
+            <button className="cursor-pointer rounded-sm bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 transition-all md:px-3">
               프로젝트
             </button>
             {currentUser.role === "SUPER_ADMIN" && (
               <Link
                 href="/admin"
-                className="cursor-pointer rounded-sm px-3 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white"
+                className="cursor-pointer rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-3"
               >
                 관리자
               </Link>
@@ -124,18 +122,18 @@ export function ProjectsWorkstation({
               <button
                 key={p.id}
                 onClick={() => selectProject(p.id)}
-                className={`flex cursor-pointer items-center gap-2 rounded px-3 py-1 text-[11px] transition-all ${
+                className={`flex shrink-0 cursor-pointer items-center gap-2 rounded px-3 py-1 text-[11px] transition-all ${
                   p.id === currentId
                     ? "bg-white font-bold text-slate-900 shadow-sm"
                     : "border border-white/10 bg-white/5 font-medium text-white/60 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <div
-                  className={`h-1.5 w-1.5 rounded-full ${p.id === currentId ? "bg-emerald-500" : "bg-white/30"}`}
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${p.id === currentId ? "bg-emerald-500" : "bg-white/30"}`}
                 />
-                <span>{p.name}</span>
+                <span className="whitespace-nowrap">{p.name}</span>
                 <span
-                  className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                  className={`whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-bold ${
                     p.id === currentId
                       ? "bg-black/10 text-slate-700"
                       : "border border-white/5 bg-white/5 text-white/40"
@@ -151,24 +149,26 @@ export function ProjectsWorkstation({
             ))}
             <button
               onClick={() => setShowNewProject(true)}
-              className="ml-1 flex cursor-pointer items-center gap-1.5 rounded border border-dashed border-white/10 px-3 py-1 text-[11px] font-medium text-white/30 transition-all hover:border-white/30 hover:text-white/60"
+              className="ml-1 flex shrink-0 cursor-pointer items-center gap-1.5 rounded border border-dashed border-white/10 px-3 py-1 text-[11px] font-medium text-white/30 transition-all hover:border-white/30 hover:text-white/60"
             >
               + 새 프로젝트
             </button>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-5">
-          <div className="hidden items-center gap-2 border-r border-white/10 pr-5 text-xs sm:flex">
+        <div className="flex shrink-0 items-center gap-2 md:gap-5">
+          <div className="hidden items-center gap-2 border-r border-white/10 pr-5 text-xs lg:flex">
             <span className="text-sm">☀️</span>
             <span className="font-bold text-white/90">Seoul</span>
             <span className="text-white/60">16° / 23°</span>
           </div>
 
-          <MusicWidget />
+          <div className="hidden md:block">
+            <MusicWidget />
+          </div>
 
-          <div className="flex items-center gap-3 border-l border-white/10 pl-5">
-            <div className="flex flex-col text-right leading-tight">
+          <div className="flex items-center gap-2 border-l border-white/10 pl-3 md:gap-3 md:pl-5">
+            <div className="hidden flex-col text-right leading-tight sm:flex">
               <span className="text-xs font-bold text-white">
                 {currentUser.name ?? currentUser.email}
               </span>
@@ -178,7 +178,7 @@ export function ProjectsWorkstation({
             </div>
             <Link
               href="/dashboard/settings"
-              className="cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
+              className="hidden cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white sm:block"
             >
               설정
             </Link>
