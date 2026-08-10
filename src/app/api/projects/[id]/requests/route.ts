@@ -10,7 +10,7 @@ export async function POST(
   const user = await requireUser();
   const { id: projectId } = await params;
 
-  const { title, body, assigneeUserIds } = await request.json();
+  const { title, body, assigneeUserIds, itemType } = await request.json();
 
   if (!body || typeof body !== "string") {
     return NextResponse.json({ error: "내용은 필수입니다." }, { status: 400 });
@@ -32,12 +32,16 @@ export async function POST(
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 
+  const resolvedType =
+    typeof itemType === "string" && itemType === "TASK" ? "TASK" : "REQUEST";
+
   const projectRequest = await prisma.projectRequest.create({
     data: {
       projectId,
       authorId: user.id,
       title: typeof title === "string" && title.trim() ? title.trim() : null,
       body,
+      itemType: resolvedType,
       assignees: {
         create: assignees.map((userId: string) => ({ userId })),
       },

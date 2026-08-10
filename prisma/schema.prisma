@@ -34,6 +34,7 @@ enum RequestStatus {
   WAIT
   CHECK
   WIP
+  REVIEW
   DONE
 }
 
@@ -132,6 +133,7 @@ model ProjectRequest {
   id        String   @id @default(cuid())
   title     String?
   body      String
+  itemType  String   @default("REQUEST") // "REQUEST" | "TASK"
   createdAt DateTime @default(now())
 
   projectId String

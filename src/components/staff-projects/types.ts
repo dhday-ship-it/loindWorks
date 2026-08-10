@@ -39,6 +39,7 @@ export interface ProjectRequestItem {
   id: string;
   title: string | null;
   body: string;
+  itemType: string; // "REQUEST" | "TASK"
   createdAt: string;
   author: Person;
   assignees: RequestAssigneeItem[];

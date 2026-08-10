@@ -214,7 +214,7 @@ export function ProjectsWorkstation({
                         : "border-transparent font-medium text-white/40 hover:text-white"
                     }`}
                   >
-                    요청사항
+                    WORK STATION
                   </button>
                   <button
                     onClick={() => setTab("log")}
