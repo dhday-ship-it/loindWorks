@@ -37,6 +37,11 @@ export function CalendarPanel({
   myProjects?: ProjectSummary[];
 }) {
   const [events, setEvents] = useState(initialEvents);
+  const [syncedEvents, setSyncedEvents] = useState(initialEvents);
+  if (initialEvents !== syncedEvents) {
+    setSyncedEvents(initialEvents);
+    setEvents(initialEvents);
+  }
   const [now, setNow] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -208,7 +213,7 @@ export function CalendarPanel({
                   <div className="mt-0.5 flex items-center justify-center gap-0.5">
                     {hasEvent && (
                       <div
-                        className={`h-1 w-1 rounded-full ${isToday ? "bg-slate-900" : "bg-emerald-400"}`}
+                        className={`h-1 w-1 rounded-full ${isToday ? "bg-slate-900" : "bg-brand-light"}`}
                       />
                     )}
                     {hasDue && (
@@ -225,7 +230,7 @@ export function CalendarPanel({
 
         {showForm && (
           <div className="animate-fade-up mt-4 rounded-xl border border-white/10 bg-black/40 p-3">
-            <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+            <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-brand-light">
               NEW SCHEDULE
             </div>
             <div className="mb-2 grid grid-cols-5 gap-1 text-center font-mono text-xs">
@@ -334,7 +339,7 @@ export function CalendarPanel({
         </span>
         {sortedEvents.length === 0 && (
           <div className="py-4 text-center font-mono text-[10px] text-white/20">
-            NO LOGGED EVENTS
+            등록된 일정이 없습니다
           </div>
         )}
         {sortedEvents.map((e) => {
@@ -346,7 +351,7 @@ export function CalendarPanel({
               className="flex items-center justify-between rounded-lg border border-transparent px-2 py-1 text-[11px] transition-all hover:border-white/5 hover:bg-white/5"
             >
               <div className="flex min-w-0 flex-1 items-center gap-2 truncate font-mono">
-                <span className="shrink-0 rounded border border-emerald-500/20 bg-emerald-500/5 px-1 text-[9px] font-bold text-emerald-400">
+                <span className="shrink-0 rounded border border-brand-light/20 bg-brand-light/5 px-1 text-[9px] font-bold text-brand-light">
                   {pad(d.getMonth() + 1)}.{pad(d.getDate())} {pad(d.getHours())}:{pad(d.getMinutes())}
                 </span>
                 {projName && (
@@ -379,7 +384,7 @@ export function CalendarPanel({
           <div className="glass-card animate-fade-up flex w-full max-w-sm flex-col overflow-hidden rounded-2xl shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-5 py-3.5">
               <div className="flex flex-col">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-brand-light">
                   Workstation Scheduler
                 </span>
                 <h5 className="mt-0.5 font-mono text-xs font-bold text-white">
@@ -408,7 +413,7 @@ export function CalendarPanel({
                     className="flex flex-col gap-1 rounded-xl border border-white/5 bg-white/5 p-2.5"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold text-emerald-400">
+                      <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold text-brand-light">
                         {pad(d.getHours())}:{pad(d.getMinutes())}
                       </div>
                       {projName && (

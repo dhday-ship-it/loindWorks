@@ -35,15 +35,28 @@ export default async function ClientProjectPage({
           assignees: {
             include: { user: { select: { id: true, name: true, email: true } } },
           },
+          files: {
+            include: { uploader: { select: { id: true, name: true, email: true } } },
+          },
         },
       },
       logs: {
         orderBy: { createdAt: "desc" },
-        include: { author: { select: { id: true, name: true, email: true } } },
+        include: {
+          author: { select: { id: true, name: true, email: true } },
+          files: {
+            include: { uploader: { select: { id: true, name: true, email: true } } },
+          },
+        },
       },
       calendarEvents: {
         orderBy: { startAt: "asc" },
         include: { owner: { select: { id: true, name: true, email: true } } },
+      },
+      files: {
+        where: { requestId: null, logId: null },
+        orderBy: { createdAt: "desc" },
+        include: { uploader: { select: { id: true, name: true, email: true } } },
       },
     },
   });
@@ -65,17 +78,20 @@ export default async function ClientProjectPage({
         comments:
           a.comments as unknown as ProjectDetail["requests"][number]["assignees"][number]["comments"],
       })),
+      files: r.files.map((f) => ({ ...f, createdAt: f.createdAt.toISOString() })),
     })),
     logs: detail.logs.map((l) => ({
       ...l,
       createdAt: l.createdAt.toISOString(),
       logDate: l.logDate ? l.logDate.toISOString() : null,
       edits: l.edits as unknown as ProjectDetail["logs"][number]["edits"],
+      files: l.files.map((f) => ({ ...f, createdAt: f.createdAt.toISOString() })),
     })),
     calendarEvents: detail.calendarEvents.map((e) => ({
       ...e,
       startAt: e.startAt.toISOString(),
     })),
+    files: detail.files.map((f) => ({ ...f, createdAt: f.createdAt.toISOString() })),
   };
 
   return (

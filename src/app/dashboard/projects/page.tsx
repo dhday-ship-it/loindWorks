@@ -3,8 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { ProjectsWorkstation } from "@/components/staff-projects/ProjectsWorkstation";
 import type { ProjectDetail } from "@/components/staff-projects/types";
 
-export default async function ProjectsPage() {
+export default async function ProjectsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ project?: string }>;
+}) {
   const user = await requireStaff();
+  const { project: requestedProjectId } = await searchParams;
 
   const [projects, staff] = await Promise.all([
     prisma.project.findMany({
@@ -24,11 +29,15 @@ export default async function ProjectsPage() {
     }),
   ]);
 
+  const initialProject =
+    (requestedProjectId && projects.find((p) => p.id === requestedProjectId)) ||
+    projects[0];
+
   let initialDetail: ProjectDetail | null = null;
 
-  if (projects[0]) {
+  if (initialProject) {
     const detail = await prisma.project.findUnique({
-      where: { id: projects[0].id },
+      where: { id: initialProject.id },
       include: {
         company: true,
         pm: { select: { id: true, name: true, email: true } },
@@ -46,12 +55,18 @@ export default async function ProjectsPage() {
                 user: { select: { id: true, name: true, email: true } },
               },
             },
+            files: {
+              include: { uploader: { select: { id: true, name: true, email: true } } },
+            },
           },
         },
         logs: {
           orderBy: { createdAt: "desc" },
           include: {
             author: { select: { id: true, name: true, email: true } },
+            files: {
+              include: { uploader: { select: { id: true, name: true, email: true } } },
+            },
           },
         },
         calendarEvents: {
@@ -59,6 +74,11 @@ export default async function ProjectsPage() {
           include: {
             owner: { select: { id: true, name: true, email: true } },
           },
+        },
+        files: {
+          where: { requestId: null, logId: null },
+          orderBy: { createdAt: "desc" },
+          include: { uploader: { select: { id: true, name: true, email: true } } },
         },
       },
     });
@@ -77,17 +97,20 @@ export default async function ProjectsPage() {
             comments:
               a.comments as unknown as ProjectDetail["requests"][number]["assignees"][number]["comments"],
           })),
+          files: r.files.map((f) => ({ ...f, createdAt: f.createdAt.toISOString() })),
         })),
         logs: detail.logs.map((l) => ({
           ...l,
           createdAt: l.createdAt.toISOString(),
           logDate: l.logDate ? l.logDate.toISOString() : null,
           edits: l.edits as unknown as ProjectDetail["logs"][number]["edits"],
+          files: l.files.map((f) => ({ ...f, createdAt: f.createdAt.toISOString() })),
         })),
         calendarEvents: detail.calendarEvents.map((e) => ({
           ...e,
           startAt: e.startAt.toISOString(),
         })),
+        files: detail.files.map((f) => ({ ...f, createdAt: f.createdAt.toISOString() })),
       };
     }
   }

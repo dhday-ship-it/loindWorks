@@ -9,7 +9,8 @@ export async function POST(
 ) {
   const user = await requireStaff();
   const { id: projectId } = await params;
-  const { type, title, body, withPerson, logDate } = await request.json();
+  const { type, title, body, withPerson, logDate, taggedUserIds, attachments } =
+    await request.json();
 
   if (!type || !title) {
     return NextResponse.json(
@@ -17,6 +18,22 @@ export async function POST(
       { status: 400 }
     );
   }
+
+  const files = Array.isArray(attachments)
+    ? attachments
+        .filter(
+          (a): a is { name: string; url: string; size: number; mimeType?: string } =>
+            a && typeof a.url === "string" && typeof a.name === "string"
+        )
+        .map((a) => ({
+          name: a.name,
+          url: a.url,
+          size: typeof a.size === "number" ? a.size : 0,
+          mimeType: a.mimeType ?? null,
+          projectId,
+          uploaderId: user.id,
+        }))
+    : [];
 
   const log = await prisma.activityLog.create({
     data: {
@@ -27,6 +44,8 @@ export async function POST(
       body: body || undefined,
       withPerson: withPerson || undefined,
       logDate: logDate ? new Date(logDate) : undefined,
+      taggedUserIds: Array.isArray(taggedUserIds) ? taggedUserIds : [],
+      files: { create: files },
       edits: [
         {
           actorId: user.id,
@@ -37,7 +56,12 @@ export async function POST(
         },
       ],
     },
-    include: { author: { select: { id: true, name: true, email: true } } },
+    include: {
+      author: { select: { id: true, name: true, email: true } },
+      files: {
+        include: { uploader: { select: { id: true, name: true, email: true } } },
+      },
+    },
   });
 
   return NextResponse.json({ log }, { status: 201 });

@@ -1,32 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Modal } from "./Modal";
 import type { AdminProjectItem, CompanyItem, StaffOption } from "./types";
 
-export function CreateProjectModal({
+function toDateInput(iso: string | null) {
+  return iso ? iso.slice(0, 10) : "";
+}
+
+export function EditProjectModal({
+  project,
   companies,
   staff,
   onClose,
-  onCreated,
+  onSaved,
 }: {
+  project: AdminProjectItem;
   companies: CompanyItem[];
   staff: StaffOption[];
   onClose: () => void;
-  onCreated: (project: AdminProjectItem) => void;
+  onSaved: (project: AdminProjectItem) => void;
 }) {
-  const [name, setName] = useState("");
-  const [companyId, setCompanyId] = useState("");
-  const [pmId, setPmId] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [phasesText, setPhasesText] = useState(
-    "기획 확정\n디자인 시안 검토\n개발 착수\nQA · 테스트\n최종 런칭"
-  );
+  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState(project.name);
+  const [companyId, setCompanyId] = useState(project.company?.id ?? "");
+  const [pmId, setPmId] = useState(project.pm?.id ?? "");
+  const [startDate, setStartDate] = useState(toDateInput(project.startDate));
+  const [endDate, setEndDate] = useState(toDateInput(project.endDate));
+  const [phasesText, setPhasesText] = useState("");
   const [selectedStaff, setSelectedStaff] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/projects/${project.id}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        setLoading(false);
+        if (data?.project) {
+          setPhasesText((data.project.phases as string[]).join("\n"));
+          const members = data.project.members as {
+            userId: string;
+            roleLabel: string;
+          }[];
+          setSelectedStaff(
+            new Set(
+              members
+                .filter((m) => m.roleLabel === "팀원")
+                .map((m) => m.userId)
+            )
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [project.id]);
 
   const toggleStaff = (id: string) => {
     setSelectedStaff((prev) => {
@@ -44,55 +76,51 @@ export function CreateProjectModal({
       .map((p) => p.trim())
       .filter(Boolean);
 
-    if (!name.trim() || !companyId || !pmId || phases.length === 0) {
-      setError("프로젝트명, 고객사, 담당 PM은 필수입니다.");
+    if (!name.trim() || phases.length === 0) {
+      setError("프로젝트명과 최소 1개 이상의 단계가 필요합니다.");
       return;
     }
 
     setSubmitting(true);
-    const res = await fetch("/api/projects", {
-      method: "POST",
+    const res = await fetch(`/api/projects/${project.id}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
+        companyId: companyId || null,
+        pmId: pmId || null,
+        startDate: startDate || null,
+        endDate: endDate || null,
         phases,
-        companyId,
-        pmId,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
-        memberUserIds: [...new Set([pmId, ...selectedStaff])],
+        memberUserIds: [...selectedStaff],
       }),
     });
     setSubmitting(false);
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "프로젝트 생성에 실패했습니다.");
+      setError(data.error ?? "수정에 실패했습니다.");
       return;
     }
 
-    const { project } = await res.json();
-    const company = companies.find((c) => c.id === companyId) ?? null;
-    const pm = staff.find((s) => s.id === pmId) ?? null;
-
-    onCreated({
-      id: project.id,
-      name,
-      status: "PENDING",
-      currentPhase: 0,
-      phaseCount: phases.length,
-      startDate: startDate ? new Date(startDate).toISOString() : null,
-      endDate: endDate ? new Date(endDate).toISOString() : null,
-      company: company ? { id: company.id, name: company.name } : null,
-      pm,
-      clientNames: [],
+    const { project: updated } = await res.json();
+    onSaved({
+      ...project,
+      name: updated.name,
+      status: updated.status,
+      currentPhase: updated.currentPhase,
+      phaseCount: updated.phaseCount,
+      startDate: updated.startDate,
+      endDate: updated.endDate,
+      company: updated.company,
+      pm: updated.pm,
     });
   };
 
   return (
     <Modal
-      title="프로젝트 생성"
-      subtitle="새 프로젝트를 생성하고 담당자와 고객사를 배정합니다."
+      title="프로젝트 수정"
+      subtitle="프로젝트 정보를 수정합니다."
       onClose={onClose}
     >
       <div className="flex flex-col gap-3.5">
@@ -104,7 +132,6 @@ export function CreateProjectModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="admin-input"
-            placeholder="웹사이트 리뉴얼"
           />
         </div>
         <div className="grid grid-cols-2 gap-3.5">
@@ -118,7 +145,7 @@ export function CreateProjectModal({
               className="admin-input cursor-pointer"
             >
               <option value="" className="bg-[#0c0e12]">
-                선택...
+                선택 안 함
               </option>
               {companies.map((c) => (
                 <option key={c.id} value={c.id} className="bg-[#0c0e12]">
@@ -137,7 +164,7 @@ export function CreateProjectModal({
               className="admin-input cursor-pointer"
             >
               <option value="" className="bg-[#0c0e12]">
-                선택...
+                선택 안 함
               </option>
               {staff.map((s) => (
                 <option key={s.id} value={s.id} className="bg-[#0c0e12]">
@@ -178,8 +205,13 @@ export function CreateProjectModal({
           <textarea
             value={phasesText}
             onChange={(e) => setPhasesText(e.target.value)}
-            className="admin-input min-h-[100px] resize-none leading-relaxed"
+            disabled={loading}
+            className="admin-input min-h-[100px] resize-none leading-relaxed disabled:opacity-40"
+            placeholder={loading ? "불러오는 중..." : undefined}
           />
+          <span className="text-[10px] text-white/30">
+            현재 진행 단계보다 줄어들면 마지막 단계로 자동 조정됩니다.
+          </span>
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -199,7 +231,8 @@ export function CreateProjectModal({
                   key={s.id}
                   type="button"
                   onClick={() => toggleStaff(s.id)}
-                  className={`cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all ${
+                  disabled={loading}
+                  className={`cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all disabled:opacity-40 ${
                     isSel
                       ? "border-brand-light bg-brand-light text-slate-900"
                       : "border-white/10 bg-white/5 text-white/50 hover:text-white"
@@ -220,10 +253,10 @@ export function CreateProjectModal({
           </button>
           <button
             onClick={submit}
-            disabled={submitting}
+            disabled={submitting || loading}
             className="admin-btn-primary disabled:opacity-50"
           >
-            {submitting ? "생성 중..." : "생성"}
+            {submitting ? "저장 중..." : "저장"}
           </button>
         </div>
       </div>

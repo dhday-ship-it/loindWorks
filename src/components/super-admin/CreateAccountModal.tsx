@@ -132,6 +132,7 @@ export function CreateAccountModal({
           </span>
           <input
             type="password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="admin-input"

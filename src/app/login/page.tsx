@@ -131,7 +131,7 @@ export default function LoginPage() {
     <main
       className={`${dmSans.className} relative flex min-h-screen w-full flex-col overflow-hidden text-white lg:flex-row`}
     >
-      <ParticleBackground />
+      <ParticleBackground rgb="52,211,153" bg="#0b0f19" />
 
       <div className="relative z-10 flex flex-1 flex-col justify-between p-8 md:p-16 lg:p-24 xl:p-28">
         <div />

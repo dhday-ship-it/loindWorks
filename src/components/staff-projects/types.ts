@@ -35,6 +35,16 @@ export interface RequestAssigneeItem {
   user: Person;
 }
 
+export interface ProjectFileItem {
+  id: string;
+  name: string;
+  url: string;
+  size: number;
+  mimeType: string | null;
+  createdAt: string;
+  uploader: Person;
+}
+
 export interface ProjectRequestItem {
   id: string;
   title: string | null;
@@ -43,6 +53,7 @@ export interface ProjectRequestItem {
   createdAt: string;
   author: Person;
   assignees: RequestAssigneeItem[];
+  files: ProjectFileItem[];
 }
 
 export interface ActivityLogEdit {
@@ -60,9 +71,11 @@ export interface ActivityLogItem {
   body: string | null;
   withPerson: string | null;
   logDate: string | null;
+  taggedUserIds: string[];
   edits: ActivityLogEdit[];
   createdAt: string;
   author: Person;
+  files: ProjectFileItem[];
 }
 
 export interface CompanyRef {
@@ -92,6 +105,7 @@ export interface ProjectDetail {
   requests: ProjectRequestItem[];
   logs: ActivityLogItem[];
   calendarEvents: CalendarEventItem[];
+  files: ProjectFileItem[];
 }
 
 const AVATAR_PALETTE = [

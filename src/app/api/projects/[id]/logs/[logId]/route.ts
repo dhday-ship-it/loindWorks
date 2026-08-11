@@ -18,7 +18,7 @@ export async function PATCH(
 ) {
   const user = await requireStaff();
   const { logId } = await params;
-  const { title, body } = await request.json();
+  const { title, body, taggedUserIds } = await request.json();
 
   const existing = await prisma.activityLog.findUniqueOrThrow({
     where: { id: logId },
@@ -45,6 +45,7 @@ export async function PATCH(
     data: {
       title: title || undefined,
       body: body !== undefined ? body : undefined,
+      taggedUserIds: Array.isArray(taggedUserIds) ? taggedUserIds : undefined,
       edits: nextEdits as unknown as Prisma.InputJsonValue,
     },
     include: { author: { select: { id: true, name: true, email: true } } },

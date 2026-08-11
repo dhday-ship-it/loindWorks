@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { progressPercent } from "@/lib/project-progress";
 import { CreateProjectModal } from "./CreateProjectModal";
+import { EditProjectModal } from "./EditProjectModal";
 import type { AdminProjectItem, CompanyItem, StaffOption } from "./types";
 
 const STATUS_LABEL: Record<AdminProjectItem["status"], string> = {
@@ -44,6 +45,7 @@ export function ProjectsAdminPage({
   showToast: (msg: string) => void;
 }) {
   const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<AdminProjectItem | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
 
   const deleteProject = async (id: string, name: string) => {
@@ -220,12 +222,20 @@ export function ProjectsAdminPage({
                     </span>
                   </td>
                   <td>
-                    <button
-                      onClick={() => deleteProject(p.id, p.name)}
-                      className="admin-btn-danger"
-                    >
-                      삭제
-                    </button>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => setEditing(p)}
+                        className="admin-btn-ghost"
+                      >
+                        수정
+                      </button>
+                      <button
+                        onClick={() => deleteProject(p.id, p.name)}
+                        className="admin-btn-danger"
+                      >
+                        삭제
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -243,6 +253,22 @@ export function ProjectsAdminPage({
             onProjectsChange([...projects, project]);
             setShowCreate(false);
             showToast(`${project.name} 프로젝트가 생성되었습니다.`);
+          }}
+        />
+      )}
+
+      {editing && (
+        <EditProjectModal
+          project={editing}
+          companies={companies}
+          staff={staff}
+          onClose={() => setEditing(null)}
+          onSaved={(updated) => {
+            onProjectsChange(
+              projects.map((p) => (p.id === updated.id ? updated : p))
+            );
+            setEditing(null);
+            showToast(`${updated.name} 프로젝트가 수정되었습니다.`);
           }}
         />
       )}

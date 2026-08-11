@@ -41,15 +41,28 @@ export async function GET(
               user: { select: { id: true, name: true, email: true } },
             },
           },
+          files: {
+            include: { uploader: { select: { id: true, name: true, email: true } } },
+          },
         },
       },
       logs: {
         orderBy: { createdAt: "desc" },
-        include: { author: { select: { id: true, name: true, email: true } } },
+        include: {
+          author: { select: { id: true, name: true, email: true } },
+          files: {
+            include: { uploader: { select: { id: true, name: true, email: true } } },
+          },
+        },
       },
       calendarEvents: {
         orderBy: { startAt: "asc" },
         include: { owner: { select: { id: true, name: true, email: true } } },
+      },
+      files: {
+        where: { requestId: null, logId: null },
+        orderBy: { createdAt: "desc" },
+        include: { uploader: { select: { id: true, name: true, email: true } } },
       },
     },
   });
@@ -70,11 +83,21 @@ export async function PATCH(
 ) {
   await requireStaff();
   const { id } = await params;
-  const { currentPhase, status } = await request.json();
+  const {
+    currentPhase,
+    status,
+    name,
+    companyId,
+    pmId,
+    startDate,
+    endDate,
+    phases,
+    memberUserIds,
+  } = await request.json();
 
   const existing = await prisma.project.findUnique({
     where: { id },
-    select: { phases: true },
+    select: { phases: true, currentPhase: true },
   });
   if (!existing) {
     return NextResponse.json(
@@ -83,10 +106,32 @@ export async function PATCH(
     );
   }
 
-  const data: { currentPhase?: number; status?: ProjectStatus } = {};
+  const data: {
+    currentPhase?: number;
+    status?: ProjectStatus;
+    name?: string;
+    companyId?: string | null;
+    pmId?: string | null;
+    startDate?: Date | null;
+    endDate?: Date | null;
+    phases?: string[];
+  } = {};
+
+  if (phases !== undefined) {
+    if (!Array.isArray(phases) || phases.length === 0) {
+      return NextResponse.json(
+        { error: "최소 1개 이상의 단계가 필요합니다." },
+        { status: 400 }
+      );
+    }
+    data.phases = phases;
+  }
+
+  const phaseCount = data.phases
+    ? data.phases.length
+    : (existing.phases as string[]).length;
 
   if (currentPhase !== undefined) {
-    const phaseCount = (existing.phases as string[]).length;
     if (
       typeof currentPhase !== "number" ||
       !Number.isInteger(currentPhase) ||
@@ -99,6 +144,8 @@ export async function PATCH(
       );
     }
     data.currentPhase = currentPhase;
+  } else if (data.phases && existing.currentPhase > phaseCount - 1) {
+    data.currentPhase = phaseCount - 1;
   }
 
   if (status !== undefined) {
@@ -111,10 +158,61 @@ export async function PATCH(
     data.status = status;
   }
 
-  const project = await prisma.project.update({ where: { id }, data });
+  if (name !== undefined) {
+    if (typeof name !== "string" || !name.trim()) {
+      return NextResponse.json(
+        { error: "프로젝트명을 입력해주세요." },
+        { status: 400 }
+      );
+    }
+    data.name = name.trim();
+  }
+
+  if (companyId !== undefined) data.companyId = companyId || null;
+  if (pmId !== undefined) data.pmId = pmId || null;
+  if (startDate !== undefined)
+    data.startDate = startDate ? new Date(startDate) : null;
+  if (endDate !== undefined) data.endDate = endDate ? new Date(endDate) : null;
+
+  if (Array.isArray(memberUserIds)) {
+    await prisma.projectMember.deleteMany({
+      where: { projectId: id, roleLabel: "팀원" },
+    });
+    if (memberUserIds.length > 0) {
+      await prisma.projectMember.createMany({
+        data: memberUserIds.map((userId: string) => ({
+          projectId: id,
+          userId,
+          roleLabel: "팀원",
+        })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
+  const project = await prisma.project.update({
+    where: { id },
+    data,
+    include: {
+      company: true,
+      pm: { select: { id: true, name: true, email: true } },
+    },
+  });
 
   return NextResponse.json({
-    project: { id: project.id, currentPhase: project.currentPhase, status: project.status },
+    project: {
+      id: project.id,
+      name: project.name,
+      status: project.status,
+      currentPhase: project.currentPhase,
+      phaseCount: (project.phases as string[]).length,
+      startDate: project.startDate,
+      endDate: project.endDate,
+      company: project.company
+        ? { id: project.company.id, name: project.company.name }
+        : null,
+      pm: project.pm,
+    },
   });
 }
 

@@ -149,7 +149,7 @@ export function ContactsPage({
                   key={i}
                   className="rounded-xl border border-white/8 bg-white/5 p-3.5"
                 >
-                  <div className="mb-2 font-mono text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+                  <div className="mb-2 font-mono text-[9px] font-bold uppercase tracking-wider text-brand-light">
                     문의 {i + 1} · {p.category || "카테고리 미선택"}
                   </div>
                   <div className="flex flex-col gap-1.5 text-xs">

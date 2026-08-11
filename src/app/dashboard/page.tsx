@@ -1,65 +1,37 @@
 import { requireUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { signOut } from "@/auth";
+import { getStaffHomeData } from "@/lib/staff-home-data";
 import { StaffHome } from "@/components/staff-home/StaffHome";
 import { ClientHome } from "@/components/client-home/ClientHome";
-
-const taskSelect = {
-  id: true,
-  title: true,
-  description: true,
-  status: true,
-  tag: true,
-  startDate: true,
-  dueDate: true,
-  createdAt: true,
-  assignee: { select: { id: true, name: true, email: true } },
-  createdBy: { select: { id: true, name: true, email: true } },
-} as const;
 
 export default async function DashboardPage() {
   const user = await requireUser();
 
   if (user.role === "STAFF" || user.role === "SUPER_ADMIN") {
-    const [tasks, events, memos, folders, myProjects] = await Promise.all([
-      prisma.task.findMany({
-        select: taskSelect,
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.calendarEvent.findMany({
-        where: {
-          OR: [
-            { ownerId: user.id },
-            {
-              project: {
-                members: { some: { userId: user.id } },
-              },
-            },
-          ],
-        },
-        orderBy: { startAt: "asc" },
-        include: { owner: { select: { id: true, name: true, email: true } } },
-      }),
-      prisma.memo.findMany({
-        where: { ownerId: user.id },
-        orderBy: { createdAt: "desc" },
-        include: { folder: { select: { id: true, name: true } } },
-      }),
-      prisma.memoFolder.findMany({
-        where: { ownerId: user.id },
-        orderBy: { createdAt: "asc" },
-      }),
-      prisma.project.findMany({
-        where: {
-          OR: [
-            { pmId: user.id },
-            { members: { some: { userId: user.id } } },
-          ],
-        },
-        select: { id: true, name: true },
-        orderBy: { createdAt: "asc" },
-      }),
-    ]);
+    const [{ tasks, events, taggedItems }, memos, folders, myProjects] =
+      await Promise.all([
+        getStaffHomeData(user.id),
+        prisma.memo.findMany({
+          where: { ownerId: user.id },
+          orderBy: { createdAt: "desc" },
+          include: { folder: { select: { id: true, name: true } } },
+        }),
+        prisma.memoFolder.findMany({
+          where: { ownerId: user.id },
+          orderBy: { createdAt: "asc" },
+        }),
+        prisma.project.findMany({
+          where: {
+            OR: [
+              { pmId: user.id },
+              { members: { some: { userId: user.id } } },
+            ],
+          },
+          select: { id: true, name: true, status: true },
+          orderBy: { createdAt: "asc" },
+        }),
+      ]);
 
     return (
       <StaffHome
@@ -69,22 +41,15 @@ export default async function DashboardPage() {
           email: user.email ?? "",
           role: user.role,
         }}
-        initialTasks={tasks.map((t) => ({
-          ...t,
-          startDate: t.startDate ? t.startDate.toISOString() : null,
-          dueDate: t.dueDate ? t.dueDate.toISOString() : null,
-          createdAt: t.createdAt.toISOString(),
-        }))}
-        initialEvents={events.map((e) => ({
-          ...e,
-          startAt: e.startAt.toISOString(),
-        }))}
+        initialTasks={tasks}
+        initialEvents={events}
         initialMemos={memos.map((m) => ({
           ...m,
           createdAt: m.createdAt.toISOString(),
         }))}
         initialFolders={folders}
         myProjects={myProjects}
+        taggedItems={taggedItems}
       />
     );
   }

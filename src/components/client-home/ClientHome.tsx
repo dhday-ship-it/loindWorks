@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { signOut } from "next-auth/react";
 import { Bebas_Neue, DM_Sans } from "next/font/google";
 
 import { ParticleBackground } from "@/components/ParticleBackground";
+import { UserMenu } from "@/components/nav/UserMenu";
 import { colorForId } from "@/components/staff-projects/types";
 import { progressPercent } from "@/lib/project-progress";
 import type { ClientProjectCard } from "./types";
@@ -25,7 +25,7 @@ const STATUS_BADGE_CLASS: Record<ClientProjectCard["status"], string> = {
   PENDING:
     "border border-amber-400/25 bg-amber-400/10 text-amber-300",
   IN_PROGRESS:
-    "border border-blue-400/25 bg-blue-400/10 text-blue-300",
+    "border border-brand-light/25 bg-brand-light/10 text-brand-light",
   DONE: "border border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
 };
 
@@ -47,7 +47,6 @@ export function ClientHome({
   projects: ClientProjectCard[];
 }) {
   const displayName = currentUser.name ?? currentUser.email;
-  const initial = displayName.charAt(0).toUpperCase();
 
   const inProgress = projects.filter((p) => p.status === "IN_PROGRESS");
   const done = projects.filter((p) => p.status === "DONE");
@@ -67,6 +66,7 @@ export function ClientHome({
       className={`${dmSans.className} relative flex min-h-screen flex-col text-white`}
     >
       <ParticleBackground />
+      <div className="relative z-10 flex min-h-screen flex-col">
       <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-white/10 bg-black/30 px-6 backdrop-blur-2xl md:px-10">
         <div className="flex items-center gap-5">
           <span
@@ -81,39 +81,18 @@ export function ClientHome({
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 border-l border-white/10 pl-5">
-            <div className="text-right leading-tight">
-              <div className="text-xs font-semibold text-white/90">
-                {displayName}
-              </div>
-              <div className="font-mono text-[10px] text-white/40">
-                {companyName ?? "소속 없음"}
-              </div>
-            </div>
-            <div className="flex h-7.5 w-7.5 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-400/15">
-              <span className="text-[11px] font-bold text-emerald-400">
-                {initial}
-              </span>
-            </div>
-            <Link
-              href="/dashboard/settings"
-              className="cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
-            >
-              설정
-            </Link>
-            <button
-              onClick={() => signOut({ redirectTo: "/login" })}
-              className="cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
-            >
-              로그아웃
-            </button>
-          </div>
+          {companyName && (
+            <span className="hidden font-mono text-[10px] text-white/40 sm:inline">
+              {companyName}
+            </span>
+          )}
+          <UserMenu name={displayName} roleLabel="클라이언트" />
         </div>
       </nav>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 pb-20 pt-10 md:px-10">
         <div className="animate-fade-up mb-8">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-emerald-400">
+          <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-brand-light">
             Client Portal · My Projects
           </div>
           <h1
@@ -142,7 +121,7 @@ export function ClientHome({
               진행 중
             </div>
             <div
-              className={`${bebasNeue.className} mt-1 text-3xl tracking-wide text-blue-300`}
+              className={`${bebasNeue.className} mt-1 text-3xl tracking-wide text-brand-light`}
             >
               {inProgress.length}
             </div>
@@ -168,7 +147,7 @@ export function ClientHome({
             </div>
             <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-300"
+                className="h-full rounded-full bg-gradient-to-r from-brand-light to-brand"
                 style={{ width: `${avgProgress}%` }}
               />
             </div>
@@ -233,7 +212,7 @@ export function ClientHome({
                       </div>
                       <div className="h-[3px] overflow-hidden rounded-full bg-white/10">
                         <div
-                          className={`h-full rounded-full ${isDone ? "bg-emerald-400/45" : "bg-gradient-to-r from-blue-400 to-blue-200"}`}
+                          className={`h-full rounded-full ${isDone ? "bg-emerald-400/45" : "bg-gradient-to-r from-brand-light to-brand"}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -259,7 +238,7 @@ export function ClientHome({
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-emerald-400 opacity-0 transition-all group-hover:opacity-100">
+                    <div className="flex items-center gap-1.5 text-brand-light opacity-0 transition-all group-hover:opacity-100">
                       <span className="font-bold">입장하기</span>
                       <span>→</span>
                     </div>
@@ -270,6 +249,7 @@ export function ClientHome({
           </div>
         )}
       </main>
+      </div>
     </div>
   );
 }

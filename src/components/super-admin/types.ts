@@ -1,4 +1,4 @@
-import type { ProjectStatus, Role } from "@/generated/prisma/enums";
+import type { ProjectStatus, Role, TaxType } from "@/generated/prisma/enums";
 
 export interface CompanyItem {
   id: string;
@@ -76,4 +76,28 @@ export interface ContactRequestItem {
   projects: ContactProjectInquiry[];
   handled: boolean;
   createdAt: string;
+}
+
+export interface ProjectRecordItem {
+  id: string;
+  date: string;
+  title: string;
+  note: string | null;
+  amount: number | null;
+  taxType: TaxType;
+  advancePayment: number | null;
+  balance: number | null;
+  settled: boolean;
+  taxInvoiceIssued: boolean;
+  outsourced: boolean;
+  outsourceVendor: string | null;
+  outsourceTotalAmount: number | null;
+  outsourceTaxType: TaxType;
+  outsourcePayment: number | null;
+  outsourceBalanceSettled: boolean;
+  outsourceTaxInvoiceIssued: boolean;
+  projectId: string;
+  project: { id: string; name: string };
+  createdAt: string;
+  author: { id: string; name: string | null; email: string };
 }

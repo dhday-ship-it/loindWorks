@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { requireStaff } from "@/lib/auth-guards";
+import { requireUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import type { RequestStatus } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
 
-const VALID_STATUSES: RequestStatus[] = ["WAIT", "CHECK", "WIP", "DONE"];
+const VALID_STATUSES: RequestStatus[] = ["WAIT", "CHECK", "WIP", "REVIEW", "DONE"];
 
 interface Comment {
   authorId: string;
@@ -20,12 +20,42 @@ export async function PATCH(
     params,
   }: { params: Promise<{ id: string; requestId: string; assigneeId: string }> }
 ) {
-  const user = await requireStaff();
-  const { assigneeId } = await params;
+  const user = await requireUser();
+  const { id: projectId, assigneeId } = await params;
   const { status, comment } = await request.json();
+
+  if (user.role === "CLIENT") {
+    if (status !== undefined) {
+      return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+    }
+    const membership = await prisma.projectMember.findUnique({
+      where: { projectId_userId: { projectId, userId: user.id } },
+    });
+    if (!membership) {
+      return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+    }
+  } else if (user.role !== "STAFF" && user.role !== "SUPER_ADMIN") {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
 
   if (status !== undefined && !VALID_STATUSES.includes(status)) {
     return NextResponse.json({ error: "잘못된 상태값입니다." }, { status: 400 });
+  }
+
+  const existing = await prisma.requestAssignee.findUniqueOrThrow({
+    where: { id: assigneeId },
+    select: { userId: true, comments: true },
+  });
+
+  if (
+    status !== undefined &&
+    existing.userId !== user.id &&
+    user.role !== "SUPER_ADMIN"
+  ) {
+    return NextResponse.json(
+      { error: "담당자 본인만 상태를 변경할 수 있습니다." },
+      { status: 403 }
+    );
   }
 
   const data: Prisma.RequestAssigneeUpdateInput = {};
@@ -35,10 +65,6 @@ export async function PATCH(
   }
 
   if (typeof comment === "string" && comment.trim()) {
-    const existing = await prisma.requestAssignee.findUniqueOrThrow({
-      where: { id: assigneeId },
-      select: { comments: true },
-    });
     const list = Array.isArray(existing.comments)
       ? (existing.comments as unknown as Comment[])
       : [];

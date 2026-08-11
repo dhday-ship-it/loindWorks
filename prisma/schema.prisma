@@ -46,6 +46,13 @@ enum LogType {
   NOTE
 }
 
+enum TaxType {
+  VAT_EXCLUSIVE
+  VAT_INCLUSIVE
+  WITHHOLD_3_3
+  NONE
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -70,6 +77,8 @@ model User {
   projectRequests    ProjectRequest[]
   requestAssignments RequestAssignee[]
   activityLogs       ActivityLog[]
+  projectRecords     ProjectRecord[]
+  uploadedFiles      ProjectFile[]
   pmProjects         Project[]         @relation("ProjectPM")
 
   companyId String?
@@ -114,6 +123,41 @@ model Project {
   requests       ProjectRequest[]
   logs           ActivityLog[]
   calendarEvents CalendarEvent[]
+  records        ProjectRecord[]
+  files          ProjectFile[]
+}
+
+model ProjectRecord {
+  id    String   @id @default(cuid())
+  date  DateTime
+  title String
+  note  String?
+
+  // 정산
+  amount           Int?
+  taxType          TaxType @default(VAT_INCLUSIVE)
+  advancePayment   Int?
+  balance          Int?
+  settled          Boolean @default(false)
+  taxInvoiceIssued Boolean @default(false)
+
+  // 외주
+  outsourced                Boolean @default(false)
+  outsourceVendor           String?
+  outsourceTotalAmount      Int?
+  outsourceTaxType          TaxType @default(NONE)
+  outsourcePayment          Int?
+  outsourceBalanceSettled   Boolean @default(false)
+  outsourceTaxInvoiceIssued Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model ProjectMember {
@@ -143,6 +187,7 @@ model ProjectRequest {
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   assignees RequestAssignee[]
+  files     ProjectFile[]
 }
 
 model RequestAssignee {
@@ -160,21 +205,46 @@ model RequestAssignee {
 }
 
 model ActivityLog {
-  id         String    @id @default(cuid())
-  type       LogType
-  title      String
-  body       String?
-  withPerson String?
-  logDate    DateTime?
-  edits      Json      @default("[]")
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  type          LogType
+  title         String
+  body          String?
+  withPerson    String?
+  logDate       DateTime?
+  taggedUserIds String[]  @default([])
+  edits         Json      @default("[]")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  files ProjectFile[]
+}
+
+model ProjectFile {
+  id       String  @id @default(cuid())
+  name     String
+  url      String
+  size     Int
+  mimeType String?
+
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  requestId String?
+  request   ProjectRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  logId String?
+  log   ActivityLog? @relation(fields: [logId], references: [id], onDelete: Cascade)
+
+  uploaderId String
+  uploader   User   @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
 }
 
 model Task {

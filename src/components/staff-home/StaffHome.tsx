@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bebas_Neue, DM_Sans } from "next/font/google";
 
-import { signOut } from "next-auth/react";
 import type { Role } from "@/generated/prisma/enums";
 import { ParticleBackground } from "@/components/ParticleBackground";
+import { UserMenu } from "@/components/nav/UserMenu";
 import { CalendarPanel } from "@/components/calendar/CalendarPanel";
 import { WorkStationPanel } from "./WorkStationPanel";
 import { MemoPanel } from "./MemoPanel";
@@ -16,8 +16,14 @@ import type {
   MemoFolderItem,
   MemoItem,
   ProjectSummary,
+  TaggedItem,
   TaskItem,
 } from "./types";
+
+const TAGGED_KIND_META: Record<TaggedItem["kind"], { icon: string; label: string }> = {
+  request: { icon: "📨", label: "요청/작업" },
+  log: { icon: "🗂️", label: "기록" },
+};
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -32,6 +38,10 @@ const ROLE_LABEL: Record<Role, string> = {
   CLIENT: "클라이언트",
 };
 
+function nowMs() {
+  return Date.now();
+}
+
 export function StaffHome({
   currentUser,
   initialTasks,
@@ -39,6 +49,7 @@ export function StaffHome({
   initialMemos,
   initialFolders,
   myProjects,
+  taggedItems: initialTaggedItems,
 }: {
   currentUser: { id: string; name: string | null; email: string; role: Role };
   initialTasks: TaskItem[];
@@ -46,168 +57,234 @@ export function StaffHome({
   initialMemos: MemoItem[];
   initialFolders: MemoFolderItem[];
   myProjects: ProjectSummary[];
+  taggedItems: TaggedItem[];
 }) {
   const [tasks, setTasks] = useState(initialTasks);
+  const [events, setEvents] = useState(initialEvents);
+  const [taggedItems, setTaggedItems] = useState(initialTaggedItems);
   const displayName = currentUser.name ?? currentUser.email;
   const initial = displayName.charAt(0).toUpperCase();
 
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const res = await fetch("/api/dashboard/home");
+      if (!res.ok) return;
+      const data = await res.json();
+      setTasks(data.tasks);
+      setEvents(data.events);
+      setTaggedItems(data.taggedItems);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const myTasks = tasks.filter((t) => t.assignee.id === currentUser.id);
+  const doneCount = myTasks.filter((t) => t.status === "DONE").length;
+  const openCount = myTasks.length - doneCount;
+  const upcomingEvents = events.filter(
+    (e) => new Date(e.startAt).getTime() >= nowMs()
+  ).length;
+
+  const activeProjects = myProjects.filter((p) => p.status !== "DONE");
+  const doneProjects = myProjects.filter((p) => p.status === "DONE");
+
   return (
     <div
-      className={`${dmSans.className} relative flex min-h-screen flex-col justify-between text-white`}
+      className={`${dmSans.className} relative flex min-h-screen flex-col text-white`}
     >
       <ParticleBackground />
-      <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-white/10 bg-black/20 px-4 backdrop-blur-xl md:px-10">
-        <div className="flex shrink-0 items-center gap-3 md:gap-6">
-          <div
-            className={`${bebasNeue.className} cursor-pointer border-r border-white/10 pr-3 text-xl tracking-widest text-white transition-all hover:opacity-60 md:pr-5`}
-          >
-            LOIND
-          </div>
-          <div className="flex gap-1 md:gap-2">
-            <button className="cursor-pointer rounded-sm bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 md:px-4">
-              홈
-            </button>
-            <Link
-              href="/dashboard/projects"
-              className="cursor-pointer rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
+      <div className="relative z-10 flex min-h-screen flex-col justify-between">
+        <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-white/10 bg-black/30 px-4 backdrop-blur-2xl md:px-10">
+          <div className="flex min-w-0 shrink-0 items-center gap-3 md:gap-6">
+            <div
+              className={`${bebasNeue.className} shrink-0 cursor-pointer border-r border-white/10 pr-3 text-xl tracking-widest text-white transition-all hover:opacity-60 md:pr-5`}
             >
-              프로젝트
-            </Link>
-            {currentUser.role === "SUPER_ADMIN" && (
+              LOIND
+            </div>
+            <div className="flex shrink-0 gap-1 md:gap-2">
+              <button className="cursor-pointer whitespace-nowrap rounded-sm bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 md:px-4">
+                홈
+              </button>
               <Link
-                href="/admin"
-                className="cursor-pointer rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
+                href="/dashboard/projects"
+                className="cursor-pointer whitespace-nowrap rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
               >
-                관리자
+                프로젝트
               </Link>
-            )}
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2 md:gap-5">
-          <div className="hidden items-center gap-2 border-r border-white/10 pr-5 text-xs lg:flex">
-            <span className="text-sm">☀️</span>
-            <span className="font-bold text-white/90">Seoul</span>
-            <span className="text-white/60">16° / 23°</span>
-          </div>
-
-          <div className="hidden md:block">
-            <MusicWidget />
-          </div>
-
-          <div className="flex items-center gap-2 border-l border-white/10 pl-3 md:gap-3 md:pl-5">
-            <div className="hidden flex-col text-right leading-tight sm:flex">
-              <span className="text-xs font-bold text-white">
-                {displayName}
-              </span>
-              <span className="font-mono text-[10px] text-white/50">
-                {ROLE_LABEL[currentUser.role]}
-              </span>
-            </div>
-            <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1 text-xs font-medium text-white/80 xl:flex">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-              워크스테이션 가동 중
-            </div>
-            <Link
-              href="/dashboard/settings"
-              className="hidden cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white sm:block"
-            >
-              설정
-            </Link>
-            <button
-              onClick={() => signOut({ redirectTo: "/login" })}
-              className="cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
-            >
-              로그아웃
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <div className="w-full px-6 pb-3 pt-10 md:px-10">
-        <h2
-          className={`${bebasNeue.className} text-4xl font-light leading-none tracking-widest text-white/90 md:text-5xl`}
-        >
-          LOIND CORPORATION
-        </h2>
-        <div className="glass-panel mt-5 flex max-w-lg items-center gap-3 rounded-xl p-2.5">
-          <span className="border-r border-white/10 px-3 font-mono text-xs font-bold uppercase tracking-wider text-white/40">
-            Quick Links
-          </span>
-          <div className="flex items-center gap-2 pl-1">
-            {["🌐", "🖥️", "📄", "📷"].map((icon) => (
-              <a
-                key={icon}
-                href="#"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-sm text-white transition-all hover:bg-white/15"
-              >
-                {icon}
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <main className="mb-16 grid w-full flex-1 grid-cols-1 items-start gap-8 px-6 py-5 md:mb-6 md:px-10 lg:grid-cols-12">
-        <div className="glass-panel flex flex-col gap-6 rounded-2xl p-7 shadow-2xl lg:col-span-8">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4 font-mono">
-            <div className="flex items-center gap-2.5 text-xs font-bold tracking-widest text-emerald-400">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-              LOIND FLOW STATION v2.5
-            </div>
-            <div className="text-xs tracking-widest text-white/40">
-              {new Date().toLocaleDateString("en-US", {
-                month: "short",
-                day: "2-digit",
-                year: "numeric",
-              })}
+              {currentUser.role === "SUPER_ADMIN" && (
+                <Link
+                  href="/admin"
+                  className="cursor-pointer whitespace-nowrap rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
+                >
+                  관리자
+                </Link>
+              )}
             </div>
           </div>
 
-          <div className="grid min-h-[460px] grid-cols-1 gap-y-8 divide-y divide-white/10 md:grid-cols-3 md:gap-y-0 md:divide-x md:divide-y-0">
-            <CalendarPanel initialEvents={initialEvents} tasks={tasks} myProjects={myProjects} />
-            <WorkStationPanel
-              tasks={tasks}
-              onTasksChange={setTasks}
-              currentUserId={currentUser.id}
-              myProjects={myProjects}
-            />
-            <MemoPanel
-              initialMemos={initialMemos}
-              initialFolders={initialFolders}
-            />
+          <div className="flex shrink-0 items-center gap-2.5 md:gap-4">
+            <div className="hidden md:block">
+              <MusicWidget />
+            </div>
+            <UserMenu name={displayName} roleLabel={ROLE_LABEL[currentUser.role]} />
+          </div>
+        </nav>
+
+        <div className="w-full px-6 pb-3 pt-10 md:px-10">
+          <h2
+            className={`${bebasNeue.className} text-4xl font-light leading-none tracking-widest text-white/90 md:text-5xl`}
+          >
+            LOIND CORPORATION
+          </h2>
+          <div className="glass-panel mt-5 flex max-w-lg items-center gap-3 rounded-xl p-2.5">
+            <span className="border-r border-white/10 px-3 font-mono text-xs font-bold uppercase tracking-wider text-white/40">
+              Quick Links
+            </span>
+            <div className="flex items-center gap-2 pl-1">
+              {["🌐", "🖥️", "📄", "📷"].map((icon) => (
+                <a
+                  key={icon}
+                  href="#"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-sm text-white transition-all hover:bg-white/15"
+                >
+                  {icon}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="glass-panel flex h-full min-h-[536px] flex-col items-center justify-center rounded-2xl p-8 text-center shadow-2xl lg:col-span-4">
-          <div className="flex w-full flex-col items-center gap-5">
-            <div className="group relative">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-emerald-400 to-blue-500 opacity-40 blur-md transition-all duration-500 group-hover:opacity-70" />
-              <div className="relative z-10 flex h-32 w-32 items-center justify-center rounded-full border-2 border-white/20 bg-black/40 shadow-inner">
-                <span className={`${bebasNeue.className} text-5xl text-white/80`}>
-                  {initial}
-                </span>
+        <main className="mb-16 grid w-full flex-1 grid-cols-1 items-start gap-8 px-6 py-5 md:mb-6 md:px-10 lg:grid-cols-12">
+          <div className="glass-panel flex flex-col gap-6 rounded-2xl p-7 shadow-2xl lg:col-span-8">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4 font-mono">
+              <div className="flex items-center gap-2.5 text-xs font-bold tracking-widest text-brand-light">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-brand-light shadow-[0_0_8px_rgba(143,168,196,0.6)]" />
+                LOIND FLOW STATION
               </div>
-              <span className="absolute bottom-1 right-2 z-20 h-4 w-4 animate-pulse rounded-full border-2 border-slate-900 bg-emerald-400" />
-            </div>
-
-            <div className="mt-2 flex flex-col gap-1">
-              <h3 className="text-2xl font-bold tracking-tight text-white/95">
-                {displayName}
-              </h3>
               <div
-                className={`${bebasNeue.className} text-sm tracking-widest text-emerald-400`}
+                className="text-xs tracking-widest text-white/40"
+                suppressHydrationWarning
               >
-                {ROLE_LABEL[currentUser.role].toUpperCase()}
-              </div>
-              <div className="mt-1 rounded-full border border-white/5 bg-white/5 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-white/40">
-                LOIND CORE TEAM
+                {new Date().toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "2-digit",
+                  year: "numeric",
+                })}
               </div>
             </div>
 
-            <div className="my-2 w-full border-t border-white/10" />
+            <div className="grid min-h-[460px] grid-cols-1 gap-y-8 divide-y divide-white/10 md:grid-cols-3 md:gap-y-0 md:divide-x md:divide-y-0">
+              <CalendarPanel initialEvents={events} tasks={tasks} myProjects={myProjects} />
+              <WorkStationPanel
+                tasks={tasks}
+                onTasksChange={setTasks}
+                currentUserId={currentUser.id}
+                myProjects={myProjects}
+              />
+              <MemoPanel
+                initialMemos={initialMemos}
+                initialFolders={initialFolders}
+              />
+            </div>
+          </div>
 
-            <div className="flex w-full flex-col gap-2.5">
+          <div className="glass-panel flex h-full flex-col gap-6 rounded-2xl p-7 shadow-2xl lg:col-span-4">
+            <div className="flex items-center gap-4">
+              <div className="group relative shrink-0">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-light to-brand opacity-50 blur-md transition-all duration-500 group-hover:opacity-80" />
+                <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/20 bg-black/40 shadow-inner">
+                  <span className={`${bebasNeue.className} text-2xl text-white/80`}>
+                    {initial}
+                  </span>
+                </div>
+                <span className="absolute bottom-0.5 right-0.5 z-20 h-3 w-3 animate-pulse rounded-full border-2 border-slate-900 bg-brand-light" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-lg font-bold tracking-tight text-white/95">
+                  {displayName}
+                </h3>
+                <div
+                  className={`${bebasNeue.className} text-xs tracking-widest text-brand-light`}
+                >
+                  {ROLE_LABEL[currentUser.role].toUpperCase()}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2.5 border-y border-white/10 py-4">
+              <div className="text-center">
+                <div className={`${bebasNeue.className} text-2xl text-white/90`}>
+                  {openCount}
+                </div>
+                <div className="mt-0.5 font-mono text-[9px] uppercase tracking-wider text-white/35">
+                  진행 업무
+                </div>
+              </div>
+              <div className="text-center">
+                <div className={`${bebasNeue.className} text-2xl text-brand-light`}>
+                  {doneCount}
+                </div>
+                <div className="mt-0.5 font-mono text-[9px] uppercase tracking-wider text-white/35">
+                  완료
+                </div>
+              </div>
+              <div className="text-center">
+                <div className={`${bebasNeue.className} text-2xl text-white/90`}>
+                  {upcomingEvents}
+                </div>
+                <div className="mt-0.5 font-mono text-[9px] uppercase tracking-wider text-white/35">
+                  예정 일정
+                </div>
+              </div>
+            </div>
+
+            {taggedItems.length > 0 && (
+              <div>
+                <div className="mb-2 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest text-white/30">
+                  🏷️ 내게 배정된 항목
+                  <span className="rounded-full border border-brand-light/30 bg-brand-light/10 px-1.5 py-0.5 text-[9px] font-bold text-brand-light">
+                    {taggedItems.length}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {taggedItems.slice(0, 4).map((item) => (
+                    <Link
+                      key={`${item.kind}-${item.id}`}
+                      href={`/dashboard/projects?project=${item.projectId}`}
+                      className="flex items-center gap-2 rounded-lg border border-brand-light/10 bg-brand-light/5 px-3 py-2 text-xs font-medium text-white/70 transition-all hover:bg-brand-light/10 hover:text-white"
+                    >
+                      <span className="shrink-0">{TAGGED_KIND_META[item.kind].icon}</span>
+                      <span className="min-w-0 flex-1 truncate">{item.title}</span>
+                      <span className="shrink-0 font-mono text-[9px] text-white/30">
+                        {item.projectName}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeProjects.length > 0 && (
+              <div>
+                <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-white/30">
+                  배정 프로젝트 · 진행중 {activeProjects.length}
+                  {doneProjects.length > 0 && ` · 완료 ${doneProjects.length}`}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {activeProjects.slice(0, 4).map((p) => (
+                    <Link
+                      key={p.id}
+                      href={`/dashboard/projects?project=${p.id}`}
+                      className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/5 px-3 py-2 text-xs font-medium text-white/70 transition-all hover:bg-white/10 hover:text-white"
+                    >
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                      <span className="truncate">{p.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-auto flex flex-col gap-2.5">
               <Link
                 href="/dashboard/projects"
                 className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/70 transition-all hover:bg-white/10 hover:text-white"
@@ -220,16 +297,10 @@ export function StaffHome({
               >
                 <span>⚙️</span> 계정 설정
               </Link>
-              <button
-                onClick={() => signOut({ redirectTo: "/login" })}
-                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-2.5 text-xs font-semibold text-red-400/70 transition-all hover:bg-red-400/15 hover:text-red-300"
-              >
-                <span>→</span> 로그아웃
-              </button>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

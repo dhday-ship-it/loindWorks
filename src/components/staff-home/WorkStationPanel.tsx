@@ -201,7 +201,7 @@ export function WorkStationPanel({
                 max={31}
                 value={dueDay}
                 onChange={(e) => setDueDay(Number(e.target.value))}
-                className="w-full border-none bg-transparent font-bold text-emerald-400 outline-none"
+                className="w-full border-none bg-transparent font-bold text-brand-light outline-none"
               />
             </div>
           </div>
@@ -246,7 +246,7 @@ export function WorkStationPanel({
       <div className="max-h-[250px] flex-1 space-y-1.5 overflow-y-auto pr-1">
         {visible.length === 0 && (
           <div className="select-none py-5 text-center text-xs text-white/20">
-            No active tasks in this scope
+            표시할 업무가 없습니다.
           </div>
         )}
         {visible.map((t) => {
@@ -279,7 +279,7 @@ export function WorkStationPanel({
                       </span>
                     )}
                     {t.dueDate && (
-                      <span className="rounded border border-emerald-500/10 bg-emerald-500/5 px-1 font-mono text-[9px] font-medium text-emerald-400">
+                      <span className="rounded border border-brand-light/15 bg-brand-light/5 px-1 font-mono text-[9px] font-medium text-brand-light">
                         📅 {fmtDay(t.startDate)}일 ~ {fmtDay(t.dueDate)}일
                       </span>
                     )}
@@ -314,7 +314,7 @@ export function WorkStationPanel({
       <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3">
         <div className="mr-3 h-1 flex-1 overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full bg-gradient-to-r from-emerald-400 to-blue-500 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-brand-light to-brand transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>

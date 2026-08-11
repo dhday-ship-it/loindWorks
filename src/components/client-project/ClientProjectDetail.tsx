@@ -1,14 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
 import { Bebas_Neue, DM_Sans } from "next/font/google";
 
 import type { LogType, ProjectStatus } from "@/generated/prisma/enums";
 import { ParticleBackground } from "@/components/ParticleBackground";
+import { UserMenu } from "@/components/nav/UserMenu";
 import { progressPercent } from "@/lib/project-progress";
-import { colorForId, type Person, type ProjectDetail, type ProjectRequestItem } from "@/components/staff-projects/types";
+import { fmtFileSize, uploadFile } from "@/lib/file-format";
+import { colorForId, type Person, type ProjectDetail, type ProjectFileItem, type ProjectRequestItem } from "@/components/staff-projects/types";
+
+function AttachmentList({ files }: { files: ProjectFileItem[] }) {
+  if (files.length === 0) return null;
+  return (
+    <div className="mb-2 flex flex-wrap gap-1.5">
+      {files.map((f) => (
+        <a
+          key={f.id}
+          href={f.url}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 py-1 font-mono text-[10px] text-white/55 transition-all hover:bg-white/10 hover:text-white"
+        >
+          📎 {f.name}
+          <span className="text-white/25">{fmtFileSize(f.size)}</span>
+        </a>
+      ))}
+    </div>
+  );
+}
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -68,11 +89,30 @@ export function ClientProjectDetail({
   currentUser: Person;
 }) {
   const [project, setProject] = useState(initialProject);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/projects/${initialProject.id}`);
+      if (res.ok) {
+        const { project: detail } = await res.json();
+        setProject(detail);
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [initialProject.id]);
   const [leftTab, setLeftTab] = useState<"brief" | "info">("brief");
   const [showCompose, setShowCompose] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [commentDraft, setCommentDraft] = useState<Record<string, string>>({});
+  const [pendingFiles, setPendingFiles] = useState<
+    { name: string; url: string; size: number; mimeType: string | null }[]
+  >([]);
+  const [uploading, setUploading] = useState(false);
+  const [selectedAssignees, setSelectedAssignees] = useState<Set<string>>(
+    new Set()
+  );
 
   const total = project.phases.length;
   const current = project.currentPhase;
@@ -96,7 +136,12 @@ export function ClientProjectDetail({
     const res = await fetch(`/api/projects/${project.id}/requests`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, body }),
+      body: JSON.stringify({
+        title,
+        body,
+        attachments: pendingFiles,
+        assigneeUserIds: [...selectedAssignees],
+      }),
     });
     setSubmitting(false);
     if (res.ok) {
@@ -104,8 +149,76 @@ export function ClientProjectDetail({
       setProject((prev) => ({ ...prev, requests: [request, ...prev.requests] }));
       setTitle("");
       setBody("");
+      setPendingFiles([]);
+      setSelectedAssignees(new Set());
       setShowCompose(false);
     }
+  };
+
+  const handleFileSelect = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(fileList)) {
+        const uploaded = await uploadFile(file, project.id);
+        setPendingFiles((prev) => [...prev, uploaded]);
+      }
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "업로드에 실패했습니다.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePendingFile = (url: string) => {
+    setPendingFiles((prev) => prev.filter((f) => f.url !== url));
+  };
+
+  const toggleAssignee = (id: string) => {
+    setSelectedAssignees((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const sendComment = async (requestId: string, assigneeId: string) => {
+    const text = (commentDraft[requestId] ?? "").trim();
+    if (!text) return;
+
+    const optimistic = {
+      authorId: currentUser.id,
+      authorName: currentUser.name ?? currentUser.email,
+      text,
+      createdAt: new Date().toISOString(),
+    };
+
+    setProject((prev) => ({
+      ...prev,
+      requests: prev.requests.map((r) =>
+        r.id !== requestId
+          ? r
+          : {
+              ...r,
+              assignees: r.assignees.map((a) =>
+                a.id === assigneeId
+                  ? { ...a, comments: [...a.comments, optimistic] }
+                  : a
+              ),
+            }
+      ),
+    }));
+    setCommentDraft((prev) => ({ ...prev, [requestId]: "" }));
+
+    await fetch(
+      `/api/projects/${project.id}/requests/${requestId}/assignees/${assigneeId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment: text }),
+      }
+    );
   };
 
   return (
@@ -113,59 +226,42 @@ export function ClientProjectDetail({
       className={`${dmSans.className} relative flex h-screen flex-col overflow-hidden text-white`}
     >
       <ParticleBackground />
+      <div className="relative z-10 flex h-screen flex-col overflow-hidden">
       <nav className="flex h-14 w-full shrink-0 items-center border-b border-white/10 bg-black/40 backdrop-blur-2xl">
-        <div className="flex h-full items-center gap-3.5 border-r border-white/10 px-6">
+        <div className="flex h-full shrink-0 items-center gap-3.5 border-r border-white/10 px-6">
           <span className={`${bebasNeue.className} text-xl tracking-widest text-white/95`}>
             LOIND
           </span>
           <div className="h-3.5 w-px bg-white/15" />
-          <span className="font-mono text-[9px] uppercase tracking-widest text-white/35">
+          <span className="hidden font-mono text-[9px] uppercase tracking-widest text-white/35 sm:inline">
             Client Portal
           </span>
         </div>
 
-        <div className="flex h-full items-center gap-3.5 border-r border-white/10 px-6">
+        <div className="flex h-full min-w-0 items-center gap-3.5 border-r border-white/10 px-6">
           <Link
             href="/dashboard"
-            className="flex cursor-pointer items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-white/50 transition-all hover:bg-white/10 hover:text-white"
+            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-white/50 transition-all hover:bg-white/10 hover:text-white"
           >
             ← 홈으로
           </Link>
-          <div className="h-3.5 w-px bg-white/10" />
-          <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-            <span className={`${bebasNeue.className} text-base tracking-wider text-white`}>
+          <div className="hidden h-3.5 w-px bg-white/10 sm:block" />
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-brand-light" />
+            <span className={`${bebasNeue.className} truncate text-base tracking-wider text-white`}>
               {project.name}
             </span>
-            <span className="rounded-full border border-blue-400/25 bg-blue-400/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-blue-300">
+            <span className="shrink-0 rounded-full border border-brand-light/25 bg-brand-light/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-brand-light">
               {STATUS_LABEL[project.status]}
             </span>
           </div>
         </div>
 
-        <div className="ml-auto flex h-full items-center gap-2.5 border-l border-white/10 px-5">
-          <div className="text-right leading-tight">
-            <div className="text-xs font-semibold text-white">
-              {currentUser.name ?? currentUser.email}
-            </div>
-          </div>
-          <div className="flex h-7.5 w-7.5 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-400/15">
-            <span className="text-[11px] font-bold text-emerald-400">
-              {(currentUser.name ?? currentUser.email).charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <Link
-            href="/dashboard/settings"
-            className="hidden cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white sm:block"
-          >
-            설정
-          </Link>
-          <button
-            onClick={() => signOut({ redirectTo: "/login" })}
-            className="cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
-          >
-            로그아웃
-          </button>
+        <div className="ml-auto flex h-full shrink-0 items-center px-5">
+          <UserMenu
+            name={currentUser.name ?? currentUser.email}
+            roleLabel="클라이언트"
+          />
         </div>
       </nav>
 
@@ -211,7 +307,7 @@ export function ClientProjectDetail({
                             i < current
                               ? "flex items-center gap-2 opacity-40"
                               : i === current
-                                ? "flex items-center gap-2 rounded-lg border border-blue-400/22 bg-blue-400/10 px-2.5 py-1.5"
+                                ? "flex items-center gap-2 rounded-lg border border-brand-light/22 bg-brand-light/10 px-2.5 py-1.5"
                                 : "flex items-center gap-2 opacity-28"
                           }
                         >
@@ -220,7 +316,7 @@ export function ClientProjectDetail({
                               i < current
                                 ? "bg-emerald-300"
                                 : i === current
-                                  ? "animate-pulse bg-blue-400"
+                                  ? "animate-pulse bg-brand-light"
                                   : "bg-white/25"
                             }`}
                           />
@@ -236,7 +332,7 @@ export function ClientProjectDetail({
                             {String(i + 1).padStart(2, "0")}. {phase}
                           </span>
                           {i === current && (
-                            <span className="ml-auto font-mono text-[10px] font-bold text-blue-300">
+                            <span className="ml-auto font-mono text-[10px] font-bold text-brand-light">
                               {current + 1} / {total}
                             </span>
                           )}
@@ -251,11 +347,11 @@ export function ClientProjectDetail({
                 <div>
                   <div className="mb-1.5 flex justify-between font-mono text-[9px] uppercase tracking-widest text-white/32">
                     <span>전체 진행률</span>
-                    <span className="text-[13px] font-bold text-blue-300">{progressPct}%</span>
+                    <span className="text-[13px] font-bold text-brand-light">{progressPct}%</span>
                   </div>
                   <div className="h-1 overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-200"
+                      className="h-full rounded-full bg-gradient-to-r from-brand-light to-brand"
                       style={{ width: `${progressPct}%` }}
                     />
                   </div>
@@ -418,30 +514,94 @@ export function ClientProjectDetail({
             </div>
             <button
               onClick={() => setShowCompose((v) => !v)}
-              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-emerald-500/22 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-bold text-emerald-400 transition-all hover:bg-emerald-500/20"
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-brand-light/25 bg-brand-light/10 px-3 py-1.5 text-[11px] font-bold text-brand-light transition-all hover:bg-brand-light/20"
             >
               + 새 요청
             </button>
           </div>
 
           {showCompose && (
-            <div className="animate-fade-up flex flex-col gap-2 border-b border-white/10 bg-emerald-500/[0.03] px-4.5 py-3.5">
+            <div className="animate-fade-up flex flex-col gap-2 border-b border-white/10 bg-brand-light/[0.04] px-4.5 py-3.5">
               <div className="font-mono text-[9px] uppercase tracking-widest text-white/35">
                 새 요청사항 작성
               </div>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none placeholder:text-white/20 focus:border-emerald-400/40"
+                className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none placeholder:text-white/20 focus:border-brand-light/40"
                 placeholder="요청 제목을 입력하세요..."
               />
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 rows={3}
-                className="resize-none rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs leading-relaxed text-white outline-none placeholder:text-white/20 focus:border-emerald-400/40"
+                className="resize-none rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs leading-relaxed text-white outline-none placeholder:text-white/20 focus:border-brand-light/40"
                 placeholder="자세한 내용을 입력하세요..."
               />
+              {team.length > 0 && (
+                <div>
+                  <div className="mb-1 font-mono text-[9px] uppercase tracking-widest text-white/30">
+                    담당자 지정 (선택하지 않으면 PM에게 전달됩니다)
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {team.map(({ user }) => {
+                      const isSel = selectedAssignees.has(user.id);
+                      return (
+                        <div
+                          key={user.id}
+                          onClick={() => toggleAssignee(user.id)}
+                          className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] font-medium transition-all ${
+                            isSel
+                              ? "border-brand-light bg-brand-light text-slate-900"
+                              : "border-white/10 bg-white/5 text-white/50 hover:text-white"
+                          }`}
+                        >
+                          <div
+                            className="flex h-3.5 w-3.5 items-center justify-center rounded-full text-[7px] font-bold text-white"
+                            style={{ background: colorForId(user.id) }}
+                          >
+                            {(user.name ?? user.email).slice(0, 2).toUpperCase()}
+                          </div>
+                          <span>{user.name ?? user.email}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <label className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[10px] font-medium text-white/45 transition-all hover:text-white">
+                  {uploading ? "업로드 중..." : "📎 파일 첨부"}
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={(e) => {
+                      handleFileSelect(e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {pendingFiles.length > 0 && (
+                  <div className="flex flex-wrap justify-end gap-1.5">
+                    {pendingFiles.map((f) => (
+                      <span
+                        key={f.url}
+                        className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 py-1 font-mono text-[10px] text-white/55"
+                      >
+                        {f.name}
+                        <button
+                          onClick={() => removePendingFile(f.url)}
+                          className="cursor-pointer text-white/30 hover:text-red-400"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="flex justify-end gap-1.5">
                 <button
                   onClick={() => setShowCompose(false)}
@@ -452,7 +612,7 @@ export function ClientProjectDetail({
                 <button
                   onClick={submitRequest}
                   disabled={submitting || !body.trim()}
-                  className="cursor-pointer rounded-lg border border-emerald-500/32 bg-emerald-500/15 px-4 py-1.5 text-[11px] font-bold text-emerald-400 transition-all hover:bg-emerald-500/25 disabled:opacity-50"
+                  className="cursor-pointer rounded-lg border border-brand-light/35 bg-brand-light/15 px-4 py-1.5 text-[11px] font-bold text-brand-light transition-all hover:bg-brand-light/25 disabled:opacity-50"
                 >
                   전달하기 →
                 </button>
@@ -469,12 +629,19 @@ export function ClientProjectDetail({
             {project.requests.map((r) => {
               const badge = requestBadge(r, currentUser.id);
               const isMine = r.author.id === currentUser.id;
+              const primaryAssignee = r.assignees[0] ?? null;
+              const allComments = r.assignees
+                .flatMap((a) => a.comments)
+                .sort(
+                  (a, b) =>
+                    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                );
               return (
                 <div
                   key={r.id}
                   className={`rounded-xl border p-3.5 ${
                     isMine
-                      ? "border-emerald-500/15 bg-emerald-500/[0.04]"
+                      ? "border-brand-light/15 bg-brand-light/[0.04]"
                       : "border-white/6 bg-white/5"
                   }`}
                 >
@@ -507,6 +674,61 @@ export function ClientProjectDetail({
                   <div className="whitespace-pre-wrap text-xs leading-relaxed text-white/58">
                     {r.body}
                   </div>
+
+                  <AttachmentList files={r.files} />
+
+                  <div className="mt-2.5 flex flex-col gap-2 border-t border-white/8 pt-2.5">
+                    {allComments.length > 0 && (
+                      <div className="flex flex-col gap-1.5">
+                        {allComments.map((c, i) => (
+                          <div key={i} className="flex items-start gap-2 text-xs">
+                            <div
+                              className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[7px] font-bold text-white"
+                              style={{ background: colorForId(c.authorId) }}
+                            >
+                              {c.authorName.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1 rounded-lg border border-white/5 bg-black/20 px-2.5 py-1">
+                              <div className="mb-0.5 text-[10px] font-bold text-white/85">
+                                {c.authorName}
+                                <span className="ml-1 font-mono text-[9px] font-normal text-white/25">
+                                  {timeAgo(c.createdAt)}
+                                </span>
+                              </div>
+                              <div className="break-all leading-relaxed text-white/65">
+                                {c.text}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {primaryAssignee ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={commentDraft[r.id] ?? ""}
+                          onChange={(e) =>
+                            setCommentDraft((prev) => ({ ...prev, [r.id]: e.target.value }))
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") sendComment(r.id, primaryAssignee.id);
+                          }}
+                          className="flex-1 rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5 text-xs text-white outline-none placeholder:text-white/20 focus:border-brand-light/40"
+                          placeholder="댓글 남기기..."
+                        />
+                        <button
+                          onClick={() => sendComment(r.id, primaryAssignee.id)}
+                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-brand-light text-xs text-slate-900"
+                        >
+                          ➤
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="font-mono text-[10px] text-white/25">
+                        담당자가 배정되면 댓글을 남길 수 있습니다.
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -519,9 +741,29 @@ export function ClientProjectDetail({
             <div className="mb-2.5 font-mono text-[9px] uppercase tracking-widest text-white/35">
               결과물 · 파일
             </div>
-            <div className="rounded-lg border border-dashed border-white/10 bg-black/15 py-6 text-center font-mono text-[10px] text-white/25">
-              아직 등록된 파일이 없습니다.
-            </div>
+            {project.files.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-white/10 bg-black/15 py-6 text-center font-mono text-[10px] text-white/25">
+                아직 등록된 파일이 없습니다.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {project.files.map((f) => (
+                  <a
+                    key={f.id}
+                    href={f.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-white/6 bg-white/5 px-2.5 py-2 text-[11px] text-white/65 transition-all hover:bg-white/10 hover:text-white"
+                  >
+                    <span>📎</span>
+                    <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                    <span className="shrink-0 font-mono text-[9px] text-white/30">
+                      {fmtFileSize(f.size)}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="border-b border-white/10 px-4 py-3">
@@ -556,6 +798,7 @@ export function ClientProjectDetail({
                       {log.body && (
                         <div className="text-[10px] leading-relaxed text-white/45">{log.body}</div>
                       )}
+                      <AttachmentList files={log.files} />
                       <div className="mt-1.5 font-mono text-[9px] text-white/28">
                         {log.author.name ?? log.author.email}
                         {log.logDate && ` · ${fmtDate(log.logDate)}`}
@@ -567,6 +810,7 @@ export function ClientProjectDetail({
             })}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

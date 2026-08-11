@@ -26,7 +26,14 @@ const ORBS: Orb[] = [
   { nx: 0.5, ny: 0.48, r: 0.2, alpha: 0.06, speed: 0.0006, phase: 3.5 },
 ];
 
-export function ParticleBackground() {
+export function ParticleBackground({
+  rgb = "85,104,155",
+  bg = "#0e1116",
+}: {
+  /** "r,g,b" string used for the glowing orbs */
+  rgb?: string;
+  bg?: string;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -56,7 +63,7 @@ export function ParticleBackground() {
     const draw = () => {
       const W = canvas.width;
       const H = canvas.height;
-      ctx.fillStyle = "#0b0f19";
+      ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
 
       for (const o of ORBS) {
@@ -65,8 +72,8 @@ export function ParticleBackground() {
         const py = (o.ny + Math.cos(t + o.phase * 0.7) * 0.08) * H;
         const r = o.r * Math.min(W, H);
         const gradient = ctx.createRadialGradient(px, py, 0, px, py, r);
-        gradient.addColorStop(0, `rgba(52,211,153,${o.alpha})`);
-        gradient.addColorStop(1, "rgba(52,211,153,0)");
+        gradient.addColorStop(0, `rgba(${rgb},${o.alpha})`);
+        gradient.addColorStop(1, `rgba(${rgb},0)`);
         ctx.beginPath();
         ctx.arc(px, py, r, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
@@ -95,7 +102,7 @@ export function ParticleBackground() {
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, [rgb, bg]);
 
   return (
     <canvas

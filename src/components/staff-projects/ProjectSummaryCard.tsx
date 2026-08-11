@@ -12,7 +12,7 @@ const STATUS_LABEL: Record<ProjectDetail["status"], string> = {
 const STATUS_BADGE_CLASS: Record<ProjectDetail["status"], string> = {
   PENDING: "bg-white text-slate-900",
   IN_PROGRESS:
-    "border border-emerald-500/20 bg-emerald-500/5 text-emerald-400",
+    "border border-brand-light/25 bg-brand-light/8 text-brand-light",
   DONE: "border border-white/20 bg-white/5 text-white/60",
 };
 
@@ -106,7 +106,7 @@ export function ProjectSummaryCard({
                   i < current || project.status === "DONE"
                     ? "bg-white"
                     : i === current
-                      ? "relative bg-gradient-to-r from-emerald-400 to-teal-400"
+                      ? "relative bg-gradient-to-r from-brand-light to-brand"
                       : "bg-white/10"
                 }`}
               >
@@ -180,7 +180,7 @@ export function ProjectSummaryCard({
                 i < current || project.status === "DONE"
                   ? "bg-white/30"
                   : i === current
-                    ? "animate-pulse bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.4)]"
+                    ? "animate-pulse bg-brand-light shadow-[0_0_6px_rgba(143,168,196,0.5)]"
                     : "bg-white/10"
               }`}
             />

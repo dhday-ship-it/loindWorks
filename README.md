@@ -49,7 +49,6 @@ npm run dev
 | `/dashboard` | 로그인한 사용자 페이지 — `STAFF`/`SUPER_ADMIN`은 LOIND FLOW STATION(캘린더+업무+메모), `CLIENT`는 배정된 프로젝트 목록(My Workspace), 그 외는 기본 페이지 |
 | `/dashboard/client/[id]` | `CLIENT` 전용 프로젝트 상세 — 진행 단계/진행률, 요청사항(열람+새 요청 작성), 결과물(자리만, 파일 업로드는 미구현), 히스토리 로그(열람 전용) |
 | `/admin` | `SUPER_ADMIN`만 접근 가능한 관리자 페이지 (사용자/고객사/프로젝트 관리) |
-| `/api/register` | 계정 생성 (관리자/스크립트용, 공개 가입 UI는 없음) |
 | `/api/contact` | 프로젝트 문의 접수 (`ContactRequest` 테이블에 저장) |
 | `/api/tasks`, `/api/tasks/[id]` | 업무 생성/조회, 상태 변경·삭제 (`STAFF`/`SUPER_ADMIN` 전용) |
 | `/api/calendar-events`, `/api/calendar-events/[id]` | 팀 공유 캘린더 일정 (`STAFF`/`SUPER_ADMIN` 전용) |

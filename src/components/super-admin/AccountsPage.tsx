@@ -150,7 +150,7 @@ export function AccountsPage({
                 <tr key={u.id}>
                   <td>
                     <div className="flex items-center gap-2">
-                      <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-emerald-400/26 bg-emerald-400/14 text-[10px] font-bold text-emerald-400">
+                      <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-brand-light/30 bg-brand-light/14 text-[10px] font-bold text-brand-light">
                         {initial(u)}
                       </div>
                       <span className="font-semibold text-white">

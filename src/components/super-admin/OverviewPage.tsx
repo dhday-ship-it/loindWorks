@@ -71,7 +71,7 @@ export function OverviewPage({
           <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
             고객사
           </div>
-          <div className="my-1 text-3xl tracking-wide text-emerald-300">
+          <div className="my-1 text-3xl tracking-wide text-brand-light">
             {stats.companyCount}
           </div>
           <div className="mt-1 font-mono text-[10px] text-white/28">
@@ -96,7 +96,7 @@ export function OverviewPage({
           <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
             미확인 문의
           </div>
-          <div className="my-1 text-3xl tracking-wide text-purple-300">
+          <div className="my-1 text-3xl tracking-wide text-brand-light">
             {unhandledContacts}
           </div>
           <div className="mt-1 font-mono text-[10px] text-white/28">
