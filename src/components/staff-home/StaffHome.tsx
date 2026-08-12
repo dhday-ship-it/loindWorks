@@ -10,7 +10,7 @@ import { UserMenu } from "@/components/nav/UserMenu";
 import { CalendarPanel } from "@/components/calendar/CalendarPanel";
 import { WorkStationPanel } from "./WorkStationPanel";
 import { MemoPanel } from "./MemoPanel";
-import { ProjectContent } from "@/components/staff-projects/ProjectContent";
+import { ProjectTaskList } from "@/components/ProjectTaskList";
 import { MusicWidget } from "./MusicWidget";
 import type {
   CalendarEventItem,
@@ -113,7 +113,7 @@ export function StaffHome({
                 홈
               </button>
               <Link
-                href="/dashboard/projects"
+                href="/dashboard"
                 className="cursor-pointer whitespace-nowrap rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
               >
                 프로젝트
@@ -215,7 +215,7 @@ export function StaffHome({
             )}
             <div className="mt-auto pt-4">
               <Link
-                href="/dashboard/projects"
+                href="/dashboard"
                 className="flex items-center gap-2 rounded-lg border border-dashed border-white/10 px-3 py-2 text-[11px] text-white/30 transition-all hover:border-white/20 hover:text-white/60"
               >
                 📁 프로젝트 관리
@@ -255,10 +255,9 @@ export function StaffHome({
             </div>
                 </>
               ) : (
-                <ProjectContent
+                <ProjectTaskList
                   projectId={activeView}
-                  currentUser={currentUser}
-                  staff={[]}
+                  projectName={myProjects.find((p) => p.id === activeView)?.name ?? "프로젝트"}
                 />
               )}
           </div>
@@ -326,7 +325,7 @@ export function StaffHome({
                   {taggedItems.slice(0, 4).map((item) => (
                     <Link
                       key={`${item.kind}-${item.id}`}
-                      href={`/dashboard/projects?project=${item.projectId}`}
+                      href={`/dashboard?project=${item.projectId}`}
                       className="flex items-center gap-2 rounded-lg border border-brand-light/10 bg-brand-light/5 px-3 py-2 text-xs font-medium text-white/70 transition-all hover:bg-brand-light/10 hover:text-white"
                     >
                       <span className="shrink-0">{TAGGED_KIND_META[item.kind].icon}</span>
@@ -350,7 +349,7 @@ export function StaffHome({
 
             <div className="mt-auto flex flex-col gap-2.5">
               <Link
-                href="/dashboard/projects"
+                href="/dashboard"
                 className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/70 transition-all hover:bg-white/10 hover:text-white"
               >
                 <span>📁</span> 프로젝트 워크스테이션
