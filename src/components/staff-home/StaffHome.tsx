@@ -10,7 +10,7 @@ import { UserMenu } from "@/components/nav/UserMenu";
 import { CalendarPanel } from "@/components/calendar/CalendarPanel";
 import { WorkStationPanel } from "./WorkStationPanel";
 import { MemoPanel } from "./MemoPanel";
-import { ProjectTaskList } from "@/components/ProjectTaskList";
+import { ProjectContent } from "@/components/staff-projects/ProjectContent";
 import { MusicWidget } from "./MusicWidget";
 import type {
   CalendarEventItem,
@@ -255,9 +255,10 @@ export function StaffHome({
             </div>
                 </>
               ) : (
-                <ProjectTaskList
+                <ProjectContent
                   projectId={activeView}
-                  projectName={myProjects.find((p) => p.id === activeView)?.name ?? "프로젝트"}
+                  currentUser={currentUser}
+                  staff={[]}
                 />
               )}
           </div>
