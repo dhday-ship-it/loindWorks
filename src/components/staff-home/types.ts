@@ -13,7 +13,7 @@ export interface TaggedItem {
   id: string;
   kind: "request" | "log";
   title: string;
-  projectId: string;
+  projectId: string | null;
   projectName: string;
   createdAt: string;
 }
@@ -35,7 +35,7 @@ export interface TaskItem {
   description: string | null;
   status: TaskStatus;
   priority: TaskPriority;
-  projectId: string;
+  projectId: string | null;
   order: number;
   startDate: string | null;
   dueDate: string | null;

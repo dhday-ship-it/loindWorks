@@ -171,7 +171,43 @@ export function StaffHome({
           </div>
         </div>
 
-        <main className="mb-16 grid w-full flex-1 grid-cols-1 items-start gap-8 px-6 py-5 md:mb-6 md:px-10 lg:grid-cols-12">
+        <div className="flex flex-1 items-stretch">
+          {/* 왼쪽 프로젝트 사이드바 */}
+          <aside className="hidden w-48 shrink-0 flex-col overflow-y-auto border-r border-white/10 bg-black/20 p-4 backdrop-blur-md md:flex">
+            <div className="mb-3 font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
+              프로젝트
+            </div>
+            {activeProjects.length === 0 && (
+              <div className="py-3 text-[11px] text-white/20">프로젝트 없음</div>
+            )}
+            <div className="flex flex-col gap-1">
+              {activeProjects.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/dashboard/projects?project=${p.id}`}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium text-white/55 transition-all hover:bg-white/8 hover:text-white"
+                >
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                  <span className="truncate">{p.name}</span>
+                </Link>
+              ))}
+            </div>
+            {doneProjects.length > 0 && (
+              <div className="mt-3 text-[10px] text-white/20">
+                완료 {doneProjects.length}개
+              </div>
+            )}
+            <div className="mt-auto pt-4">
+              <Link
+                href="/dashboard/projects"
+                className="flex items-center gap-2 rounded-lg border border-dashed border-white/10 px-3 py-2 text-[11px] text-white/30 transition-all hover:border-white/20 hover:text-white/60"
+              >
+                📁 전체 보기
+              </Link>
+            </div>
+          </aside>
+
+          <main className="mb-16 grid w-full flex-1 grid-cols-1 items-start gap-8 px-6 py-5 md:mb-6 md:px-10 lg:grid-cols-12">
           <div className="glass-panel flex flex-col gap-6 rounded-2xl p-7 shadow-2xl lg:col-span-8">
             <div className="flex items-center justify-between border-b border-white/10 pb-4 font-mono">
               <div className="flex items-center gap-2.5 text-xs font-bold tracking-widest text-brand-light">
@@ -281,27 +317,6 @@ export function StaffHome({
               </div>
             )}
 
-            {activeProjects.length > 0 && (
-              <div>
-                <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-white/30">
-                  배정 프로젝트 · 진행중 {activeProjects.length}
-                  {doneProjects.length > 0 && ` · 완료 ${doneProjects.length}`}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  {activeProjects.slice(0, 4).map((p) => (
-                    <Link
-                      key={p.id}
-                      href={`/dashboard/projects?project=${p.id}`}
-                      className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/5 px-3 py-2 text-xs font-medium text-white/70 transition-all hover:bg-white/10 hover:text-white"
-                    >
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
-                      <span className="truncate">{p.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="mt-auto flex flex-col gap-2.5">
               <Link
                 href="/dashboard/projects"
@@ -318,6 +333,7 @@ export function StaffHome({
             </div>
           </div>
         </main>
+        </div>
       </div>
 
       {showNotifications && (
