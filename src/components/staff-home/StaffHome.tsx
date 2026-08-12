@@ -172,8 +172,9 @@ export function StaffHome({
         </div>
 
         <div className="flex flex-1 items-stretch">
-          {/* 왼쪽 프로젝트 사이드바 */}
-          <aside className="hidden w-48 shrink-0 flex-col overflow-y-auto border-r border-white/10 bg-black/20 p-4 backdrop-blur-md md:flex">
+          <div className="glass-panel flex flex-1 overflow-hidden rounded-2xl shadow-2xl lg:col-span-8">
+            {/* 왼쪽 프로젝트 사이드바 */}
+            <aside className="hidden w-48 shrink-0 flex-col overflow-y-auto border-r border-white/10 p-4 md:flex">
             <div className="mb-3 font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
               프로젝트
             </div>
@@ -207,9 +208,9 @@ export function StaffHome({
             </div>
           </aside>
 
-          <main className="mb-16 grid w-full flex-1 grid-cols-1 items-start gap-8 px-6 py-5 md:mb-6 md:px-10 lg:grid-cols-12">
-          <div className="glass-panel flex flex-col gap-6 rounded-2xl p-7 shadow-2xl lg:col-span-8">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4 font-mono">
+            {/* 메인 콘텐츠 */}
+            <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-7">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4 font-mono">
               <div className="flex items-center gap-2.5 text-xs font-bold tracking-widest text-brand-light">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-brand-light shadow-[0_0_8px_rgba(143,168,196,0.6)]" />
                 LOIND FLOW STATION
@@ -236,6 +237,7 @@ export function StaffHome({
               />
             </div>
           </div>
+          </div>{/* 합쳐진 카드 닫기 */}
 
           <div className="glass-panel flex h-full flex-col gap-6 rounded-2xl p-7 shadow-2xl lg:col-span-4">
             <div className="flex items-center gap-4">
@@ -336,7 +338,6 @@ export function StaffHome({
               </Link>
             </div>
           </div>
-        </main>
         </div>
       </div>
 
