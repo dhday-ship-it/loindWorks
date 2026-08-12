@@ -63,27 +63,32 @@ export function ProjectSummaryCard({
 
   return (
     <div className="glass-panel flex flex-col gap-4 rounded-2xl p-6 shadow-2xl">
-      <div className="flex items-center justify-between border-b border-white/10 pb-3">
-        <div className="grid flex-1 grid-cols-2 items-center gap-3">
+      <div className="grid grid-cols-2 gap-3 border-b border-white/10 pb-4">
+        <div className="flex flex-col justify-between rounded-xl border border-white/10 bg-black/20 px-3.5 py-3">
           <span
             className={`w-fit rounded px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider ${STATUS_BADGE_CLASS[project.status]}`}
           >
             {STATUS_LABEL[project.status]}
           </span>
-          <div className="min-w-0 border-l border-white/10 pl-3">
-            <div className="truncate text-[11px] font-semibold text-white/70">
+          <span className="mt-2 font-mono text-[11px] font-bold text-white/40">
+            진행률 {pct}%
+          </span>
+        </div>
+        <div className="flex min-w-0 flex-col justify-between rounded-xl border border-white/10 bg-black/20 px-3.5 py-3">
+          <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
+            고객사
+          </span>
+          <div className="mt-1.5 min-w-0">
+            <div className="truncate text-[12px] font-semibold text-white/85">
               {project.company?.name ?? "고객사 미지정"}
             </div>
             {project.company?.contactName && (
-              <div className="truncate font-mono text-[10px] text-white/35">
-                {project.company.contactName}
+              <div className="truncate font-mono text-[10px] text-white/40">
+                담당자 {project.company.contactName}
               </div>
             )}
           </div>
         </div>
-        <span className="shrink-0 font-mono text-[11px] font-bold text-white/40">
-          {pct}%
-        </span>
       </div>
 
       <div>

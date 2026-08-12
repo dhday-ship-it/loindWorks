@@ -69,6 +69,7 @@ export function StaffHome({
   const [notifications, setNotifications] = useState(initialNotifications);
   const [showNotifications, setShowNotifications] = useState(false);
   const [activeView, setActiveView] = useState<"home" | string>("home"); // "home" or projectId
+  const [showDone, setShowDone] = useState(false);
   const displayName = currentUser.name ?? currentUser.email;
   const initial = displayName.charAt(0).toUpperCase();
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -112,12 +113,6 @@ export function StaffHome({
               <button className="cursor-pointer whitespace-nowrap rounded-sm bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 md:px-4">
                 홈
               </button>
-              <Link
-                href="/dashboard"
-                className="cursor-pointer whitespace-nowrap rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
-              >
-                프로젝트
-              </Link>
               {currentUser.role === "SUPER_ADMIN" && (
                 <Link
                   href="/admin"
@@ -209,8 +204,33 @@ export function StaffHome({
               ))}
             </div>
             {doneProjects.length > 0 && (
-              <div className="mt-3 text-[10px] text-white/20">
-                완료 {doneProjects.length}개
+              <div className="mt-3">
+                <button
+                  onClick={() => setShowDone((v) => !v)}
+                  className="flex w-full cursor-pointer items-center gap-1 px-1 font-mono text-[10px] font-bold text-white/25 transition-all hover:text-white/50"
+                >
+                  <span>{showDone ? "▾" : "▸"}</span> 완료 {doneProjects.length}개
+                </button>
+                {showDone && (
+                  <div className="mt-1 flex flex-col gap-1">
+                    {doneProjects.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => setActiveView(p.id)}
+                        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[12px] font-medium transition-all ${
+                          activeView === p.id
+                            ? "bg-white/10 text-white"
+                            : "text-white/45 hover:bg-white/8 hover:text-white"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 shrink-0 rounded-full ${activeView === p.id ? "bg-brand-light" : "bg-emerald-400/50"}`}
+                        />
+                        <span className="truncate">{p.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             <div className="mt-auto pt-4">
@@ -350,12 +370,6 @@ export function StaffHome({
             </div>
 
             <div className="mt-auto flex flex-col gap-2.5">
-              <Link
-                href="/dashboard"
-                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/70 transition-all hover:bg-white/10 hover:text-white"
-              >
-                <span>📁</span> 프로젝트 워크스테이션
-              </Link>
               <Link
                 href="/dashboard/settings"
                 className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/70 transition-all hover:bg-white/10 hover:text-white"
