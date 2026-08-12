@@ -20,6 +20,7 @@ import type {
   TaggedItem,
   TaskItem,
 } from "./types";
+import { NotificationPanel } from "@/components/notifications/NotificationPanel";
 
 const TAGGED_KIND_META: Record<TaggedItem["kind"], { icon: string; label: string }> = {
   request: { icon: "📨", label: "요청/작업" },
@@ -64,8 +65,11 @@ export function StaffHome({
   const [tasks, setTasks] = useState(initialTasks);
   const [events, setEvents] = useState(initialEvents);
   const [taggedItems, setTaggedItems] = useState(initialTaggedItems);
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const [showNotifications, setShowNotifications] = useState(false);
   const displayName = currentUser.name ?? currentUser.email;
   const initial = displayName.charAt(0).toUpperCase();
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -127,6 +131,18 @@ export function StaffHome({
             <div className="hidden md:block">
               <MusicWidget />
             </div>
+            {/* 알림 벨 */}
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="relative cursor-pointer rounded-lg border border-white/10 bg-white/5 p-1.5 text-sm transition-all hover:bg-white/10"
+            >
+              🔔
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#c9595a] text-[8px] font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
             <UserMenu name={displayName} roleLabel={ROLE_LABEL[currentUser.role]} />
           </div>
         </nav>
@@ -303,6 +319,13 @@ export function StaffHome({
           </div>
         </main>
       </div>
+
+      {showNotifications && (
+        <NotificationPanel
+          notifications={notifications}
+          onClose={() => setShowNotifications(false)}
+        />
+      )}
     </div>
   );
 }

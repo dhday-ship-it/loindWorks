@@ -13,6 +13,10 @@ import { ProjectSummaryCard } from "./ProjectSummaryCard";
 import { ProjectStreamTab } from "./ProjectStreamTab";
 import { ProjectInfoPanel } from "./ProjectInfoPanel";
 import { NewProjectModal } from "./NewProjectModal";
+import { KanbanBoard, type KanbanTask } from "./KanbanBoard";
+import { TaskDetailModal, type TaskDetailData } from "./TaskDetailModal";
+import { PMOverviewPanel } from "./PMOverviewPanel";
+import { ArchivePanel } from "./ArchivePanel";
 import type { Person, ProjectDetail, ProjectSummary } from "./types";
 
 const dmSans = DM_Sans({
@@ -75,6 +79,8 @@ export function ProjectsWorkstation({
   const [showNewProject, setShowNewProject] = useState(false);
   const [showDone, setShowDone] = useState(false);
   const [mobileShowDone, setMobileShowDone] = useState(false);
+  const [viewTab, setViewTab] = useState<"kanban" | "stream" | "overview" | "archive">("kanban");
+  const [selectedTask, setSelectedTask] = useState<TaskDetailData | null>(null);
 
   const project = detailCache[currentId] ?? null;
   const person: Person = {
@@ -296,25 +302,127 @@ export function ProjectsWorkstation({
                   </div>
 
                   <div className="glass-panel flex min-h-[540px] flex-col rounded-2xl p-6 shadow-2xl lg:col-span-7">
-                    <div className="mb-1 flex items-center justify-between">
-                      <h4 className="text-sm font-bold tracking-wide text-white">
+                    {/* 탭 전환 */}
+                    <div className="mb-4 flex items-center justify-between border-b border-white/8 pb-3">
+                      <div className="flex gap-1 font-mono text-[10px]">
+                        {([
+                          { id: "kanban", label: "칸반 보드" },
+                          { id: "stream", label: "스트림" },
+                          ...(currentUser.role === "PM" || currentUser.role === "SUPER_ADMIN"
+                            ? [{ id: "overview", label: "전체 현황" }]
+                            : []),
+                          { id: "archive", label: "아카이브" },
+                        ] as { id: typeof viewTab; label: string }[]).map((tab) => (
+                          <button
+                            key={tab.id}
+                            onClick={() => setViewTab(tab.id)}
+                            className={`cursor-pointer rounded-lg px-3 py-1.5 font-bold transition-all ${
+                              viewTab === tab.id
+                                ? "bg-white text-slate-900"
+                                : "text-white/40 hover:text-white"
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                      <span className="hidden font-mono text-[10px] text-white/25 md:block">
                         WORK STATION
-                      </h4>
-                      <span className="font-mono text-[10px] text-white/30">
-                        요청 · 작업 · 통화 · 미팅 기록 통합
                       </span>
                     </div>
-                    <div className="flex-1 overflow-y-auto pt-4">
-                      <ProjectStreamTab
-                        projectId={project.id}
-                        requests={project.requests}
-                        logs={project.logs}
-                        members={project.members}
-                        currentUser={person}
-                        currentUserRole={currentUser.role}
-                        onRequestsChange={(requests) => updateProject({ requests })}
-                        onLogsChange={(logs) => updateProject({ logs })}
-                      />
+
+                    {/* 탭 콘텐츠 */}
+                    <div className="flex-1 overflow-y-auto">
+                      {viewTab === "kanban" && project.tasks && (
+                        <KanbanBoard
+                          tasks={project.tasks.map((t) => ({
+                            ...t,
+                            dueDate: t.dueDate ?? null,
+                          })) as KanbanTask[]}
+                          onStatusChange={async (taskId, newStatus) => {
+                            const updated = project.tasks.map((t) =>
+                              t.id === taskId ? { ...t, status: newStatus } : t
+                            );
+                            updateProject({ tasks: updated });
+                            await fetch(`/api/tasks/${taskId}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ status: newStatus }),
+                            });
+                          }}
+                          onReorder={async (taskId, newOrder, newStatus) => {
+                            const updated = project.tasks.map((t) =>
+                              t.id === taskId ? { ...t, order: newOrder, status: newStatus } : t
+                            );
+                            updateProject({ tasks: updated });
+                            await fetch(`/api/tasks/${taskId}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ order: newOrder, status: newStatus }),
+                            });
+                          }}
+                          onTaskClick={async (task) => {
+                            // 태스크 상세 모달 열기
+                            const res = await fetch(`/api/tasks/${task.id}/comments`);
+                            const commentsData = res.ok ? await res.json() : { comments: [] };
+                            setSelectedTask({
+                              ...task,
+                              projectId: project.id,
+                              createdAt: "",
+                              comments: commentsData.comments ?? [],
+                              history: [],
+                              files: [],
+                            });
+                          }}
+                        />
+                      )}
+                      {viewTab === "stream" && (
+                        <ProjectStreamTab
+                          projectId={project.id}
+                          requests={project.requests}
+                          logs={project.logs}
+                          members={project.members}
+                          currentUser={person}
+                          currentUserRole={currentUser.role}
+                          onRequestsChange={(requests) => updateProject({ requests })}
+                          onLogsChange={(logs) => updateProject({ logs })}
+                        />
+                      )}
+                      {viewTab === "overview" && (
+                        <PMOverviewPanel
+                          tasks={project.tasks.map((t) => ({
+                            ...t,
+                            projectId: project.id,
+                            projectName: project.name,
+                            dueDate: t.dueDate ?? null,
+                          }))}
+                          onTaskClick={(taskId) => {
+                            const task = project.tasks.find((t) => t.id === taskId);
+                            if (task) {
+                              setSelectedTask({
+                                ...task,
+                                projectId: project.id,
+                                createdAt: task.createdAt ?? "",
+                                comments: [],
+                                history: [],
+                                files: [],
+                              });
+                            }
+                          }}
+                        />
+                      )}
+                      {viewTab === "archive" && (
+                        <ArchivePanel
+                          projectId={project.id}
+                          onRestore={async () => {
+                            const res = await fetch(`/api/projects/${project.id}`);
+                            if (res.ok) {
+                              const { project: detail } = await res.json();
+                              setDetailCache((prev) => ({ ...prev, [project.id]: detail }));
+                            }
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -333,6 +441,18 @@ export function ProjectsWorkstation({
           </main>
         </div>
       </div>
+
+      {selectedTask && project && (
+        <TaskDetailModal
+          task={selectedTask}
+          members={project.members}
+          currentUser={person}
+          onClose={() => setSelectedTask(null)}
+          onUpdate={(patch) => {
+            setSelectedTask((prev) => prev ? { ...prev, ...patch } : null);
+          }}
+        />
+      )}
 
       {showNewProject && (
         <NewProjectModal

@@ -46,6 +46,14 @@ export default async function ProjectsPage({
             user: { select: { id: true, name: true, email: true } },
           },
         },
+        tasks: {
+          where: { archivedAt: null },
+          orderBy: { order: "asc" },
+          include: {
+            assignee: { select: { id: true, name: true, email: true } },
+            createdBy: { select: { id: true, name: true, email: true } },
+          },
+        },
         requests: {
           orderBy: { createdAt: "desc" },
           include: {
@@ -89,6 +97,12 @@ export default async function ProjectsPage({
         phases: detail.phases as string[],
         startDate: detail.startDate ? detail.startDate.toISOString() : null,
         endDate: detail.endDate ? detail.endDate.toISOString() : null,
+        tasks: detail.tasks.map((t) => ({
+          ...t,
+          startDate: t.startDate ? t.startDate.toISOString() : null,
+          dueDate: t.dueDate ? t.dueDate.toISOString() : null,
+          createdAt: t.createdAt.toISOString(),
+        })),
         requests: detail.requests.map((r) => ({
           ...r,
           createdAt: r.createdAt.toISOString(),

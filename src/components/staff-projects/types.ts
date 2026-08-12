@@ -2,6 +2,8 @@ import type {
   LogType,
   ProjectStatus,
   RequestStatus,
+  TaskPriority,
+  TaskStatus,
 } from "@/generated/prisma/enums";
 import type { Person, CalendarEventItem } from "@/components/calendar/types";
 
@@ -86,6 +88,20 @@ export interface CompanyRef {
   contactEmail: string | null;
 }
 
+export interface ProjectTaskItem {
+  id: string;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  priority: TaskPriority;
+  order: number;
+  startDate: string | null;
+  dueDate: string | null;
+  createdAt: string;
+  assignee: Person;
+  createdBy: Person;
+}
+
 export interface ProjectDetail {
   id: string;
   name: string;
@@ -102,6 +118,7 @@ export interface ProjectDetail {
   keywords: string[];
   notes: string | null;
   members: ProjectMemberItem[];
+  tasks: ProjectTaskItem[];
   requests: ProjectRequestItem[];
   logs: ActivityLogItem[];
   calendarEvents: CalendarEventItem[];

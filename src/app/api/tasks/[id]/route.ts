@@ -10,12 +10,30 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await requireStaff();
+  const user = await requireStaff();
   const { id } = await params;
   const { status, priority, order, title, description, dueDate } = await request.json();
 
   if (status !== undefined && !VALID_STATUSES.includes(status)) {
     return NextResponse.json({ error: "잘못된 상태값입니다." }, { status: 400 });
+  }
+
+  // 상태 변경 히스토리 기록
+  if (status !== undefined) {
+    const existing = await prisma.task.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+    if (existing && existing.status !== status) {
+      await prisma.taskHistory.create({
+        data: {
+          taskId: id,
+          fromStatus: existing.status,
+          toStatus: status,
+          actorId: user.id,
+        },
+      });
+    }
   }
 
   const task = await prisma.task.update({
