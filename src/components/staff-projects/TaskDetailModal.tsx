@@ -49,6 +49,14 @@ export interface TaskDetailData {
   files: TaskFile[];
 }
 
+export interface TaskEditPatch {
+  title?: string;
+  description?: string | null;
+  priority?: TaskPriority;
+  dueDate?: string | null;
+  assigneeId?: string;
+}
+
 interface Props {
   task: TaskDetailData;
   members: { id: string; user: Person }[];
@@ -56,6 +64,7 @@ interface Props {
   onUpdate: (task: Partial<TaskDetailData>) => void;
   onArchive?: () => void;
   onStatusChange?: (status: TaskStatus) => void;
+  onEdit?: (patch: TaskEditPatch) => void;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -86,12 +95,50 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, onStatusChange }: Props) {
+export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, onStatusChange, onEdit }: Props) {
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+  const [editDescription, setEditDescription] = useState(task.description ?? "");
+  const [editAssigneeId, setEditAssigneeId] = useState(task.assignee.id);
+  const [editPriority, setEditPriority] = useState<TaskPriority>(task.priority);
+  const [editDueDate, setEditDueDate] = useState(
+    task.dueDate ? task.dueDate.slice(0, 10) : ""
+  );
+
+  const startEdit = () => {
+    setEditTitle(task.title);
+    setEditDescription(task.description ?? "");
+    setEditAssigneeId(task.assignee.id);
+    setEditPriority(task.priority);
+    setEditDueDate(task.dueDate ? task.dueDate.slice(0, 10) : "");
+    setIsEditing(true);
+  };
+
+  const saveEdit = () => {
+    if (!editTitle.trim()) return;
+    const assignee = members.find((m) => m.user.id === editAssigneeId)?.user;
+    onEdit?.({
+      title: editTitle.trim(),
+      description: editDescription || null,
+      priority: editPriority,
+      dueDate: editDueDate || null,
+      assigneeId: editAssigneeId,
+    });
+    onUpdate({
+      title: editTitle.trim(),
+      description: editDescription || null,
+      priority: editPriority,
+      dueDate: editDueDate ? new Date(editDueDate).toISOString() : null,
+      ...(assignee ? { assignee } : {}),
+    });
+    setIsEditing(false);
+  };
 
   const submitComment = async () => {
     if (!commentText.trim()) return;
@@ -163,18 +210,62 @@ export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, o
       <div className="glass-card animate-fade-up flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-2xl">
         {/* Header */}
         <div className="flex items-start justify-between border-b border-white/8 px-6 py-4">
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-bold text-white">{task.title}</h3>
-            {task.description && (
-              <p className="mt-1 text-xs leading-relaxed text-white/50">{task.description}</p>
+          {isEditing ? (
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm font-bold text-white outline-none focus:border-brand-light/40"
+                placeholder="작업 제목"
+              />
+              <textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={2}
+                className="resize-none rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs leading-relaxed text-white outline-none focus:border-brand-light/40"
+                placeholder="세부 내용 (선택)"
+              />
+            </div>
+          ) : (
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base font-bold text-white">{task.title}</h3>
+              {task.description && (
+                <p className="mt-1 text-xs leading-relaxed text-white/50">{task.description}</p>
+              )}
+            </div>
+          )}
+          <div className="ml-4 flex shrink-0 items-center gap-1">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-white/50 hover:text-white"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={saveEdit}
+                  className="cursor-pointer rounded-lg border border-brand-light/35 bg-brand-light/15 px-2.5 py-1 text-[10px] font-bold text-brand-light hover:bg-brand-light/25"
+                >
+                  저장
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={startEdit}
+                className="cursor-pointer p-1 text-white/30 hover:text-white"
+                title="수정"
+              >
+                ✎
+              </button>
             )}
+            <button
+              onClick={onClose}
+              className="cursor-pointer p-1 text-white/30 hover:text-white"
+            >
+              ✕
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="ml-4 shrink-0 cursor-pointer p-1 text-white/30 hover:text-white"
-          >
-            ✕
-          </button>
         </div>
 
         {/* Meta */}
@@ -195,22 +286,70 @@ export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, o
               </button>
             ))}
           </div>
-          <span className="text-[10px] font-bold text-white/50">
-            {PRIORITY_LABEL[task.priority]}
-          </span>
-          <div className="flex items-center gap-1.5 text-[10px] text-white/40">
-            <div
-              className="flex h-4 w-4 items-center justify-center rounded-full text-[7px] font-bold text-white"
-              style={{ background: colorForId(task.assignee.id) }}
-            >
-              {initials(task.assignee)}
-            </div>
-            <span>{task.assignee.name ?? task.assignee.email}</span>
-          </div>
-          {task.dueDate && (
-            <span className="font-mono text-[10px] text-white/35">
-              마감: {new Date(task.dueDate).toLocaleDateString("ko-KR")}
-            </span>
+          {isEditing ? (
+            <>
+              <select
+                value={editPriority}
+                onChange={(e) => setEditPriority(e.target.value as TaskPriority)}
+                className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-white outline-none"
+              >
+                {(["HIGH", "NORMAL", "LOW"] as TaskPriority[]).map((p) => (
+                  <option key={p} value={p} className="bg-[#0c0e12]">
+                    {PRIORITY_LABEL[p]}
+                  </option>
+                ))}
+              </select>
+              <div className="flex flex-wrap gap-1">
+                {members.map((m) => {
+                  const isSel = editAssigneeId === m.user.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setEditAssigneeId(m.user.id)}
+                      className={`flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium transition-all ${
+                        isSel
+                          ? "border-white bg-white text-slate-900"
+                          : "border-white/10 bg-white/5 text-white/50 hover:text-white"
+                      }`}
+                    >
+                      <div
+                        className="flex h-3.5 w-3.5 items-center justify-center rounded-full text-[7px] font-bold text-white"
+                        style={{ background: colorForId(m.user.id) }}
+                      >
+                        {initials(m.user)}
+                      </div>
+                      <span>{m.user.name ?? m.user.email}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <input
+                type="date"
+                value={editDueDate}
+                onChange={(e) => setEditDueDate(e.target.value)}
+                className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-white outline-none"
+              />
+            </>
+          ) : (
+            <>
+              <span className="text-[10px] font-bold text-white/50">
+                {PRIORITY_LABEL[task.priority]}
+              </span>
+              <div className="flex items-center gap-1.5 text-[10px] text-white/40">
+                <div
+                  className="flex h-4 w-4 items-center justify-center rounded-full text-[7px] font-bold text-white"
+                  style={{ background: colorForId(task.assignee.id) }}
+                >
+                  {initials(task.assignee)}
+                </div>
+                <span>{task.assignee.name ?? task.assignee.email}</span>
+              </div>
+              {task.dueDate && (
+                <span className="font-mono text-[10px] text-white/35">
+                  마감: {new Date(task.dueDate).toLocaleDateString("ko-KR")}
+                </span>
+              )}
+            </>
           )}
           {task.status === "DONE" && onArchive && (
             <button

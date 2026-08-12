@@ -10,8 +10,9 @@ import { ProjectInfoPanel } from "./ProjectInfoPanel";
 import { KanbanBoard, type KanbanTask } from "./KanbanBoard";
 import { TaskDetailModal, type TaskDetailData } from "./TaskDetailModal";
 import { NewTaskModal } from "./NewTaskModal";
-import { ArchivePanel } from "./ArchivePanel";
 import type { Person, ProjectDetail } from "./types";
+
+const ARCHIVE_URL = "https://loind.tw2.quickconnect.to/";
 
 export function ProjectContent({
   projectId,
@@ -24,7 +25,7 @@ export function ProjectContent({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [retryTick, setRetryTick] = useState(0);
-  const [viewTab, setViewTab] = useState<"kanban" | "stream" | "archive">("kanban");
+  const [viewTab, setViewTab] = useState<"kanban" | "stream">("kanban");
   const [selectedTask, setSelectedTask] = useState<TaskDetailData | null>(null);
   const [showNewTask, setShowNewTask] = useState(false);
 
@@ -128,7 +129,6 @@ export function ProjectContent({
             {([
               { id: "kanban", label: "칸반 보드" },
               { id: "stream", label: "스트림" },
-              { id: "archive", label: "아카이브" },
             ] as { id: typeof viewTab; label: string }[]).map((tab) => (
               <button
                 key={tab.id}
@@ -142,6 +142,14 @@ export function ProjectContent({
                 {tab.label}
               </button>
             ))}
+            <a
+              href={ARCHIVE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="flex cursor-pointer items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-bold text-white/40 transition-all hover:bg-white/5 hover:text-white/70"
+            >
+              아카이브 ↗
+            </a>
           </div>
           {viewTab === "kanban" && (
             <button
@@ -197,25 +205,10 @@ export function ProjectContent({
         {viewTab === "stream" && (
           <ProjectStreamTab
             projectId={project.id}
-            requests={project.requests}
             logs={project.logs}
             members={project.members}
             currentUser={person}
-            currentUserRole={currentUser.role}
-            onRequestsChange={(requests) => updateProject({ requests })}
             onLogsChange={(logs) => updateProject({ logs })}
-          />
-        )}
-        {viewTab === "archive" && (
-          <ArchivePanel
-            projectId={project.id}
-            onRestore={async () => {
-              const res = await fetch(`/api/projects/${project.id}`);
-              if (res.ok) {
-                const { project: detail } = await res.json();
-                setProject(detail);
-              }
-            }}
           />
         )}
         </div>
@@ -252,6 +245,29 @@ export function ProjectContent({
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ status }),
+            });
+          }}
+          onEdit={async (patch) => {
+            const assignee = patch.assigneeId
+              ? project.members.find((m) => m.user.id === patch.assigneeId)?.user
+              : undefined;
+            const updated = (project.tasks ?? []).map((t) =>
+              t.id === selectedTask.id
+                ? {
+                    ...t,
+                    ...(patch.title !== undefined && { title: patch.title }),
+                    ...(patch.description !== undefined && { description: patch.description }),
+                    ...(patch.priority !== undefined && { priority: patch.priority }),
+                    ...(patch.dueDate !== undefined && { dueDate: patch.dueDate }),
+                    ...(assignee ? { assignee } : {}),
+                  }
+                : t
+            );
+            updateProject({ tasks: updated });
+            await fetch(`/api/tasks/${selectedTask.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(patch),
             });
           }}
         />

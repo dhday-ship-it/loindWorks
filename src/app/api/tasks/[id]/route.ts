@@ -12,7 +12,8 @@ export async function PATCH(
 ) {
   const user = await requireStaff();
   const { id } = await params;
-  const { status, priority, order, title, description, dueDate } = await request.json();
+  const { status, priority, order, title, description, dueDate, assigneeId } =
+    await request.json();
 
   if (status !== undefined && !VALID_STATUSES.includes(status)) {
     return NextResponse.json({ error: "잘못된 상태값입니다." }, { status: 400 });
@@ -45,8 +46,18 @@ export async function PATCH(
       ...(title !== undefined && { title }),
       ...(description !== undefined && { description }),
       ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
+      ...(assigneeId !== undefined && { assigneeId }),
     },
-    select: { id: true, status: true, priority: true, order: true },
+    select: {
+      id: true,
+      status: true,
+      priority: true,
+      order: true,
+      title: true,
+      description: true,
+      dueDate: true,
+      assignee: { select: { id: true, name: true, email: true } },
+    },
   });
 
   return NextResponse.json({ task });

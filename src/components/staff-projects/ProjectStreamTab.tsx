@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
-import type { Role, RequestStatus } from "@/generated/prisma/enums";
+import type { LogType } from "@/generated/prisma/enums";
 import {
   colorForId,
   initials,
@@ -10,7 +10,6 @@ import {
   type Person,
   type ProjectFileItem,
   type ProjectMemberItem,
-  type ProjectRequestItem,
 } from "./types";
 import { HistoryModal } from "./HistoryModal";
 import { fmtFileSize, uploadFile } from "@/lib/file-format";
@@ -35,89 +34,33 @@ function AttachmentList({ files }: { files: ProjectFileItem[] }) {
   );
 }
 
-// ─── 통합 유형 정의 ──────────────────────────────────────────────
-const KIND_META = {
-  REQUEST: { icon: "📨", label: "요청", kind: "request" as const, cls: "border-brand-light/30 text-brand-light bg-brand-light/5" },
-  TASK: { icon: "📋", label: "작업", kind: "request" as const, cls: "border-white/20 text-white/60 bg-white/5" },
-  CALL: { icon: "📞", label: "통화", kind: "log" as const, cls: "border-emerald-500/30 text-emerald-400 bg-emerald-500/5" },
-  MEET: { icon: "👥", label: "미팅", kind: "log" as const, cls: "border-blue-500/30 text-blue-400 bg-blue-500/5" },
-  MSG: { icon: "💬", label: "문자", kind: "log" as const, cls: "border-amber-500/30 text-amber-400 bg-amber-500/5" },
-  EMAIL: { icon: "✉️", label: "이메일", kind: "log" as const, cls: "border-red-500/30 text-red-400 bg-red-500/5" },
-  NOTE: { icon: "📝", label: "메모", kind: "log" as const, cls: "border-white/20 text-white/60 bg-white/5" },
-} as const;
-type ComposeKind = keyof typeof KIND_META;
-const KIND_ORDER: ComposeKind[] = ["REQUEST", "TASK", "CALL", "MEET", "MSG", "EMAIL", "NOTE"];
-
-const STATUS_LABEL: Record<RequestStatus, string> = {
-  WAIT: "대기",
-  CHECK: "확인",
-  WIP: "작업 중",
-  REVIEW: "검토",
-  DONE: "완료",
+const TYPE_META: Record<LogType, { icon: string; label: string; cls: string }> = {
+  CALL: { icon: "📞", label: "통화", cls: "border-emerald-500/30 text-emerald-400 bg-emerald-500/5" },
+  MEET: { icon: "👥", label: "미팅", cls: "border-blue-500/30 text-blue-400 bg-blue-500/5" },
+  MSG: { icon: "💬", label: "문자", cls: "border-amber-500/30 text-amber-400 bg-amber-500/5" },
+  EMAIL: { icon: "✉️", label: "이메일", cls: "border-red-500/30 text-red-400 bg-red-500/5" },
+  NOTE: { icon: "📝", label: "메모", cls: "border-white/20 text-white/60 bg-white/5" },
 };
-const STATUS_ORDER: RequestStatus[] = ["WAIT", "CHECK", "WIP", "REVIEW", "DONE"];
-const STATUS_STYLE: Record<RequestStatus, string> = {
-  WAIT: "border-white/15 bg-white/5 text-white/50",
-  CHECK: "border-blue-400/35 bg-blue-400/10 text-blue-300",
-  WIP: "border-amber-400/35 bg-amber-400/10 text-amber-300",
-  REVIEW: "border-violet-400/35 bg-violet-400/10 text-violet-300",
-  DONE: "border-emerald-400/35 bg-emerald-400/10 text-emerald-300",
-};
-const STATUS_DOT: Record<RequestStatus, string> = {
-  WAIT: "bg-white/30",
-  CHECK: "bg-blue-400",
-  WIP: "bg-amber-400 animate-pulse",
-  REVIEW: "bg-violet-400",
-  DONE: "bg-emerald-400",
-};
-
-function timeAgo(iso: string) {
-  return new Date(iso).toLocaleString("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function overallStatus(item: ProjectRequestItem): RequestStatus {
-  if (item.assignees.length === 0) return "WAIT";
-  let max = 0;
-  for (const a of item.assignees) {
-    const idx = STATUS_ORDER.indexOf(a.status);
-    if (idx > max) max = idx;
-  }
-  return STATUS_ORDER[max];
-}
-
-type StreamEntry =
-  | { kind: "request"; id: string; createdAt: string; data: ProjectRequestItem }
-  | { kind: "log"; id: string; createdAt: string; data: ActivityLogItem };
+const TYPE_ORDER: LogType[] = ["CALL", "MEET", "MSG", "EMAIL", "NOTE"];
 
 export function ProjectStreamTab({
   projectId,
-  requests,
   logs,
   members,
   currentUser,
-  currentUserRole,
-  onRequestsChange,
   onLogsChange,
 }: {
   projectId: string;
-  requests: ProjectRequestItem[];
   logs: ActivityLogItem[];
   members: ProjectMemberItem[];
   currentUser: Person;
-  currentUserRole: Role;
-  onRequestsChange: (next: ProjectRequestItem[]) => void;
   onLogsChange: (next: ActivityLogItem[]) => void;
 }) {
-  const [filterKind, setFilterKind] = useState<ComposeKind | "ALL">("ALL");
+  const [filterType, setFilterType] = useState<LogType | "ALL">("ALL");
   const [onlyMine, setOnlyMine] = useState(false);
   const [showCompose, setShowCompose] = useState(false);
 
-  const [composeKind, setComposeKind] = useState<ComposeKind>("REQUEST");
+  const [composeType, setComposeType] = useState<LogType>("CALL");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [withPerson, setWithPerson] = useState("");
@@ -128,51 +71,18 @@ export function ProjectStreamTab({
   >([]);
   const [uploading, setUploading] = useState(false);
 
-  const [openComments, setOpenComments] = useState<Set<string>>(new Set());
-  const [commentDraft, setCommentDraft] = useState<Record<string, string>>({});
-
   const [editingLogId, setEditingLogId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [editTags, setEditTags] = useState<Set<string>>(new Set());
   const [historyLog, setHistoryLog] = useState<ActivityLogItem | null>(null);
 
-  const memberOf = useMemo(() => {
-    const map = new Map<string, Person>();
-    for (const m of members) map.set(m.user.id, m.user);
-    return map;
-  }, [members]);
+  const memberOf = new Map<string, Person>();
+  for (const m of members) memberOf.set(m.user.id, m.user);
 
-  const entries: StreamEntry[] = useMemo(() => {
-    const a: StreamEntry[] = requests.map((r) => ({
-      kind: "request",
-      id: r.id,
-      createdAt: r.createdAt,
-      data: r,
-    }));
-    const b: StreamEntry[] = logs.map((l) => ({
-      kind: "log",
-      id: l.id,
-      createdAt: l.createdAt,
-      data: l,
-    }));
-    return [...a, ...b].sort(
-      (x, y) => new Date(y.createdAt).getTime() - new Date(x.createdAt).getTime()
-    );
-  }, [requests, logs]);
-
-  const filtered = entries.filter((e) => {
-    if (filterKind !== "ALL") {
-      const value = e.kind === "request" ? e.data.itemType : e.data.type;
-      if (value !== filterKind) return false;
-    }
-    if (onlyMine) {
-      if (e.kind === "request") {
-        if (!e.data.assignees.some((a) => a.user.id === currentUser.id)) return false;
-      } else {
-        if (!e.data.taggedUserIds.includes(currentUser.id)) return false;
-      }
-    }
+  const filtered = logs.filter((l) => {
+    if (filterType !== "ALL" && l.type !== filterType) return false;
+    if (onlyMine && !l.taggedUserIds.includes(currentUser.id)) return false;
     return true;
   });
 
@@ -223,138 +133,34 @@ export function ProjectStreamTab({
     setPendingFiles((prev) => prev.filter((f) => f.url !== url));
   };
 
-  const submitItem = async () => {
-    const meta = KIND_META[composeKind];
-    if (meta.kind === "request") {
-      if (!body.trim()) return;
-      const res = await fetch(`/api/projects/${projectId}/requests`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          body,
-          itemType: composeKind,
-          assigneeUserIds: [...selectedTags],
-          attachments: pendingFiles,
-        }),
-      });
-      if (res.ok) {
-        const { request } = await res.json();
-        onRequestsChange([request, ...requests]);
-        setShowCompose(false);
-      }
-    } else {
-      if (!title.trim()) {
-        window.alert("제목을 입력해주세요.");
-        return;
-      }
-      const res = await fetch(`/api/projects/${projectId}/logs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          attachments: pendingFiles,
-          type: composeKind,
-          title,
-          body,
-          withPerson,
-          logDate,
-          taggedUserIds: [...selectedTags],
-        }),
-      });
-      if (res.ok) {
-        const { log } = await res.json();
-        onLogsChange([log, ...logs]);
-        setShowCompose(false);
-      }
+  const submitLog = async () => {
+    if (!title.trim()) {
+      window.alert("제목을 입력해주세요.");
+      return;
     }
-  };
-
-  const deleteRequest = async (id: string) => {
-    onRequestsChange(requests.filter((r) => r.id !== id));
-    await fetch(`/api/projects/${projectId}/requests/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/projects/${projectId}/logs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        attachments: pendingFiles,
+        type: composeType,
+        title,
+        body,
+        withPerson,
+        logDate,
+        taggedUserIds: [...selectedTags],
+      }),
+    });
+    if (res.ok) {
+      const { log } = await res.json();
+      onLogsChange([log, ...logs]);
+      setShowCompose(false);
+    }
   };
 
   const deleteLog = async (id: string) => {
     onLogsChange(logs.filter((l) => l.id !== id));
     await fetch(`/api/projects/${projectId}/logs/${id}`, { method: "DELETE" });
-  };
-
-  const setStatus = async (
-    requestId: string,
-    assigneeId: string,
-    status: RequestStatus
-  ) => {
-    const req = requests.find((r) => r.id === requestId);
-    const a = req?.assignees.find((a) => a.id === assigneeId);
-    const nextStatus = a?.status === status ? "WAIT" : status;
-
-    onRequestsChange(
-      requests.map((r) =>
-        r.id !== requestId
-          ? r
-          : {
-              ...r,
-              assignees: r.assignees.map((a) =>
-                a.id === assigneeId ? { ...a, status: nextStatus } : a
-              ),
-            }
-      )
-    );
-    await fetch(
-      `/api/projects/${projectId}/requests/${requestId}/assignees/${assigneeId}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus }),
-      }
-    );
-  };
-
-  const toggleComments = (key: string) => {
-    setOpenComments((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  };
-
-  const sendComment = async (requestId: string, assigneeId: string) => {
-    const key = `${requestId}-${assigneeId}`;
-    const text = (commentDraft[key] ?? "").trim();
-    if (!text) return;
-
-    const optimistic = {
-      authorId: currentUser.id,
-      authorName: currentUser.name ?? currentUser.email,
-      text,
-      createdAt: new Date().toISOString(),
-    };
-
-    onRequestsChange(
-      requests.map((r) =>
-        r.id !== requestId
-          ? r
-          : {
-              ...r,
-              assignees: r.assignees.map((a) =>
-                a.id === assigneeId
-                  ? { ...a, comments: [...a.comments, optimistic] }
-                  : a
-              ),
-            }
-      )
-    );
-    setCommentDraft((prev) => ({ ...prev, [key]: "" }));
-
-    await fetch(
-      `/api/projects/${projectId}/requests/${requestId}/assignees/${assigneeId}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comment: text }),
-      }
-    );
   };
 
   const startEditLog = (log: ActivityLogItem) => {
@@ -387,31 +193,29 @@ export function ProjectStreamTab({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-1 font-mono text-[10px]">
           <button
-            onClick={() => setFilterKind("ALL")}
+            onClick={() => setFilterType("ALL")}
             className={`cursor-pointer rounded-full border px-2.5 py-0.5 font-bold transition-all ${
-              filterKind === "ALL"
+              filterType === "ALL"
                 ? "border-white/20 bg-white text-slate-900"
                 : "border-white/5 bg-white/5 text-white/35 hover:text-white"
             }`}
           >
-            전체 {entries.length}
+            전체 {logs.length}
           </button>
-          {KIND_ORDER.map((k) => {
-            const count = entries.filter((e) =>
-              e.kind === "request" ? e.data.itemType === k : e.data.type === k
-            ).length;
+          {TYPE_ORDER.map((t) => {
+            const count = logs.filter((l) => l.type === t).length;
             if (count === 0) return null;
             return (
               <button
-                key={k}
-                onClick={() => setFilterKind(k)}
+                key={t}
+                onClick={() => setFilterType(t)}
                 className={`cursor-pointer rounded-full border px-2.5 py-0.5 font-bold transition-all ${
-                  filterKind === k
+                  filterType === t
                     ? "border-white/20 bg-white text-slate-900"
                     : "border-white/5 bg-white/5 text-white/35 hover:text-white"
                 }`}
               >
-                {KIND_META[k].icon} {KIND_META[k].label} {count}
+                {TYPE_META[t].icon} {TYPE_META[t].label} {count}
               </button>
             );
           })}
@@ -438,17 +242,17 @@ export function ProjectStreamTab({
       {showCompose && (
         <div className="glass-input animate-fade-up mb-4 rounded-xl border border-white/10 p-3.5">
           <div className="mb-3 flex flex-wrap gap-1">
-            {KIND_ORDER.map((k) => (
+            {TYPE_ORDER.map((t) => (
               <button
-                key={k}
-                onClick={() => setComposeKind(k)}
+                key={t}
+                onClick={() => setComposeType(t)}
                 className={`cursor-pointer rounded px-2.5 py-0.5 font-mono text-[10px] font-bold transition-all ${
-                  composeKind === k
+                  composeType === t
                     ? "bg-white text-slate-900"
                     : "border border-white/5 bg-white/5 font-medium text-white/40 hover:text-white"
                 }`}
               >
-                {KIND_META[k].icon} {KIND_META[k].label}
+                {TYPE_META[t].icon} {TYPE_META[t].label}
               </button>
             ))}
           </div>
@@ -456,33 +260,31 @@ export function ProjectStreamTab({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="mb-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-white outline-none placeholder:text-white/20"
-            placeholder="제목"
+            placeholder="제목 (예: 정대희 대표 통화 — UI 수정 방향 논의)"
           />
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             className="mb-3 min-h-[64px] w-full resize-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs leading-relaxed text-white outline-none placeholder:text-white/20"
-            placeholder="내용을 입력하세요..."
+            placeholder="핵심 내용, 결정 사항, 다음 액션 등을 기록하세요..."
           />
 
-          {KIND_META[composeKind].kind === "log" && (
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <input
-                value={withPerson}
-                onChange={(e) => setWithPerson(e.target.value)}
-                style={{ width: 130 }}
-                className="rounded-lg border border-white/10 bg-black/40 px-2.5 py-1 font-mono text-xs text-white outline-none placeholder:text-white/20"
-                placeholder="대화 상대"
-              />
-              <input
-                type="date"
-                value={logDate}
-                onChange={(e) => setLogDate(e.target.value)}
-                style={{ width: 125 }}
-                className="rounded-lg border border-white/10 bg-black/40 px-2.5 py-1 font-mono text-xs text-white/60 outline-none"
-              />
-            </div>
-          )}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <input
+              value={withPerson}
+              onChange={(e) => setWithPerson(e.target.value)}
+              style={{ width: 130 }}
+              className="rounded-lg border border-white/10 bg-black/40 px-2.5 py-1 font-mono text-xs text-white outline-none placeholder:text-white/20"
+              placeholder="대화 상대"
+            />
+            <input
+              type="date"
+              value={logDate}
+              onChange={(e) => setLogDate(e.target.value)}
+              style={{ width: 125 }}
+              className="rounded-lg border border-white/10 bg-black/40 px-2.5 py-1 font-mono text-xs text-white/60 outline-none"
+            />
+          </div>
 
           <div className="border-t border-white/5 pt-2.5">
             <div className="mb-1.5 font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
@@ -561,7 +363,7 @@ export function ProjectStreamTab({
               취소
             </button>
             <button
-              onClick={submitItem}
+              onClick={submitLog}
               className="cursor-pointer rounded bg-white px-3 py-1 text-slate-900 transition-all"
             >
               등록
@@ -570,7 +372,7 @@ export function ProjectStreamTab({
         </div>
       )}
 
-      {/* ── 통합 스트림 ── */}
+      {/* ── 기록 목록 ── */}
       <div className="flex-1 space-y-2.5 overflow-y-auto">
         {filtered.length === 0 && (
           <div className="py-10 text-center font-mono text-xs text-white/20">
@@ -578,175 +380,8 @@ export function ProjectStreamTab({
           </div>
         )}
 
-        {filtered.map((e) => {
-          if (e.kind === "request") {
-            const r = e.data;
-            const meta = KIND_META[r.itemType === "TASK" ? "TASK" : "REQUEST"];
-            const overall = overallStatus(r);
-            return (
-              <div
-                key={`req-${r.id}`}
-                className="group relative flex flex-col gap-2.5 rounded-xl border border-white/5 bg-white/[0.03] p-4 transition-all hover:border-white/10 hover:bg-white/[0.05]"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <div className={`mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOT[overall]}`} />
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-white/40">
-                        <span className={`rounded border px-1.5 py-0.5 text-[9px] font-bold ${meta.cls}`}>
-                          {meta.icon} {meta.label}
-                        </span>
-                        <div
-                          className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[7px] font-bold text-white"
-                          style={{ background: colorForId(r.author.id) }}
-                        >
-                          {initials(r.author)}
-                        </div>
-                        <span className="font-bold text-white/60">
-                          {r.author.name ?? r.author.email}
-                        </span>
-                        <span>{timeAgo(r.createdAt)}</span>
-                      </div>
-                      {r.title && (
-                        <div className="text-xs font-bold text-white">{r.title}</div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className={`rounded-full border px-2 py-0.5 font-mono text-[9px] font-bold ${STATUS_STYLE[overall]}`}>
-                      {STATUS_LABEL[overall]}
-                    </span>
-                    <button
-                      onClick={() => deleteRequest(r.id)}
-                      className="cursor-pointer text-xs text-white/20 opacity-0 transition-all hover:text-red-400 group-hover:opacity-100"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-
-                <div className="whitespace-pre-wrap text-xs font-medium leading-relaxed text-white/75">
-                  {r.body}
-                </div>
-
-                <AttachmentList files={r.files} />
-
-                {r.assignees.length > 0 && (
-                  <div className="mt-1 flex flex-col gap-1.5 border-t border-white/5 pt-2.5">
-                    {r.assignees.map((a) => {
-                      const key = `${r.id}-${a.id}`;
-                      const isOpen = openComments.has(key);
-                      return (
-                        <div
-                          key={a.id}
-                          className="flex flex-col gap-2 rounded-xl border border-white/5 bg-black/25 p-2.5"
-                        >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex min-w-0 flex-1 items-center gap-1.5 text-xs font-medium text-white/70">
-                              <div
-                                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white"
-                                style={{ background: colorForId(a.user.id) }}
-                              >
-                                {initials(a.user)}
-                              </div>
-                              <span className="truncate">{a.user.name ?? a.user.email}</span>
-                            </div>
-
-                            <div className="flex shrink-0 flex-wrap gap-1">
-                              {a.user.id === currentUser.id ||
-                              currentUserRole === "SUPER_ADMIN" ? (
-                                STATUS_ORDER.map((s) => (
-                                  <button
-                                    key={s}
-                                    onClick={() => setStatus(r.id, a.id, s)}
-                                    className={`cursor-pointer rounded-full border px-2 py-0.5 text-[9px] font-bold transition-all ${
-                                      a.status === s
-                                        ? STATUS_STYLE[s] + " scale-105 shadow-sm"
-                                        : "border-white/5 bg-transparent text-white/30 hover:text-white"
-                                    }`}
-                                  >
-                                    {STATUS_LABEL[s]}
-                                  </button>
-                                ))
-                              ) : (
-                                <span
-                                  className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${STATUS_STYLE[a.status]}`}
-                                >
-                                  {STATUS_LABEL[a.status]}
-                                </span>
-                              )}
-                            </div>
-
-                            <button
-                              onClick={() => toggleComments(key)}
-                              className="flex shrink-0 cursor-pointer items-center gap-1 font-mono text-[10px] font-bold text-white/35 transition-all hover:text-white"
-                            >
-                              💬
-                              {a.comments.length > 0 && (
-                                <span className="rounded border border-brand-light/20 bg-brand-light/10 px-1 text-[8px] text-brand-light">
-                                  {a.comments.length}
-                                </span>
-                              )}
-                            </button>
-                          </div>
-
-                          {isOpen && (
-                            <div className="flex flex-col gap-2 border-t border-white/5 pt-2">
-                              <div className="space-y-2">
-                                {a.comments.map((c, i) => (
-                                  <div key={i} className="flex items-start gap-2 text-xs">
-                                    <div
-                                      className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[7px] font-bold text-white"
-                                      style={{ background: colorForId(c.authorId) }}
-                                    >
-                                      {c.authorName.slice(0, 2).toUpperCase()}
-                                    </div>
-                                    <div className="min-w-0 flex-1 rounded-xl border border-white/5 bg-white/5 px-2.5 py-1">
-                                      <div className="mb-0.5 text-[10px] font-bold text-white/90">
-                                        {c.authorName}
-                                        <span className="ml-1 font-mono text-[8px] font-normal text-white/20">
-                                          {timeAgo(c.createdAt)}
-                                        </span>
-                                      </div>
-                                      <div className="break-all leading-relaxed text-white/70">
-                                        {c.text}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  value={commentDraft[key] ?? ""}
-                                  onChange={(ev) =>
-                                    setCommentDraft((prev) => ({ ...prev, [key]: ev.target.value }))
-                                  }
-                                  onKeyDown={(ev) => {
-                                    if (ev.key === "Enter") sendComment(r.id, a.id);
-                                  }}
-                                  className="flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white outline-none placeholder:text-white/20"
-                                  placeholder="코멘트 달기..."
-                                />
-                                <button
-                                  onClick={() => sendComment(r.id, a.id)}
-                                  className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-white text-xs text-slate-900"
-                                >
-                                  ➤
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          }
-
-          const log = e.data;
-          const meta = KIND_META[log.type as ComposeKind] ?? KIND_META.NOTE;
+        {filtered.map((log) => {
+          const meta = TYPE_META[log.type];
           const editCount = log.edits.length - 1;
           const tagged = log.taggedUserIds
             .map((id) => memberOf.get(id))
@@ -755,7 +390,7 @@ export function ProjectStreamTab({
           if (editingLogId === log.id) {
             return (
               <div
-                key={`log-${log.id}`}
+                key={log.id}
                 className="glass-card rounded-xl border border-white/5 p-4"
               >
                 <div className="mb-2 flex items-center gap-2">
@@ -825,7 +460,7 @@ export function ProjectStreamTab({
 
           return (
             <div
-              key={`log-${log.id}`}
+              key={log.id}
               className="glass-card group relative flex flex-col gap-2.5 rounded-xl border border-white/5 p-4"
             >
               <div className="flex items-start justify-between gap-4">
