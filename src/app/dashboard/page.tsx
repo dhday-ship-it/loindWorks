@@ -1,129 +1,62 @@
 import { requireUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { signOut } from "@/auth";
 import { getStaffHomeData } from "@/lib/staff-home-data";
 import { StaffHome } from "@/components/staff-home/StaffHome";
-import { ClientHome } from "@/components/client-home/ClientHome";
 
 export default async function DashboardPage() {
   const user = await requireUser();
 
-  if (user.role === "STAFF" || user.role === "SUPER_ADMIN") {
-    const [{ tasks, events, taggedItems }, memos, folders, myProjects] =
-      await Promise.all([
-        getStaffHomeData(user.id),
-        prisma.memo.findMany({
-          where: { ownerId: user.id },
-          orderBy: { createdAt: "desc" },
-          include: { folder: { select: { id: true, name: true } } },
-        }),
-        prisma.memoFolder.findMany({
-          where: { ownerId: user.id },
-          orderBy: { createdAt: "asc" },
-        }),
-        prisma.project.findMany({
-          where: {
-            OR: [
-              { pmId: user.id },
-              { members: { some: { userId: user.id } } },
-            ],
-          },
-          select: { id: true, name: true, status: true },
-          orderBy: { createdAt: "asc" },
-        }),
-      ]);
-
-    return (
-      <StaffHome
-        currentUser={{
-          id: user.id,
-          name: user.name ?? null,
-          email: user.email ?? "",
-          role: user.role,
-        }}
-        initialTasks={tasks}
-        initialEvents={events}
-        initialMemos={memos.map((m) => ({
-          ...m,
-          createdAt: m.createdAt.toISOString(),
-        }))}
-        initialFolders={folders}
-        myProjects={myProjects}
-        taggedItems={taggedItems}
-      />
-    );
-  }
-
-  if (user.role === "CLIENT") {
-    const [projects, me] = await Promise.all([
-      prisma.project.findMany({
-        where: { members: { some: { userId: user.id } } },
-        orderBy: { createdAt: "asc" },
-        select: {
-          id: true,
-          name: true,
-          status: true,
-          summary: true,
-          phases: true,
-          currentPhase: true,
-          startDate: true,
-          endDate: true,
-          company: { select: { id: true, name: true } },
-          pm: { select: { id: true, name: true, email: true } },
-        },
+  // SUPER_ADMIN, PM, STAFF 모두 StaffHome으로
+  const [{ tasks, events, taggedItems }, memos, folders, myProjects, notifications] =
+    await Promise.all([
+      getStaffHomeData(user.id),
+      prisma.memo.findMany({
+        where: { ownerId: user.id },
+        orderBy: { createdAt: "desc" },
+        include: { folder: { select: { id: true, name: true } } },
       }),
-      prisma.user.findUnique({
-        where: { id: user.id },
-        select: { company: { select: { name: true } } },
+      prisma.memoFolder.findMany({
+        where: { ownerId: user.id },
+        orderBy: { createdAt: "asc" },
+      }),
+      prisma.project.findMany({
+        where: {
+          OR: [
+            { pmId: user.id },
+            { members: { some: { userId: user.id } } },
+          ],
+        },
+        select: { id: true, name: true, status: true },
+        orderBy: { createdAt: "asc" },
+      }),
+      prisma.notification.findMany({
+        where: { userId: user.id, read: false },
+        orderBy: { createdAt: "desc" },
+        take: 20,
       }),
     ]);
 
-    return (
-      <ClientHome
-        currentUser={{
-          id: user.id,
-          name: user.name ?? null,
-          email: user.email ?? "",
-        }}
-        companyName={me?.company?.name ?? null}
-        projects={projects.map((p) => ({
-          ...p,
-          phases: p.phases as string[],
-          startDate: p.startDate ? p.startDate.toISOString() : null,
-          endDate: p.endDate ? p.endDate.toISOString() : null,
-        }))}
-      />
-    );
-  }
-
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-4 text-center">
-        <h1 className="text-2xl font-semibold">대시보드</h1>
-        <p className="text-gray-600">{user.name ?? user.email}님, 환영합니다.</p>
-        <p className="text-sm text-gray-400">권한: {user.role}</p>
-
-        <a
-          href="/dashboard/settings"
-          className="block w-full rounded-md border border-gray-300 py-2 text-sm font-medium"
-        >
-          계정 설정
-        </a>
-
-        <form
-          action={async () => {
-            "use server";
-            await signOut({ redirectTo: "/login" });
-          }}
-        >
-          <button
-            type="submit"
-            className="w-full rounded-md border border-gray-300 py-2 text-sm font-medium"
-          >
-            로그아웃
-          </button>
-        </form>
-      </div>
-    </div>
+    <StaffHome
+      currentUser={{
+        id: user.id,
+        name: user.name ?? null,
+        email: user.email ?? "",
+        role: user.role,
+      }}
+      initialTasks={tasks}
+      initialEvents={events}
+      initialMemos={memos.map((m) => ({
+        ...m,
+        createdAt: m.createdAt.toISOString(),
+      }))}
+      initialFolders={folders}
+      myProjects={myProjects}
+      taggedItems={taggedItems}
+      initialNotifications={notifications.map((n) => ({
+        ...n,
+        createdAt: n.createdAt.toISOString(),
+      }))}
+    />
   );
 }

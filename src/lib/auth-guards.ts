@@ -18,17 +18,23 @@ export async function requireSuperAdmin() {
   return user;
 }
 
-export async function requireStaff() {
+// PM 또는 SUPER_ADMIN
+export async function requirePM() {
   const user = await requireUser();
-  if (user.role !== "STAFF" && user.role !== "SUPER_ADMIN") {
+  if (user.role !== "PM" && user.role !== "SUPER_ADMIN") {
     redirect("/dashboard");
   }
   return user;
 }
 
-export async function requireClient() {
+// STAFF, PM, SUPER_ADMIN 모두 허용
+export async function requireStaff() {
   const user = await requireUser();
-  if (user.role !== "CLIENT") {
+  if (
+    user.role !== "STAFF" &&
+    user.role !== "PM" &&
+    user.role !== "SUPER_ADMIN"
+  ) {
     redirect("/dashboard");
   }
   return user;

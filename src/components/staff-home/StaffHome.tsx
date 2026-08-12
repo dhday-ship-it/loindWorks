@@ -15,6 +15,7 @@ import type {
   CalendarEventItem,
   MemoFolderItem,
   MemoItem,
+  NotificationItem,
   ProjectSummary,
   TaggedItem,
   TaskItem,
@@ -33,9 +34,8 @@ const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400" });
 
 const ROLE_LABEL: Record<Role, string> = {
   SUPER_ADMIN: "최고관리자",
-  BRAND_ADMIN: "브랜드 관리자",
+  PM: "프로젝트 매니저",
   STAFF: "직원",
-  CLIENT: "클라이언트",
 };
 
 function nowMs() {
@@ -50,6 +50,7 @@ export function StaffHome({
   initialFolders,
   myProjects,
   taggedItems: initialTaggedItems,
+  initialNotifications = [],
 }: {
   currentUser: { id: string; name: string | null; email: string; role: Role };
   initialTasks: TaskItem[];
@@ -58,6 +59,7 @@ export function StaffHome({
   initialFolders: MemoFolderItem[];
   myProjects: ProjectSummary[];
   taggedItems: TaggedItem[];
+  initialNotifications?: NotificationItem[];
 }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [events, setEvents] = useState(initialEvents);

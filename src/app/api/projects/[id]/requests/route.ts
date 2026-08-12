@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { requireUser } from "@/lib/auth-guards";
+import { requireStaff } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await requireUser();
+  const user = await requireStaff();
   const { id: projectId } = await params;
 
   const { title, body, assigneeUserIds, itemType, attachments } =
@@ -33,43 +33,8 @@ export async function POST(
         }))
     : [];
 
-  let assignees: string[];
-  if (user.role === "CLIENT") {
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-      select: { pmId: true, members: true },
-    });
-    if (!project) {
-      return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
-    }
-    const isMember = project.members.some((m) => m.userId === user.id);
-    if (!isMember) {
-      return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
-    }
-
-    const staffMemberIds = new Set(
-      project.members
-        .filter((m) => m.roleLabel === "팀원")
-        .map((m) => m.userId)
-    );
-    if (project.pmId) staffMemberIds.add(project.pmId);
-
-    const requested = Array.isArray(assigneeUserIds)
-      ? assigneeUserIds.filter(
-          (id: unknown): id is string =>
-            typeof id === "string" && staffMemberIds.has(id)
-        )
-      : [];
-
-    assignees = requested.length > 0 ? requested : project.pmId ? [project.pmId] : [];
-  } else if (user.role === "STAFF" || user.role === "SUPER_ADMIN") {
-    assignees = Array.isArray(assigneeUserIds) ? assigneeUserIds : [];
-  } else {
-    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
-  }
-
-  const resolvedType =
-    typeof itemType === "string" && itemType === "TASK" ? "TASK" : "REQUEST";
+  const assignees: string[] = Array.isArray(assigneeUserIds) ? assigneeUserIds : [];
+  const resolvedType = typeof itemType === "string" && itemType === "TASK" ? "TASK" : "REQUEST";
 
   const projectRequest = await prisma.projectRequest.create({
     data: {
@@ -81,9 +46,7 @@ export async function POST(
       assignees: {
         create: assignees.map((userId: string) => ({ userId })),
       },
-      files: {
-        create: files,
-      },
+      files: { create: files },
     },
     include: {
       author: { select: { id: true, name: true, email: true } },

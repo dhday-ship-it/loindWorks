@@ -24,7 +24,7 @@ export function AccountsPage({
 }) {
   const [showCreate, setShowCreate] = useState(false);
   const staffUsers = users.filter((u) => u.role === "STAFF");
-  const clientUsers = users.filter((u) => u.role === "CLIENT");
+  const pmUsers = users.filter((u) => u.role === "PM");
 
   const deleteUser = async (id: string, name: string) => {
     if (!window.confirm(`${name} 계정을 삭제할까요?`)) return;
@@ -124,7 +124,7 @@ export function AccountsPage({
             Client 계정
           </div>
           <span className="admin-badge admin-b-client">
-            {clientUsers.length}명
+            {pmUsers.length}명
           </span>
         </div>
         <div className="overflow-x-auto">
@@ -139,14 +139,14 @@ export function AccountsPage({
               </tr>
             </thead>
             <tbody>
-              {clientUsers.length === 0 && (
+              {pmUsers.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-6 text-center text-white/30">
                     Client 계정이 없습니다.
                   </td>
                 </tr>
               )}
-              {clientUsers.map((u) => (
+              {pmUsers.map((u) => (
                 <tr key={u.id}>
                   <td>
                     <div className="flex items-center gap-2">

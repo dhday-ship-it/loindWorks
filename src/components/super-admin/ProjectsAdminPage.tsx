@@ -214,7 +214,7 @@ export function ProjectsAdminPage({
                     {fmtPeriod(p)}
                   </td>
                   <td className="text-[11px] text-white/55">
-                    {p.clientNames.length ? p.clientNames.join(", ") : "-"}
+                    {p.memberNames.length ? p.memberNames.join(", ") : "-"}
                   </td>
                   <td>
                     <span className={STATUS_CLASS[p.status]}>

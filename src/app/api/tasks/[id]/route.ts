@@ -4,12 +4,7 @@ import { requireStaff } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import type { TaskStatus } from "@/generated/prisma/enums";
 
-const VALID_STATUSES: TaskStatus[] = [
-  "PENDING",
-  "IN_PROGRESS",
-  "REVIEW",
-  "DONE",
-];
+const VALID_STATUSES: TaskStatus[] = ["WAIT", "IN_PROGRESS", "REVIEW", "FEEDBACK", "DONE"];
 
 export async function PATCH(
   request: Request,
@@ -17,16 +12,23 @@ export async function PATCH(
 ) {
   await requireStaff();
   const { id } = await params;
-  const { status } = await request.json();
+  const { status, priority, order, title, description, dueDate } = await request.json();
 
-  if (!VALID_STATUSES.includes(status)) {
+  if (status !== undefined && !VALID_STATUSES.includes(status)) {
     return NextResponse.json({ error: "잘못된 상태값입니다." }, { status: 400 });
   }
 
   const task = await prisma.task.update({
     where: { id },
-    data: { status },
-    select: { id: true, status: true },
+    data: {
+      ...(status !== undefined && { status }),
+      ...(priority !== undefined && { priority }),
+      ...(order !== undefined && { order }),
+      ...(title !== undefined && { title }),
+      ...(description !== undefined && { description }),
+      ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
+    },
+    select: { id: true, status: true, priority: true, order: true },
   });
 
   return NextResponse.json({ task });

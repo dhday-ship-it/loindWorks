@@ -23,9 +23,8 @@ const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400" });
 
 const ROLE_LABEL: Record<Role, string> = {
   SUPER_ADMIN: "최고관리자",
-  BRAND_ADMIN: "브랜드 관리자",
+  PM: "프로젝트 매니저",
   STAFF: "직원",
-  CLIENT: "클라이언트",
 };
 
 function ProjectRow({

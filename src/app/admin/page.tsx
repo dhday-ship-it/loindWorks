@@ -1,11 +1,7 @@
 import { requireSuperAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { SuperAdminDashboard } from "@/components/super-admin/SuperAdminDashboard";
-import type {
-  AdminProjectItem,
-  ContactRequestItem,
-  UnhandledRequestItem,
-} from "@/components/super-admin/types";
+import type { AdminProjectItem, UnhandledRequestItem } from "@/components/super-admin/types";
 
 function daysAgo(days: number) {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -18,22 +14,21 @@ export default async function AdminPage() {
     activeProjectCount,
     totalProjectCount,
     staffCount,
-    clientCount,
+    pmCount,
     companyCount,
     users,
     companies,
     allProjects,
     staff,
     openRequests,
-    contactRequests,
   ] = await Promise.all([
     prisma.project.count({ where: { status: "IN_PROGRESS" } }),
     prisma.project.count(),
     prisma.user.count({ where: { role: "STAFF" } }),
-    prisma.user.count({ where: { role: "CLIENT" } }),
+    prisma.user.count({ where: { role: "PM" } }),
     prisma.company.count(),
     prisma.user.findMany({
-      where: { role: { in: ["STAFF", "CLIENT"] } },
+      where: { role: { in: ["PM", "STAFF"] } },
       select: {
         id: true,
         name: true,
@@ -62,7 +57,7 @@ export default async function AdminPage() {
       },
     }),
     prisma.user.findMany({
-      where: { role: { in: ["STAFF", "SUPER_ADMIN"] } },
+      where: { role: { in: ["STAFF", "PM", "SUPER_ADMIN"] } },
       select: { id: true, name: true, email: true },
       orderBy: { name: "asc" },
     }),
@@ -74,16 +69,7 @@ export default async function AdminPage() {
       },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.contactRequest.findMany({
-      orderBy: { createdAt: "desc" },
-    }),
   ]);
-
-  const contacts: ContactRequestItem[] = contactRequests.map((c) => ({
-    ...c,
-    projects: c.projects as unknown as ContactRequestItem["projects"],
-    createdAt: c.createdAt.toISOString(),
-  }));
 
   const projects: AdminProjectItem[] = allProjects.map((p) => {
     const phases = p.phases as string[];
@@ -97,33 +83,25 @@ export default async function AdminPage() {
       endDate: p.endDate ? p.endDate.toISOString() : null,
       company: p.company,
       pm: p.pm,
-      clientNames: p.members
-        .filter((m) => m.user.role === "CLIENT")
-        .map((m) => m.user.name ?? "이름 없음"),
+      memberNames: p.members.map((m) => m.user.name ?? "이름 없음"),
     };
   });
 
-  const inProgressProjects = projects
-    .filter((p) => p.status === "IN_PROGRESS")
-    .slice(0, 5);
+  const inProgressProjects = projects.filter((p) => p.status === "IN_PROGRESS").slice(0, 5);
 
   const unhandled = openRequests.filter(
-    (r) =>
-      r.assignees.length === 0 ||
-      r.assignees.some((a) => a.status === "WAIT")
+    (r) => r.assignees.length === 0 || r.assignees.some((a) => a.status === "WAIT")
   );
   const weekAgo = daysAgo(7);
 
-  const unhandledRequests: UnhandledRequestItem[] = unhandled
-    .slice(0, 8)
-    .map((r) => ({
-      id: r.id,
-      projectId: r.project.id,
-      projectName: r.project.name,
-      authorName: r.author.name ?? r.author.email,
-      body: r.body,
-      createdAt: r.createdAt.toISOString(),
-    }));
+  const unhandledRequests: UnhandledRequestItem[] = unhandled.slice(0, 8).map((r) => ({
+    id: r.id,
+    projectId: r.project.id,
+    projectName: r.project.name,
+    authorName: r.author.name ?? r.author.email,
+    body: r.body,
+    createdAt: r.createdAt.toISOString(),
+  }));
 
   return (
     <SuperAdminDashboard
@@ -132,21 +110,16 @@ export default async function AdminPage() {
         activeProjects: activeProjectCount,
         totalProjects: totalProjectCount,
         staffCount,
-        clientCount,
+        pmCount,
         companyCount,
         unhandledCount: unhandled.length,
-        newRequestsThisWeek: unhandled.filter((r) => r.createdAt >= weekAgo)
-          .length,
+        newRequestsThisWeek: unhandled.filter((r) => r.createdAt >= weekAgo).length,
       }}
       inProgressProjects={inProgressProjects}
       unhandledRequests={unhandledRequests}
-      initialUsers={users.map((u) => ({
-        ...u,
-        createdAt: u.createdAt.toISOString(),
-      }))}
+      initialUsers={users.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }))}
       initialCompanies={companies}
       initialProjects={projects}
-      initialContacts={contacts}
       staff={staff}
     />
   );

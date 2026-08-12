@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 
 import { requireSuperAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import type { Role } from "@/generated/prisma/enums";
 
 const userSelect = {
   id: true,
@@ -16,11 +17,13 @@ const userSelect = {
   },
 } as const;
 
+const VALID_ROLES: Role[] = ["PM", "STAFF"];
+
 export async function GET() {
   await requireSuperAdmin();
 
   const users = await prisma.user.findMany({
-    where: { role: { in: ["STAFF", "CLIENT"] } },
+    where: { role: { in: ["PM", "STAFF"] } },
     select: userSelect,
     orderBy: { createdAt: "asc" },
   });
@@ -30,8 +33,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   await requireSuperAdmin();
-  const { name, email, password, role, companyId, projectIds } =
-    await request.json();
+  const { name, email, password, role, companyId } = await request.json();
 
   if (!name || !email || !password || !role) {
     return NextResponse.json(
@@ -40,9 +42,9 @@ export async function POST(request: Request) {
     );
   }
 
-  if (role !== "STAFF" && role !== "CLIENT") {
+  if (!VALID_ROLES.includes(role)) {
     return NextResponse.json(
-      { error: "역할은 STAFF 또는 CLIENT여야 합니다." },
+      { error: "역할은 PM 또는 STAFF여야 합니다." },
       { status: 400 }
     );
   }
@@ -56,10 +58,7 @@ export async function POST(request: Request) {
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return NextResponse.json(
-      { error: "이미 가입된 이메일입니다." },
-      { status: 409 }
-    );
+    return NextResponse.json({ error: "이미 가입된 이메일입니다." }, { status: 409 });
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
@@ -70,16 +69,7 @@ export async function POST(request: Request) {
       email,
       passwordHash,
       role,
-      companyId: role === "CLIENT" ? companyId || undefined : undefined,
-      projectMemberships:
-        role === "CLIENT" && Array.isArray(projectIds) && projectIds.length
-          ? {
-              create: projectIds.map((projectId: string) => ({
-                projectId,
-                roleLabel: "Client",
-              })),
-            }
-          : undefined,
+      companyId: companyId || undefined,
     },
     select: userSelect,
   });

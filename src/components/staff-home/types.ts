@@ -1,4 +1,4 @@
-import type { ProjectStatus, TaskStatus } from "@/generated/prisma/enums";
+import type { ProjectStatus, TaskPriority, TaskStatus } from "@/generated/prisma/enums";
 import type { Person, CalendarEventItem } from "@/components/calendar/types";
 
 export type { Person, CalendarEventItem };
@@ -18,12 +18,25 @@ export interface TaggedItem {
   createdAt: string;
 }
 
+export interface NotificationItem {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  read: boolean;
+  link: string | null;
+  createdAt: string;
+  taskId: string | null;
+}
+
 export interface TaskItem {
   id: string;
   title: string;
   description: string | null;
   status: TaskStatus;
-  tag: string | null;
+  priority: TaskPriority;
+  projectId: string;
+  order: number;
   startDate: string | null;
   dueDate: string | null;
   createdAt: string;

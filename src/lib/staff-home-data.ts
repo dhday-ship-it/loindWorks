@@ -5,7 +5,9 @@ const taskSelect = {
   title: true,
   description: true,
   status: true,
-  tag: true,
+  priority: true,
+  projectId: true,
+  order: true,
   startDate: true,
   dueDate: true,
   createdAt: true,
@@ -16,14 +18,19 @@ const taskSelect = {
 export async function getStaffHomeData(userId: string) {
   const [tasks, events, taggedAssignees, taggedLogs] = await Promise.all([
     prisma.task.findMany({
+      where: {
+        archivedAt: null,
+        assigneeId: userId,
+      },
       select: taskSelect,
-      orderBy: { createdAt: "desc" },
+      orderBy: { order: "asc" },
     }),
     prisma.calendarEvent.findMany({
       where: {
         OR: [
           { ownerId: userId },
           { project: { members: { some: { userId } } } },
+          { project: { pmId: userId } },
         ],
       },
       orderBy: { startAt: "asc" },

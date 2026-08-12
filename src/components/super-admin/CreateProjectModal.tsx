@@ -85,7 +85,7 @@ export function CreateProjectModal({
       endDate: endDate ? new Date(endDate).toISOString() : null,
       company: company ? { id: company.id, name: company.name } : null,
       pm,
-      clientNames: [],
+      memberNames: [],
     });
   };
 

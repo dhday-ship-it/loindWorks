@@ -447,9 +447,9 @@ export function CalendarPanel({
                 >
                   <div className="flex items-center justify-between font-mono text-[9px] font-bold text-blue-400">
                     <span>WORK STATION DUE TASK</span>
-                    {t.tag && (
+                    {t.projectId && (
                       <span className="rounded border border-blue-500/20 bg-blue-500/10 px-1">
-                        #{t.tag}
+                        {myProjects.find((p) => p.id === t.projectId)?.name ?? t.projectId}
                       </span>
                     )}
                   </div>

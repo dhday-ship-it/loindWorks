@@ -55,14 +55,14 @@ export function SuperAdminDashboard({
   initialUsers: AdminUserItem[];
   initialCompanies: CompanyItem[];
   initialProjects: AdminProjectItem[];
-  initialContacts: ContactRequestItem[];
+  initialContacts?: ContactRequestItem[];
   staff: StaffOption[];
 }) {
   const [page, setPage] = useState<Page>("dashboard");
   const [users, setUsers] = useState(initialUsers);
   const [companies, setCompanies] = useState(initialCompanies);
   const [projects, setProjects] = useState(initialProjects);
-  const [contacts, setContacts] = useState(initialContacts);
+  const [contacts, setContacts] = useState(initialContacts ?? []);
   const [toast, setToast] = useState<string | null>(null);
   const unhandledContacts = contacts.filter((c) => !c.handled).length;
 

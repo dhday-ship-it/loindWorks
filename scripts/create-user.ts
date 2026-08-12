@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
 import type { Role } from "../src/generated/prisma/enums";
 
-const VALID_ROLES: Role[] = ["SUPER_ADMIN", "BRAND_ADMIN", "STAFF", "CLIENT"];
+const VALID_ROLES: Role[] = ["SUPER_ADMIN", "PM", "STAFF"];
 
 function parseArgs() {
   const args = process.argv.slice(2);

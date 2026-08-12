@@ -8,9 +8,11 @@ const taskSelect = {
   title: true,
   description: true,
   status: true,
-  tag: true,
+  priority: true,
+  projectId: true,
   startDate: true,
   dueDate: true,
+  order: true,
   createdAt: true,
   assignee: { select: { id: true, name: true, email: true } },
   createdBy: { select: { id: true, name: true, email: true } },
@@ -20,8 +22,9 @@ export async function GET() {
   await requireStaff();
 
   const tasks = await prisma.task.findMany({
+    where: { archivedAt: null },
     select: taskSelect,
-    orderBy: { createdAt: "desc" },
+    orderBy: { order: "asc" },
   });
 
   return NextResponse.json({ tasks });
@@ -29,18 +32,22 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const user = await requireStaff();
-  const { title, description, assigneeId, tag, startDate, dueDate } =
+  const { title, description, assigneeId, projectId, priority, startDate, dueDate } =
     await request.json();
 
   if (!title) {
     return NextResponse.json({ error: "제목은 필수입니다." }, { status: 400 });
+  }
+  if (!projectId) {
+    return NextResponse.json({ error: "프로젝트는 필수입니다." }, { status: 400 });
   }
 
   const task = await prisma.task.create({
     data: {
       title,
       description: description || undefined,
-      tag: tag || undefined,
+      priority: priority ?? "NORMAL",
+      projectId,
       assigneeId: assigneeId || user.id,
       createdById: user.id,
       startDate: startDate ? new Date(startDate) : undefined,

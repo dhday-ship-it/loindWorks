@@ -61,10 +61,10 @@ export function OverviewPage({
             전체 계정
           </div>
           <div className="my-1 text-3xl tracking-wide text-white">
-            {stats.staffCount + stats.clientCount}
+            {stats.staffCount + stats.pmCount}
           </div>
           <div className="mt-1 font-mono text-[10px] text-white/28">
-            Staff {stats.staffCount} · Client {stats.clientCount}
+            Staff {stats.staffCount} · PM {stats.pmCount}
           </div>
         </div>
         <div className="admin-stat-card px-4 py-4">

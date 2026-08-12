@@ -10,18 +10,26 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
 enum Role {
   SUPER_ADMIN
-  BRAND_ADMIN
+  PM           // 프로젝트 매니저 (구 BRAND_ADMIN)
   STAFF
-  CLIENT
 }
 
 enum TaskStatus {
-  PENDING
-  IN_PROGRESS
-  REVIEW
-  DONE
+  WAIT         // 대기
+  IN_PROGRESS  // 진행 중
+  REVIEW       // 검토 요청
+  FEEDBACK     // 피드백/수정 필요
+  DONE         // 완료
+}
+
+enum TaskPriority {
+  HIGH
+  NORMAL
+  LOW
 }
 
 enum ProjectStatus {
@@ -53,26 +61,47 @@ enum TaxType {
   NONE
 }
 
+enum NotificationType {
+  TASK_ASSIGNED     // 작업 배정됨
+  TASK_STATUS       // 작업 상태 변경
+  TASK_DUE          // 마감 임박 (D-3)
+  TASK_OVERDUE      // 마감 초과
+  TASK_COMMENT      // 작업 댓글
+  TASK_MENTION      // @멘션
+  PROJECT_UPDATE    // 프로젝트 상태/단계 변경
+}
+
+// ─── Core Models ─────────────────────────────────────────────────────────────
+
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
   passwordHash  String?
-  role          Role      @default(CLIENT)
+  role          Role      @default(STAFF)
   emailVerified DateTime?
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // NextAuth
   accounts Account[]
   sessions Session[]
 
-  assignedTasks  Task[]          @relation("AssignedTasks")
-  createdTasks   Task[]          @relation("CreatedTasks")
+  // 작업
+  assignedTasks  Task[]         @relation("AssignedTasks")
+  createdTasks   Task[]         @relation("CreatedTasks")
+  taskComments   TaskComment[]
+
+  // 알림
+  notifications  Notification[]
+
+  // 캘린더/메모
   calendarEvents CalendarEvent[]
   memoFolders    MemoFolder[]
   memos          Memo[]
 
+  // 프로젝트
   projectMemberships ProjectMember[]
   projectRequests    ProjectRequest[]
   requestAssignments RequestAssignee[]
@@ -120,6 +149,7 @@ model Project {
   pm   User?   @relation("ProjectPM", fields: [pmId], references: [id], onDelete: SetNull)
 
   members        ProjectMember[]
+  tasks          Task[]
   requests       ProjectRequest[]
   logs           ActivityLog[]
   calendarEvents CalendarEvent[]
@@ -127,38 +157,85 @@ model Project {
   files          ProjectFile[]
 }
 
-model ProjectRecord {
-  id    String   @id @default(cuid())
-  date  DateTime
-  title String
-  note  String?
+// ─── Task (핵심 작업 관리) ────────────────────────────────────────────────────
 
-  // 정산
-  amount           Int?
-  taxType          TaxType @default(VAT_INCLUSIVE)
-  advancePayment   Int?
-  balance          Int?
-  settled          Boolean @default(false)
-  taxInvoiceIssued Boolean @default(false)
-
-  // 외주
-  outsourced                Boolean @default(false)
-  outsourceVendor           String?
-  outsourceTotalAmount      Int?
-  outsourceTaxType          TaxType @default(NONE)
-  outsourcePayment          Int?
-  outsourceBalanceSettled   Boolean @default(false)
-  outsourceTaxInvoiceIssued Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus   @default(WAIT)
+  priority    TaskPriority @default(NORMAL)
+  startDate   DateTime?
+  dueDate     DateTime?
+  order       Int          @default(0)   // 칸반 컬럼 내 순서 (drag & drop)
+  archivedAt  DateTime?                  // null이면 활성, 값 있으면 아카이브
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  assigneeId String
+  assignee   User   @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Cascade)
+
+  comments      TaskComment[]
+  files         ProjectFile[]
+  notifications Notification[]
+  // 상태 변경 자동 히스토리
+  history       TaskHistory[]
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  body      String
+  mentions  String[] @default([]) // 멘션된 userId 목록
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
+
+model TaskHistory {
+  id         String     @id @default(cuid())
+  fromStatus TaskStatus?
+  toStatus   TaskStatus?
+  note       String?     // 선택적 메모
+  createdAt  DateTime   @default(now())
+
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  actorId String
+  // actor 직접 relation 없이 userId 저장 (삭제 시 히스토리 유지)
+}
+
+// ─── Notification ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  body      String?
+  read      Boolean          @default(false)
+  link      String?          // 이동할 경로 (예: /dashboard/projects?taskId=xxx)
+  createdAt DateTime         @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 연관 작업 (선택)
+  taskId String?
+  task   Task?  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+// ─── Project 하위 모델 ────────────────────────────────────────────────────────
 
 model ProjectMember {
   id        String @id @default(cuid())
@@ -177,7 +254,7 @@ model ProjectRequest {
   id        String   @id @default(cuid())
   title     String?
   body      String
-  itemType  String   @default("REQUEST") // "REQUEST" | "TASK"
+  itemType  String   @default("TASK") // "TASK" only (클라이언트 요청 제거)
   createdAt DateTime @default(now())
 
   projectId String
@@ -191,9 +268,9 @@ model ProjectRequest {
 }
 
 model RequestAssignee {
-  id       String         @id @default(cuid())
-  status   RequestStatus  @default(WAIT)
-  comments Json           @default("[]")
+  id       String        @id @default(cuid())
+  status   RequestStatus @default(WAIT)
+  comments Json          @default("[]")
 
   requestId String
   request   ProjectRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
@@ -237,6 +314,10 @@ model ProjectFile {
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  // 연결 대상 (택1)
+  taskId    String?
+  task      Task?          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
   requestId String?
   request   ProjectRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
@@ -247,30 +328,49 @@ model ProjectFile {
   uploader   User   @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
 }
 
-model Task {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  status      TaskStatus @default(PENDING)
-  tag         String?
-  startDate   DateTime?
-  dueDate     DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+model ProjectRecord {
+  id    String   @id @default(cuid())
+  date  DateTime
+  title String
+  note  String?
 
-  assigneeId String
-  assignee   User   @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: Cascade)
+  amount           Int?
+  taxType          TaxType @default(VAT_INCLUSIVE)
+  advancePayment   Int?
+  balance          Int?
+  settled          Boolean @default(false)
+  taxInvoiceIssued Boolean @default(false)
 
-  createdById String
-  createdBy   User   @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Cascade)
+  outsourced                Boolean @default(false)
+  outsourceVendor           String?
+  outsourceTotalAmount      Int?
+  outsourceTaxType          TaxType @default(NONE)
+  outsourcePayment          Int?
+  outsourceBalanceSettled   Boolean @default(false)
+  outsourceTaxInvoiceIssued Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
+// ─── Calendar & Memo ─────────────────────────────────────────────────────────
+
 model CalendarEvent {
-  id         String   @id @default(cuid())
-  title      String
-  startAt    DateTime
-  sharedWith String[] @default([])
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  title       String
+  startAt     DateTime
+  endAt       DateTime?           // 종료 시간 추가
+  allDay      Boolean  @default(false)
+  color       String?             // 프로젝트별 색상 오버라이드
+  description String?
+  sharedWith  String[] @default([])
+  createdAt   DateTime @default(now())
 
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -307,19 +407,7 @@ model Memo {
   folder   MemoFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 }
 
-model ContactRequest {
-  id            String   @id @default(cuid())
-  companyName   String
-  contactName   String
-  phone         String
-  email         String
-  projects      Json
-  privacyAgreed Boolean  @default(false)
-  handled       Boolean  @default(false)
-  createdAt     DateTime @default(now())
-}
-
-// --- Auth.js (NextAuth) required models ---
+// ─── Auth.js (NextAuth) ───────────────────────────────────────────────────────
 
 model Account {
   id                String  @id @default(cuid())

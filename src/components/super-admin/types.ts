@@ -29,7 +29,7 @@ export interface AdminProjectItem {
   endDate: string | null;
   company: { id: string; name: string } | null;
   pm: { id: string; name: string | null; email: string } | null;
-  clientNames: string[];
+  memberNames: string[];
 }
 
 export interface UnhandledRequestItem {
@@ -45,7 +45,7 @@ export interface AdminStats {
   activeProjects: number;
   totalProjects: number;
   staffCount: number;
-  clientCount: number;
+  pmCount: number;
   companyCount: number;
   unhandledCount: number;
   newRequestsThisWeek: number;
