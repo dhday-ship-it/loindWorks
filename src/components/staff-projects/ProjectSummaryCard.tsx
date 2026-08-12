@@ -64,12 +64,24 @@ export function ProjectSummaryCard({
   return (
     <div className="glass-panel flex flex-col gap-4 rounded-2xl p-6 shadow-2xl">
       <div className="flex items-center justify-between border-b border-white/10 pb-3">
-        <span
-          className={`rounded px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider ${STATUS_BADGE_CLASS[project.status]}`}
-        >
-          {STATUS_LABEL[project.status]}
-        </span>
-        <span className="font-mono text-[11px] font-bold text-white/40">
+        <div className="grid flex-1 grid-cols-2 items-center gap-3">
+          <span
+            className={`w-fit rounded px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider ${STATUS_BADGE_CLASS[project.status]}`}
+          >
+            {STATUS_LABEL[project.status]}
+          </span>
+          <div className="min-w-0 border-l border-white/10 pl-3">
+            <div className="truncate text-[11px] font-semibold text-white/70">
+              {project.company?.name ?? "고객사 미지정"}
+            </div>
+            {project.company?.contactName && (
+              <div className="truncate font-mono text-[10px] text-white/35">
+                {project.company.contactName}
+              </div>
+            )}
+          </div>
+        </div>
+        <span className="shrink-0 font-mono text-[11px] font-bold text-white/40">
           {pct}%
         </span>
       </div>
