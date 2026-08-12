@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>LOIND Color System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background: #0E1116;
+    color: #EDEFF3;
+    padding: 48px 24px;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 720px; margin: 0 auto; }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    color: #8FA8C4;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .sub {
+    font-size: 14px;
+    color: #9198A8;
+    margin-bottom: 40px;
+  }
+
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 0;
+    border-top: 1px solid #23272F;
+  }
+  .swatch:last-child { border-bottom: 1px solid #23272F; }
+
+  .chip {
+    width: 88px;
+    height: 88px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .info { flex: 1; }
+
+  .role {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 4px;
+  }
+
+  .name {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .hex {
+    font-family: 'SF Mono', monospace;
+    font-size: 14px;
+    color: #9198A8;
+  }
+
+  .note {
+    font-size: 12px;
+    color: #6B7280;
+    margin-top: 40px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">LOIND · Brand Identity</div>
+    <h1>Color System</h1>
+    <div class="sub">2026 개정안 · 아이스블루 레퍼런스 반영 · 최종 확정</div>
+
+    <div class="swatch">
+      <div class="chip" style="background:#55689B;"></div>
+      <div class="info">
+        <div class="role">Primary — 주색</div>
+        <div class="name">딥 아이스 네이비블루</div>
+        <div class="hex">#55689B</div>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="chip" style="background:#8FA8C4;"></div>
+      <div class="info">
+        <div class="role">Secondary 01 — 보조색</div>
+        <div class="name">블루그레이</div>
+        <div class="hex">#8FA8C4</div>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="chip" style="background:#F6FAFD; border-color:#3a3f4a;"></div>
+      <div class="info">
+        <div class="role">Secondary 02 — 보조색</div>
+        <div class="name">화이트</div>
+        <div class="hex">#F6FAFD</div>
+      </div>
+    </div>
+
+    <div class="swatch">
+      <div class="chip" style="background:#000000;"></div>
+      <div class="info">
+        <div class="role">Secondary 03 — 보조색</div>
+        <div class="name">블랙</div>
+        <div class="hex">#000000</div>
+      </div>
+    </div>
+
+    <div class="note">
+      주색(#55689B)은 원단 레퍼런스의 그늘지지 않은 부분에서 추출한 베이스 톤에 채도를 높이고 파란기를 더해, 아이스블루 레퍼런스가 가진 시리고 차가운 느낌을 반영한 값입니다.
+    </div>
+  </div>
+</body>
+</html>

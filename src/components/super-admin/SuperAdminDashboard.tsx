@@ -11,14 +11,12 @@ import { AccountsPage } from "./AccountsPage";
 import { CompaniesPage } from "./CompaniesPage";
 import { ProjectsAdminPage } from "./ProjectsAdminPage";
 import { ProjectRecordsPage } from "./ProjectRecordsPage";
-import { ContactsPage } from "./ContactsPage";
 import { Toast } from "./Toast";
 import type {
   AdminProjectItem,
   AdminStats,
   AdminUserItem,
   CompanyItem,
-  ContactRequestItem,
   StaffOption,
   UnhandledRequestItem,
 } from "./types";
@@ -34,8 +32,7 @@ type Page =
   | "accounts"
   | "companies"
   | "projects"
-  | "records"
-  | "contacts";
+  | "records";
 
 export function SuperAdminDashboard({
   currentUserName,
@@ -45,7 +42,6 @@ export function SuperAdminDashboard({
   initialUsers,
   initialCompanies,
   initialProjects,
-  initialContacts,
   staff,
 }: {
   currentUserName: string;
@@ -55,16 +51,13 @@ export function SuperAdminDashboard({
   initialUsers: AdminUserItem[];
   initialCompanies: CompanyItem[];
   initialProjects: AdminProjectItem[];
-  initialContacts?: ContactRequestItem[];
   staff: StaffOption[];
 }) {
   const [page, setPage] = useState<Page>("dashboard");
   const [users, setUsers] = useState(initialUsers);
   const [companies, setCompanies] = useState(initialCompanies);
   const [projects, setProjects] = useState(initialProjects);
-  const [contacts, setContacts] = useState(initialContacts ?? []);
   const [toast, setToast] = useState<string | null>(null);
-  const unhandledContacts = contacts.filter((c) => !c.handled).length;
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -74,7 +67,6 @@ export function SuperAdminDashboard({
   const navItems: { id: Page; label: string; icon: string; section?: string }[] =
     [
       { id: "dashboard", label: "대시보드", icon: "📈" },
-      { id: "contacts", label: "문의 목록", icon: "📮", section: "문의 관리" },
       { id: "accounts", label: "계정 목록", icon: "👥", section: "계정 관리" },
       { id: "companies", label: "고객사 목록", icon: "🏢", section: "고객사 관리" },
       { id: "projects", label: "프로젝트 목록", icon: "📁", section: "프로젝트 관리" },
@@ -137,11 +129,6 @@ export function SuperAdminDashboard({
                       Live
                     </span>
                   )}
-                  {item.id === "contacts" && unhandledContacts > 0 && (
-                    <span className="ml-auto rounded-full border border-amber-400/25 bg-amber-400/15 px-1.5 py-0.5 font-mono text-[9px] font-bold text-amber-400">
-                      {unhandledContacts}
-                    </span>
-                  )}
                 </div>
               </div>
             ))}
@@ -153,16 +140,7 @@ export function SuperAdminDashboard({
                 stats={stats}
                 inProgressProjects={inProgressProjects}
                 unhandledRequests={unhandledRequests}
-                unhandledContacts={unhandledContacts}
                 onNavigateProjects={() => setPage("projects")}
-                onNavigateContacts={() => setPage("contacts")}
-              />
-            )}
-            {page === "contacts" && (
-              <ContactsPage
-                contacts={contacts}
-                onContactsChange={setContacts}
-                showToast={showToast}
               />
             )}
             {page === "accounts" && (
