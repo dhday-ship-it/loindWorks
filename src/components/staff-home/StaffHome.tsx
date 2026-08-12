@@ -226,17 +226,13 @@ export function StaffHome({
               </div>
             </div>
 
-            <div className="grid min-h-[460px] grid-cols-1 gap-y-8 divide-y divide-white/10 md:grid-cols-3 md:gap-y-0 md:divide-x md:divide-y-0">
+            <div className="grid min-h-[460px] grid-cols-1 gap-y-8 divide-y divide-white/10 md:grid-cols-[1fr_2fr] md:gap-y-0 md:divide-x md:divide-y-0">
               <CalendarPanel initialEvents={events} tasks={tasks} myProjects={myProjects} />
               <WorkStationPanel
                 tasks={tasks}
                 onTasksChange={setTasks}
                 currentUserId={currentUser.id}
                 myProjects={myProjects}
-              />
-              <MemoPanel
-                initialMemos={initialMemos}
-                initialFolders={initialFolders}
               />
             </div>
           </div>
@@ -316,6 +312,14 @@ export function StaffHome({
                 </div>
               </div>
             )}
+
+            {/* 개인 메모 */}
+            <div className="flex-1 overflow-hidden border-t border-white/10 pt-4">
+              <MemoPanel
+                initialMemos={initialMemos}
+                initialFolders={initialFolders}
+              />
+            </div>
 
             <div className="mt-auto flex flex-col gap-2.5">
               <Link
