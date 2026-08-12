@@ -101,7 +101,7 @@ export function StaffHome({
       className={`${dmSans.className} relative flex min-h-screen flex-col text-white`}
     >
       <ParticleBackground />
-      <div className="relative z-10 flex min-h-screen flex-col justify-between">
+      <div className="relative z-10 flex min-h-screen flex-col">
         <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-white/10 bg-black/30 px-4 backdrop-blur-2xl md:px-10">
           <div className="flex min-w-0 shrink-0 items-center gap-3 md:gap-6">
             <div
@@ -141,32 +141,16 @@ export function StaffHome({
           </div>
         </nav>
 
-        <div className="w-full px-6 pb-3 pt-10 md:px-10">
+        <div className="w-full px-6 pb-4 pt-6 md:px-10">
           <h2
-            className={`${bebasNeue.className} text-4xl font-light leading-none tracking-widest text-white/90 md:text-5xl`}
+            className={`${bebasNeue.className} text-3xl font-light leading-none tracking-widest text-white/90 md:text-4xl`}
           >
             LOIND CORPORATION
           </h2>
-          <div className="glass-panel mt-5 flex max-w-lg items-center gap-3 rounded-xl p-2.5">
-            <span className="border-r border-white/10 px-3 font-mono text-xs font-bold uppercase tracking-wider text-white/40">
-              Quick Links
-            </span>
-            <div className="flex items-center gap-2 pl-1">
-              {["🌐", "🖥️", "📄", "📷"].map((icon) => (
-                <a
-                  key={icon}
-                  href="#"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-sm text-white transition-all hover:bg-white/15"
-                >
-                  {icon}
-                </a>
-              ))}
-            </div>
-          </div>
         </div>
 
-        <div className="flex flex-1 items-stretch">
-          <div className="glass-panel flex flex-1 overflow-hidden rounded-2xl shadow-2xl lg:col-span-8">
+        <div className="flex flex-1 items-stretch gap-6 px-6 pb-6 md:px-10 md:pb-8">
+          <div className="glass-panel flex flex-1 overflow-hidden rounded-2xl shadow-2xl">
             {/* 왼쪽 프로젝트 사이드바 */}
             <aside className="hidden w-48 shrink-0 flex-col overflow-y-auto border-r border-white/10 p-4 md:flex">
             <button
@@ -268,13 +252,12 @@ export function StaffHome({
                   key={activeView}
                   projectId={activeView}
                   currentUser={currentUser}
-                  staff={[]}
                 />
               )}
           </div>
           </div>{/* 합쳐진 카드 닫기 */}
 
-          <div className="glass-panel flex h-full flex-col gap-6 rounded-2xl p-7 shadow-2xl lg:col-span-4">
+          <div className="glass-panel hidden h-full w-[340px] shrink-0 flex-col gap-6 rounded-2xl p-7 shadow-2xl md:flex">
             <div className="flex items-center gap-4">
               <div className="group relative shrink-0">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-light to-brand opacity-50 blur-md transition-all duration-500 group-hover:opacity-80" />
@@ -373,6 +356,7 @@ export function StaffHome({
       {showNotifications && (
         <NotificationPanel
           notifications={notifications}
+          onNotificationsChange={setNotifications}
           onClose={() => setShowNotifications(false)}
         />
       )}

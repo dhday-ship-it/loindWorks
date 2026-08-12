@@ -56,8 +56,6 @@ export function WorkStationPanel({
     [tasks, currentUserId]
   );
 
-  const projectIds = useMemo(() => myProjects.map((p) => p.id), [myProjects]);
-
   const filterOptions = useMemo(
     () => myProjects.filter((p) => myTasks.some((t) => t.projectId === p.id)),
     [myProjects, myTasks]

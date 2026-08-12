@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 
 import type { NotificationItem } from "@/components/staff-home/types";
@@ -27,17 +26,18 @@ function timeAgo(iso: string) {
 }
 
 export function NotificationPanel({
-  notifications: initial,
+  notifications,
+  onNotificationsChange,
   onClose,
 }: {
   notifications: NotificationItem[];
+  onNotificationsChange: (next: NotificationItem[]) => void;
   onClose: () => void;
 }) {
-  const [notifications, setNotifications] = useState(initial);
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const markAllRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    onNotificationsChange(notifications.map((n) => ({ ...n, read: true })));
     await fetch("/api/notifications", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -46,8 +46,8 @@ export function NotificationPanel({
   };
 
   const markRead = async (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    onNotificationsChange(
+      notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
     await fetch("/api/notifications", {
       method: "PATCH",

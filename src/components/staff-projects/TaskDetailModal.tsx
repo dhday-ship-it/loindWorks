@@ -52,7 +52,6 @@ export interface TaskDetailData {
 interface Props {
   task: TaskDetailData;
   members: { id: string; user: Person }[];
-  currentUser: Person;
   onClose: () => void;
   onUpdate: (task: Partial<TaskDetailData>) => void;
 }
@@ -83,7 +82,7 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function TaskDetailModal({ task, members, currentUser, onClose, onUpdate }: Props) {
+export function TaskDetailModal({ task, members, onClose, onUpdate }: Props) {
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);

@@ -15,11 +15,9 @@ import type { Person, ProjectDetail } from "./types";
 export function ProjectContent({
   projectId,
   currentUser,
-  staff,
 }: {
   projectId: string;
   currentUser: { id: string; name: string | null; email: string; role: Role };
-  staff: Person[];
 }) {
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,35 +113,36 @@ export function ProjectContent({
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
-      {/* 상단: 프로젝트 요약 */}
-      <div className="shrink-0">
-        <ProjectSummaryCard project={project} onUpdate={updateProject} />
-      </div>
+    <div className="grid h-full grid-cols-1 gap-5 xl:grid-cols-[1fr_320px]">
+      <div className="flex min-w-0 flex-col gap-4 overflow-y-auto">
+        {/* 상단: 프로젝트 요약 */}
+        <div className="shrink-0">
+          <ProjectSummaryCard project={project} onUpdate={updateProject} />
+        </div>
 
-      {/* 탭 전환 */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-        {([
-          { id: "kanban", label: "칸반 보드" },
-          { id: "stream", label: "스트림" },
-          { id: "archive", label: "아카이브" },
-        ] as { id: typeof viewTab; label: string }[]).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setViewTab(tab.id)}
-            className={`cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${
-              viewTab === tab.id
-                ? "bg-white/10 text-white"
-                : "text-white/40 hover:text-white/70"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+        {/* 탭 전환 */}
+        <div className="flex shrink-0 items-center gap-2 border-b border-white/10 pb-3">
+          {([
+            { id: "kanban", label: "칸반 보드" },
+            { id: "stream", label: "스트림" },
+            { id: "archive", label: "아카이브" },
+          ] as { id: typeof viewTab; label: string }[]).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setViewTab(tab.id)}
+              className={`cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${
+                viewTab === tab.id
+                  ? "bg-white/10 text-white"
+                  : "text-white/40 hover:text-white/70"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-      {/* 탭 콘텐츠 */}
-      <div className="flex-1 overflow-y-auto">
+        {/* 탭 콘텐츠 */}
+        <div className="flex-1">
         {viewTab === "kanban" && project.tasks && (
           <KanbanBoard
             tasks={project.tasks as unknown as KanbanTask[]}
@@ -207,6 +206,14 @@ export function ProjectContent({
             }}
           />
         )}
+        </div>
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-5 overflow-y-auto">
+        <div className="glass-panel rounded-2xl border border-white/10 p-5 shadow-2xl">
+          <CalendarPanel initialEvents={project.calendarEvents} projectId={project.id} />
+        </div>
+        <ProjectInfoPanel project={project} onUpdate={updateProject} />
       </div>
 
       {/* 작업 상세 모달 */}
@@ -214,7 +221,6 @@ export function ProjectContent({
         <TaskDetailModal
           task={selectedTask}
           members={project.members}
-          currentUser={person}
           onClose={() => setSelectedTask(null)}
           onUpdate={(patch) => setSelectedTask((prev) => prev ? { ...prev, ...patch } : null)}
         />
