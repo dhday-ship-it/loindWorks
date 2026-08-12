@@ -16,10 +16,7 @@ export default async function AdminPage() {
     staffCount,
     pmCount,
     companyCount,
-    users,
-    companies,
-    allProjects,
-    staff,
+    inProgressRaw,
     openRequests,
   ] = await Promise.all([
     prisma.project.count({ where: { status: "IN_PROGRESS" } }),
@@ -27,27 +24,10 @@ export default async function AdminPage() {
     prisma.user.count({ where: { role: "STAFF" } }),
     prisma.user.count({ where: { role: "PM" } }),
     prisma.company.count(),
-    prisma.user.findMany({
-      where: { role: { in: ["PM", "STAFF"] } },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        company: { select: { id: true, name: true } },
-        projectMemberships: {
-          select: { project: { select: { id: true, name: true } } },
-        },
-      },
-      orderBy: { createdAt: "asc" },
-    }),
-    prisma.company.findMany({
-      orderBy: { createdAt: "asc" },
-      include: { _count: { select: { users: true, projects: true } } },
-    }),
     prisma.project.findMany({
-      orderBy: { createdAt: "asc" },
+      where: { status: "IN_PROGRESS" },
+      take: 5,
+      orderBy: { createdAt: "desc" },
       include: {
         company: { select: { id: true, name: true } },
         pm: { select: { id: true, name: true, email: true } },
@@ -55,11 +35,6 @@ export default async function AdminPage() {
           include: { user: { select: { id: true, name: true, role: true } } },
         },
       },
-    }),
-    prisma.user.findMany({
-      where: { role: { in: ["STAFF", "PM", "SUPER_ADMIN"] } },
-      select: { id: true, name: true, email: true },
-      orderBy: { name: "asc" },
     }),
     prisma.projectRequest.findMany({
       include: {
@@ -71,7 +46,7 @@ export default async function AdminPage() {
     }),
   ]);
 
-  const projects: AdminProjectItem[] = allProjects.map((p) => {
+  const inProgressProjects: AdminProjectItem[] = inProgressRaw.map((p) => {
     const phases = p.phases as string[];
     return {
       id: p.id,
@@ -86,8 +61,6 @@ export default async function AdminPage() {
       memberNames: p.members.map((m) => m.user.name ?? "이름 없음"),
     };
   });
-
-  const inProgressProjects = projects.filter((p) => p.status === "IN_PROGRESS").slice(0, 5);
 
   const unhandled = openRequests.filter(
     (r) => r.assignees.length === 0 || r.assignees.some((a) => a.status === "WAIT")
@@ -117,10 +90,6 @@ export default async function AdminPage() {
       }}
       inProgressProjects={inProgressProjects}
       unhandledRequests={unhandledRequests}
-      initialUsers={users.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }))}
-      initialCompanies={companies}
-      initialProjects={projects}
-      staff={staff}
     />
   );
 }

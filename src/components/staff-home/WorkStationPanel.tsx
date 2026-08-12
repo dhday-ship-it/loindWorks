@@ -3,31 +3,8 @@
 import { useMemo, useState } from "react";
 
 import type { TaskPriority, TaskStatus } from "@/generated/prisma/enums";
+import { STATUS_LABEL, STATUS_STYLE, PRIORITY_DOT, STATUS_ORDER } from "@/lib/constants";
 import type { ProjectSummary, TaskItem } from "./types";
-
-const STATUS_LABEL: Record<TaskStatus, string> = {
-  WAIT: "대기",
-  IN_PROGRESS: "진행",
-  REVIEW: "검토",
-  FEEDBACK: "피드백",
-  DONE: "완료",
-};
-
-const STATUS_STYLE: Record<TaskStatus, string> = {
-  WAIT:        "badge-wait",
-  IN_PROGRESS: "badge-progress",
-  REVIEW:      "badge-review",
-  FEEDBACK:    "badge-feedback",
-  DONE:        "badge-done",
-};
-
-const PRIORITY_DOT: Record<TaskPriority, string> = {
-  HIGH:   "bg-red-400",
-  NORMAL: "bg-brand-light",
-  LOW:    "bg-white/20",
-};
-
-const STATUS_ORDER: TaskStatus[] = ["WAIT", "IN_PROGRESS", "REVIEW", "FEEDBACK", "DONE"];
 
 function fmtDue(iso: string | null): { label: string; urgent: boolean } | null {
   if (!iso) return null;

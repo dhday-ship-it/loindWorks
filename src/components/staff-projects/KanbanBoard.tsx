@@ -19,6 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 import type { TaskPriority, TaskStatus } from "@/generated/prisma/enums";
+import { PRIORITY_DOT } from "@/lib/constants";
 import { colorForId, initials, type Person } from "./types";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -51,12 +52,6 @@ const COLUMNS: { status: TaskStatus; label: string; color: string }[] = [
   { status: "FEEDBACK", label: "피드백", color: "border-t-[#e8956d]" },
   { status: "DONE", label: "완료", color: "border-t-[#5ba08a]" },
 ];
-
-const PRIORITY_DOT: Record<TaskPriority, string> = {
-  HIGH: "bg-[#c9595a]",
-  NORMAL: "bg-[#8fa8c4]",
-  LOW: "bg-white/20",
-};
 
 function fmtDue(iso: string | null): { label: string; urgent: boolean } | null {
   if (!iso) return null;

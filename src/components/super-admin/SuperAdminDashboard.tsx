@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bebas_Neue, DM_Sans } from "next/font/google";
-
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { UserMenu } from "@/components/nav/UserMenu";
+import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { OverviewPage } from "./OverviewPage";
 import { AccountsPage } from "./AccountsPage";
 import { CompaniesPage } from "./CompaniesPage";
 import { ProjectsAdminPage } from "./ProjectsAdminPage";
 import { ProjectRecordsPage } from "./ProjectRecordsPage";
-import { Toast } from "./Toast";
 import type {
   AdminProjectItem,
   AdminStats,
@@ -20,12 +18,6 @@ import type {
   StaffOption,
   UnhandledRequestItem,
 } from "./types";
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400" });
 
 type Page =
   | "dashboard"
@@ -39,29 +31,65 @@ export function SuperAdminDashboard({
   stats,
   inProgressProjects,
   unhandledRequests,
-  initialUsers,
-  initialCompanies,
-  initialProjects,
-  staff,
 }: {
   currentUserName: string;
   stats: AdminStats;
   inProgressProjects: AdminProjectItem[];
   unhandledRequests: UnhandledRequestItem[];
-  initialUsers: AdminUserItem[];
-  initialCompanies: CompanyItem[];
-  initialProjects: AdminProjectItem[];
-  staff: StaffOption[];
 }) {
   const [page, setPage] = useState<Page>("dashboard");
-  const [users, setUsers] = useState(initialUsers);
-  const [companies, setCompanies] = useState(initialCompanies);
-  const [projects, setProjects] = useState(initialProjects);
-  const [toast, setToast] = useState<string | null>(null);
+  const [users, setUsers] = useState<AdminUserItem[] | null>(null);
+  const [companies, setCompanies] = useState<CompanyItem[] | null>(null);
+  const [projects, setProjects] = useState<AdminProjectItem[] | null>(null);
+  const [staff, setStaff] = useState<StaffOption[]>([]);
+  const [tabLoading, setTabLoading] = useState(false);
+  const { toasts, show: showToast, dismiss } = useToast();
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2800);
+  const switchPage = async (target: Page) => {
+    setPage(target);
+
+    if (target === "accounts" && !users) {
+      setTabLoading(true);
+      const res = await fetch("/api/admin/accounts");
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data.users);
+      }
+      setTabLoading(false);
+    }
+    if (target === "companies" && !companies) {
+      setTabLoading(true);
+      const res = await fetch("/api/admin/companies");
+      if (res.ok) {
+        const data = await res.json();
+        setCompanies(data.companies);
+      }
+      setTabLoading(false);
+    }
+    if (target === "projects" && !projects) {
+      setTabLoading(true);
+      const res = await fetch("/api/admin/projects");
+      if (res.ok) {
+        const data = await res.json();
+        setProjects(data.projects);
+        setStaff(data.staff);
+      }
+      setTabLoading(false);
+    }
+    if (target === "records" && !projects) {
+      setTabLoading(true);
+      const res = await fetch("/api/admin/projects");
+      if (res.ok) {
+        const data = await res.json();
+        setProjects(data.projects);
+        setStaff(data.staff);
+      }
+      setTabLoading(false);
+    }
+  };
+
+  const handleShowToast = (msg: string) => {
+    showToast(msg, "success");
   };
 
   const navItems: { id: Page; label: string; icon: string; section?: string }[] =
@@ -75,16 +103,16 @@ export function SuperAdminDashboard({
 
   return (
     <div
-      className={`${dmSans.className} relative flex h-screen flex-col overflow-hidden text-white`}
+      className="font-[family-name:var(--font-dm-sans)] relative flex h-screen flex-col overflow-hidden text-white"
     >
       <ParticleBackground />
-      <Toast message={toast} />
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
 
       <div className="relative z-10 flex h-screen flex-col overflow-hidden">
         <div className="flex h-[54px] shrink-0 items-center justify-between border-b border-white/9 bg-[rgba(6,8,10,0.78)] px-6 backdrop-blur-2xl">
           <div className="flex items-center gap-3.5">
             <span
-              className={`${bebasNeue.className} text-xl tracking-widest text-white`}
+              className="font-[family-name:var(--font-bebas)] text-xl tracking-widest text-white"
             >
               LOIND
             </span>
@@ -117,7 +145,7 @@ export function SuperAdminDashboard({
                   </div>
                 )}
                 <div
-                  onClick={() => setPage(item.id)}
+                  onClick={() => switchPage(item.id)}
                   className={`admin-sb-item ${page === item.id ? "active" : ""}`}
                 >
                   <span className="w-4 text-center text-[13px]">
@@ -140,36 +168,60 @@ export function SuperAdminDashboard({
                 stats={stats}
                 inProgressProjects={inProgressProjects}
                 unhandledRequests={unhandledRequests}
-                onNavigateProjects={() => setPage("projects")}
+                onNavigateProjects={() => switchPage("projects")}
               />
             )}
             {page === "accounts" && (
-              <AccountsPage
-                users={users}
-                onUsersChange={setUsers}
-                companies={companies}
-                projects={projects.map((p) => ({ id: p.id, name: p.name }))}
-                showToast={showToast}
-              />
+              users ? (
+                <AccountsPage
+                  users={users}
+                  onUsersChange={setUsers}
+                  companies={companies ?? []}
+                  projects={(projects ?? []).map((p) => ({ id: p.id, name: p.name }))}
+                  showToast={handleShowToast}
+                />
+              ) : tabLoading ? (
+                <div className="flex items-center justify-center py-20 text-sm text-white/30">
+                  불러오는 중...
+                </div>
+              ) : null
             )}
             {page === "companies" && (
-              <CompaniesPage
-                companies={companies}
-                onCompaniesChange={setCompanies}
-                showToast={showToast}
-              />
+              companies ? (
+                <CompaniesPage
+                  companies={companies}
+                  onCompaniesChange={setCompanies}
+                  showToast={handleShowToast}
+                />
+              ) : tabLoading ? (
+                <div className="flex items-center justify-center py-20 text-sm text-white/30">
+                  불러오는 중...
+                </div>
+              ) : null
             )}
             {page === "projects" && (
-              <ProjectsAdminPage
-                projects={projects}
-                onProjectsChange={setProjects}
-                companies={companies}
-                staff={staff}
-                showToast={showToast}
-              />
+              projects ? (
+                <ProjectsAdminPage
+                  projects={projects}
+                  onProjectsChange={setProjects}
+                  companies={companies ?? []}
+                  staff={staff}
+                  showToast={handleShowToast}
+                />
+              ) : tabLoading ? (
+                <div className="flex items-center justify-center py-20 text-sm text-white/30">
+                  불러오는 중...
+                </div>
+              ) : null
             )}
             {page === "records" && (
-              <ProjectRecordsPage projects={projects} showToast={showToast} />
+              projects ? (
+                <ProjectRecordsPage projects={projects} showToast={handleShowToast} />
+              ) : tabLoading ? (
+                <div className="flex items-center justify-center py-20 text-sm text-white/30">
+                  불러오는 중...
+                </div>
+              ) : null
             )}
           </div>
         </div>

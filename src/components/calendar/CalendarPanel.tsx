@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import type { TaskItem } from "@/components/staff-home/types";
 import type { ProjectSummary } from "@/components/staff-home/types";
-import type { CalendarEventItem } from "./types";
+import type { CalendarEventItem } from "@/types/shared";
 
 const MONTH_NAMES = [
   "JANUARY",

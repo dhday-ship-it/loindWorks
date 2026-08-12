@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Role } from "@/generated/prisma/enums";
+import { usePolling } from "@/lib/hooks/usePolling";
 import { CalendarPanel } from "@/components/calendar/CalendarPanel";
+import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { ProjectSummaryCard } from "./ProjectSummaryCard";
 import { ProjectStreamTab } from "./ProjectStreamTab";
 import { ProjectInfoPanel } from "./ProjectInfoPanel";
@@ -31,6 +33,9 @@ export function ProjectContent({
   const [selectedTask, setSelectedTask] = useState<TaskDetailData | null>(null);
   const [showNewTask, setShowNewTask] = useState(false);
   const [openedInitialTask, setOpenedInitialTask] = useState(false);
+
+  const { toasts, show: showToast, dismiss } = useToast();
+  const inFlightRef = useRef<Set<string>>(new Set());
 
   const person: Person = { id: currentUser.id, name: currentUser.name, email: currentUser.email };
 
@@ -86,18 +91,15 @@ export function ProjectContent({
     };
   }, [projectId, retryTick]);
 
-  // 8초 폴링
-  useEffect(() => {
-    if (!projectId) return;
-    const interval = setInterval(async () => {
-      const res = await fetch(`/api/projects/${projectId}`);
-      if (res.ok) {
-        const { project: detail } = await res.json();
-        setProject(detail);
-      }
-    }, 8000);
-    return () => clearInterval(interval);
-  }, [projectId]);
+  // 8초 폴링 (usePolling 훅 사용)
+  usePolling({
+    url: `/api/projects/${projectId}`,
+    interval: 8000,
+    enabled: !loading && !loadError && !!project,
+    onData: (data: { project: ProjectDetail }) => {
+      setProject(data.project ?? null);
+    },
+  });
 
   useEffect(() => {
     if (!project || !initialTaskId || openedInitialTask) return;
@@ -203,26 +205,48 @@ export function ProjectContent({
           <KanbanBoard
             tasks={project.tasks as unknown as KanbanTask[]}
             onStatusChange={async (taskId, newStatus) => {
-              const updated = (project.tasks ?? []).map((t) =>
+              if (inFlightRef.current.has(`status-${taskId}`)) return;
+              inFlightRef.current.add(`status-${taskId}`);
+              const previous = project.tasks ?? [];
+              const updated = previous.map((t) =>
                 t.id === taskId ? { ...t, status: newStatus } : t
               );
               updateProject({ tasks: updated });
-              await fetch(`/api/tasks/${taskId}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: newStatus }),
-              });
+              try {
+                const res = await fetch(`/api/tasks/${taskId}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ status: newStatus }),
+                });
+                if (!res.ok) throw new Error();
+              } catch {
+                updateProject({ tasks: previous });
+                showToast("작업 상태 변경에 실패했습니다", "error");
+              } finally {
+                inFlightRef.current.delete(`status-${taskId}`);
+              }
             }}
             onReorder={async (taskId, newOrder, newStatus) => {
-              const updated = (project.tasks ?? []).map((t) =>
+              if (inFlightRef.current.has(`reorder-${taskId}`)) return;
+              inFlightRef.current.add(`reorder-${taskId}`);
+              const previous = project.tasks ?? [];
+              const updated = previous.map((t) =>
                 t.id === taskId ? { ...t, order: newOrder, status: newStatus } : t
               );
               updateProject({ tasks: updated });
-              await fetch(`/api/tasks/${taskId}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ order: newOrder, status: newStatus }),
-              });
+              try {
+                const res = await fetch(`/api/tasks/${taskId}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ order: newOrder, status: newStatus }),
+                });
+                if (!res.ok) throw new Error();
+              } catch {
+                updateProject({ tasks: previous });
+                showToast("작업 순서 변경에 실패했습니다", "error");
+              } finally {
+                inFlightRef.current.delete(`reorder-${taskId}`);
+              }
             }}
             onTaskClick={openTask}
           />
@@ -254,29 +278,54 @@ export function ProjectContent({
           onClose={() => setSelectedTask(null)}
           onUpdate={(patch) => setSelectedTask((prev) => prev ? { ...prev, ...patch } : null)}
           onArchive={async () => {
-            await fetch(`/api/tasks/${selectedTask.id}/archive`, { method: "POST" });
+            const previous = project.tasks ?? [];
             updateProject({
-              tasks: (project.tasks ?? []).filter((t) => t.id !== selectedTask.id),
+              tasks: previous.filter((t) => t.id !== selectedTask.id),
             });
             setSelectedTask(null);
+            try {
+              const res = await fetch(`/api/tasks/${selectedTask.id}/archive`, { method: "POST" });
+              if (!res.ok) throw new Error();
+            } catch {
+              updateProject({ tasks: previous });
+              showToast("작업 아카이브에 실패했습니다", "error");
+            }
           }}
           onStatusChange={async (status) => {
-            const updated = (project.tasks ?? []).map((t) =>
+            if (inFlightRef.current.has(`status-${selectedTask.id}`)) return;
+            inFlightRef.current.add(`status-${selectedTask.id}`);
+            const previous = project.tasks ?? [];
+            const updated = previous.map((t) =>
               t.id === selectedTask.id ? { ...t, status } : t
             );
             updateProject({ tasks: updated });
             setSelectedTask((prev) => (prev ? { ...prev, status } : null));
-            await fetch(`/api/tasks/${selectedTask.id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status }),
-            });
+            try {
+              const res = await fetch(`/api/tasks/${selectedTask.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status }),
+              });
+              if (!res.ok) throw new Error();
+            } catch {
+              updateProject({ tasks: previous });
+              setSelectedTask((prev) => {
+                const orig = previous.find((t) => t.id === selectedTask.id);
+                return prev && orig ? { ...prev, status: orig.status } : prev;
+              });
+              showToast("작업 상태 변경에 실패했습니다", "error");
+            } finally {
+              inFlightRef.current.delete(`status-${selectedTask.id}`);
+            }
           }}
           onEdit={async (patch) => {
+            if (inFlightRef.current.has(`edit-${selectedTask.id}`)) return;
+            inFlightRef.current.add(`edit-${selectedTask.id}`);
+            const previous = project.tasks ?? [];
             const assignee = patch.assigneeId
               ? project.members.find((m) => m.user.id === patch.assigneeId)?.user
               : undefined;
-            const updated = (project.tasks ?? []).map((t) =>
+            const updated = previous.map((t) =>
               t.id === selectedTask.id
                 ? {
                     ...t,
@@ -289,11 +338,19 @@ export function ProjectContent({
                 : t
             );
             updateProject({ tasks: updated });
-            await fetch(`/api/tasks/${selectedTask.id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(patch),
-            });
+            try {
+              const res = await fetch(`/api/tasks/${selectedTask.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(patch),
+              });
+              if (!res.ok) throw new Error();
+            } catch {
+              updateProject({ tasks: previous });
+              showToast("작업 수정에 실패했습니다", "error");
+            } finally {
+              inFlightRef.current.delete(`edit-${selectedTask.id}`);
+            }
           }}
         />
       )}
@@ -312,6 +369,8 @@ export function ProjectContent({
           }}
         />
       )}
+
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
   );
 }
