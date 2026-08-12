@@ -256,6 +256,7 @@ export function StaffHome({
                 </>
               ) : (
                 <ProjectContent
+                  key={activeView}
                   projectId={activeView}
                   currentUser={currentUser}
                   staff={[]}

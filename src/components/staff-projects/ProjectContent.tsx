@@ -23,18 +23,52 @@ export function ProjectContent({
 }) {
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryTick, setRetryTick] = useState(0);
   const [viewTab, setViewTab] = useState<"kanban" | "stream" | "archive">("kanban");
   const [selectedTask, setSelectedTask] = useState<TaskDetailData | null>(null);
 
   const person: Person = { id: currentUser.id, name: currentUser.name, email: currentUser.email };
 
   useEffect(() => {
-    setLoading(true);
-    fetch(`/api/projects/${projectId}`)
-      .then((r) => r.json())
-      .then((d) => { setProject(d.project ?? null); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [projectId]);
+    let cancelled = false;
+
+    const attemptFetch = async (retriesLeft: number): Promise<void> => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}`);
+        if (!res.ok) {
+          if (res.status === 404) {
+            if (!cancelled) {
+              setProject(null);
+              setLoading(false);
+            }
+            return;
+          }
+          throw new Error(`요청 실패 (${res.status})`);
+        }
+        const data = await res.json();
+        if (!cancelled) {
+          setProject(data.project ?? null);
+          setLoading(false);
+        }
+      } catch {
+        if (retriesLeft > 0) {
+          await new Promise((r) => setTimeout(r, 800));
+          if (!cancelled) await attemptFetch(retriesLeft - 1);
+          return;
+        }
+        if (!cancelled) {
+          setLoadError(true);
+          setLoading(false);
+        }
+      }
+    };
+
+    attemptFetch(2);
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, retryTick]);
 
   // 8초 폴링
   useEffect(() => {
@@ -56,6 +90,24 @@ export function ProjectContent({
 
   if (loading) {
     return <div className="flex h-full items-center justify-center text-sm text-white/30">불러오는 중...</div>;
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-white/30">
+        <span>불러오지 못했습니다. 네트워크 상태를 확인해주세요.</span>
+        <button
+          onClick={() => {
+            setLoading(true);
+            setLoadError(false);
+            setRetryTick((t) => t + 1);
+          }}
+          className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 transition-all hover:bg-white/10 hover:text-white"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
   }
 
   if (!project) {
