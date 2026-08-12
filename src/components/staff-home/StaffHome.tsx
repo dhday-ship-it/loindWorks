@@ -175,6 +175,13 @@ export function StaffHome({
           <div className="glass-panel flex flex-1 overflow-hidden rounded-2xl shadow-2xl lg:col-span-8">
             {/* 왼쪽 프로젝트 사이드바 */}
             <aside className="hidden w-48 shrink-0 flex-col overflow-y-auto border-r border-white/10 p-4 md:flex">
+            <Link
+              href="/dashboard"
+              className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold text-white/70 transition-all hover:bg-white/8 hover:text-white"
+            >
+              <span>🏠</span>
+              <span>홈</span>
+            </Link>
             <div className="mb-3 font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
               프로젝트
             </div>
