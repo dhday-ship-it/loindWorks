@@ -127,8 +127,8 @@ export function ProjectContent({
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 pb-3">
           <div className="flex items-center gap-2">
             {([
-              { id: "kanban", label: "칸반 보드" },
-              { id: "stream", label: "스트림" },
+              { id: "kanban", label: "작업 보드" },
+              { id: "stream", label: "기록" },
             ] as { id: typeof viewTab; label: string }[]).map((tab) => (
               <button
                 key={tab.id}
