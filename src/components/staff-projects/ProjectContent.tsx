@@ -17,9 +17,11 @@ const ARCHIVE_URL = "https://loind.tw2.quickconnect.to/";
 export function ProjectContent({
   projectId,
   currentUser,
+  initialTaskId,
 }: {
   projectId: string;
   currentUser: { id: string; name: string | null; email: string; role: Role };
+  initialTaskId?: string | null;
 }) {
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,8 +30,22 @@ export function ProjectContent({
   const [viewTab, setViewTab] = useState<"kanban" | "stream">("kanban");
   const [selectedTask, setSelectedTask] = useState<TaskDetailData | null>(null);
   const [showNewTask, setShowNewTask] = useState(false);
+  const [openedInitialTask, setOpenedInitialTask] = useState(false);
 
   const person: Person = { id: currentUser.id, name: currentUser.name, email: currentUser.email };
+
+  const openTask = async (task: KanbanTask) => {
+    const res = await fetch(`/api/tasks/${task.id}/comments`);
+    const commentsData = res.ok ? await res.json() : { comments: [] };
+    setSelectedTask({
+      ...task,
+      projectId,
+      createdAt: "",
+      comments: commentsData.comments ?? [],
+      history: [],
+      files: [],
+    });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -83,6 +99,28 @@ export function ProjectContent({
     }, 8000);
     return () => clearInterval(interval);
   }, [projectId]);
+
+  useEffect(() => {
+    if (!project || !initialTaskId || openedInitialTask) return;
+    const task = project.tasks?.find((t) => t.id === initialTaskId);
+    if (!task) {
+      Promise.resolve().then(() => setOpenedInitialTask(true));
+      return;
+    }
+    fetch(`/api/tasks/${task.id}/comments`)
+      .then((res) => (res.ok ? res.json() : { comments: [] }))
+      .then((commentsData) => {
+        setOpenedInitialTask(true);
+        setSelectedTask({
+          ...task,
+          projectId,
+          createdAt: "",
+          comments: commentsData.comments ?? [],
+          history: [],
+          files: [],
+        });
+      });
+  }, [project, initialTaskId, openedInitialTask, projectId]);
 
   const updateProject = (patch: Partial<ProjectDetail>) => {
     if (!project) return;
@@ -188,18 +226,7 @@ export function ProjectContent({
                 body: JSON.stringify({ order: newOrder, status: newStatus }),
               });
             }}
-            onTaskClick={async (task) => {
-              const res = await fetch(`/api/tasks/${task.id}/comments`);
-              const commentsData = res.ok ? await res.json() : { comments: [] };
-              setSelectedTask({
-                ...task,
-                projectId: project.id,
-                createdAt: "",
-                comments: commentsData.comments ?? [],
-                history: [],
-                files: [],
-              });
-            }}
+            onTaskClick={openTask}
           />
         )}
         {viewTab === "stream" && (

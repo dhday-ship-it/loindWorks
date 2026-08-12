@@ -20,12 +20,6 @@ export default async function DashboardPage() {
         orderBy: { createdAt: "asc" },
       }),
       prisma.project.findMany({
-        where: {
-          OR: [
-            { pmId: user.id },
-            { members: { some: { userId: user.id } } },
-          ],
-        },
         select: { id: true, name: true, status: true },
         orderBy: { createdAt: "asc" },
       }),

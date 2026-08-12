@@ -63,6 +63,7 @@ export function CalendarPanel({
     setEvents(initialEvents);
   }
   const [now, setNow] = useState(new Date());
+  const [monthOffset, setMonthOffset] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
@@ -85,9 +86,12 @@ export function CalendarPanel({
     return () => clearInterval(t);
   }, []);
 
-  const viewYear = now.getFullYear();
-  const viewMonth = now.getMonth();
+  const viewBase = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  const viewYear = viewBase.getFullYear();
+  const viewMonth = viewBase.getMonth();
   const today = now.getDate();
+  const isCurrentMonth =
+    viewYear === now.getFullYear() && viewMonth === now.getMonth();
 
   const firstDayIdx = new Date(viewYear, viewMonth, 1).getDay();
   const lastDate = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -117,9 +121,9 @@ export function CalendarPanel({
   );
 
   const openAddForm = (presetDay?: number) => {
-    const y = now.getFullYear();
-    const m = now.getMonth() + 1;
-    const d = presetDay ?? now.getDate();
+    const y = viewYear;
+    const m = viewMonth + 1;
+    const d = presetDay ?? (isCurrentMonth ? now.getDate() : 1);
     setYear(y);
     setMonth(m);
     setDay(d);
@@ -193,8 +197,27 @@ export function CalendarPanel({
             >
               {pad(now.getHours())}:{pad(now.getMinutes())}
             </div>
-            <div className="mt-0.5 text-[10px] font-mono uppercase tracking-widest text-white/40">
-              {MONTH_NAMES[viewMonth]} {viewYear}
+            <div className="mt-0.5 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-white/40">
+              <button
+                onClick={() => setMonthOffset((o) => o - 1)}
+                className="cursor-pointer rounded px-1 text-white/40 transition-all hover:bg-white/10 hover:text-white"
+                aria-label="이전 달"
+              >
+                ‹
+              </button>
+              <span
+                onClick={() => setMonthOffset(0)}
+                className={isCurrentMonth ? "" : "cursor-pointer text-brand-light hover:text-white"}
+              >
+                {MONTH_NAMES[viewMonth]} {viewYear}
+              </span>
+              <button
+                onClick={() => setMonthOffset((o) => o + 1)}
+                className="cursor-pointer rounded px-1 text-white/40 transition-all hover:bg-white/10 hover:text-white"
+                aria-label="다음 달"
+              >
+                ›
+              </button>
             </div>
           </div>
           <button
@@ -221,7 +244,7 @@ export function CalendarPanel({
           ))}
           {Array.from({ length: lastDate }).map((_, i) => {
             const d = i + 1;
-            const isToday = d === today;
+            const isToday = isCurrentMonth && d === today;
             const dow = (firstDayIdx + d - 1) % 7;
             const hasEvent = eventsByDay.has(d);
             const hasDue = tasksDueByDay.has(d);

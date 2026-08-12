@@ -11,6 +11,7 @@ const TYPE_ICON: Record<string, string> = {
   TASK_OVERDUE: "🚨",
   TASK_COMMENT: "💬",
   TASK_MENTION: "@",
+  LOG_MENTION: "🏷️",
   PROJECT_UPDATE: "📁",
 };
 

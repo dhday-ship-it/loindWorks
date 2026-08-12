@@ -27,11 +27,7 @@ export async function getStaffHomeData(userId: string) {
     }),
     prisma.calendarEvent.findMany({
       where: {
-        OR: [
-          { ownerId: userId },
-          { project: { members: { some: { userId } } } },
-          { project: { pmId: userId } },
-        ],
+        OR: [{ ownerId: userId }, { projectId: { not: null } }],
       },
       orderBy: { startAt: "asc" },
       include: { owner: { select: { id: true, name: true, email: true } } },

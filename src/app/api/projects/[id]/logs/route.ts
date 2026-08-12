@@ -64,5 +64,20 @@ export async function POST(
     },
   });
 
+  const mentionIds = (Array.isArray(taggedUserIds) ? taggedUserIds : []).filter(
+    (id: string) => id !== user.id
+  );
+  if (mentionIds.length > 0) {
+    await prisma.notification.createMany({
+      data: mentionIds.map((userId: string) => ({
+        userId,
+        type: "LOG_MENTION" as const,
+        title: `${user.name ?? user.email}님이 기록에 회원님을 태그했습니다`,
+        body: title,
+        link: `/dashboard?project=${projectId}`,
+      })),
+    });
+  }
+
   return NextResponse.json({ log }, { status: 201 });
 }

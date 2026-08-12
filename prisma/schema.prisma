@@ -68,6 +68,7 @@ enum NotificationType {
   TASK_OVERDUE      // 마감 초과
   TASK_COMMENT      // 작업 댓글
   TASK_MENTION      // @멘션
+  LOG_MENTION       // 스트림 기록 태그
   PROJECT_UPDATE    // 프로젝트 상태/단계 변경
 }
 

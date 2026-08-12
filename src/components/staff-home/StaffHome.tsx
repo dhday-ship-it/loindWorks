@@ -69,10 +69,22 @@ export function StaffHome({
   const [notifications, setNotifications] = useState(initialNotifications);
   const [showNotifications, setShowNotifications] = useState(false);
   const [activeView, setActiveView] = useState<"home" | string>("home"); // "home" or projectId
+  const [deepLinkTaskId, setDeepLinkTaskId] = useState<string | null>(null);
   const [showDone, setShowDone] = useState(false);
   const displayName = currentUser.name ?? currentUser.email;
   const initial = displayName.charAt(0).toUpperCase();
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  // 알림/태그 항목의 딥링크(?project=&task=) 진입 처리
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      const params = new URLSearchParams(window.location.search);
+      const project = params.get("project");
+      const task = params.get("task");
+      if (project) setActiveView(project);
+      if (task) setDeepLinkTaskId(task);
+    });
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -252,6 +264,7 @@ export function StaffHome({
                   key={activeView}
                   projectId={activeView}
                   currentUser={currentUser}
+                  initialTaskId={deepLinkTaskId}
                 />
               )}
           </div>

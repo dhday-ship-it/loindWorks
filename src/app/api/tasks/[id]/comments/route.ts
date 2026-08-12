@@ -44,6 +44,7 @@ export async function POST(
   // 멘션된 사용자에게 알림 생성
   const mentionIds = Array.isArray(mentions) ? mentions.filter((id: string) => id !== user.id) : [];
   if (mentionIds.length > 0) {
+    const task = await prisma.task.findUnique({ where: { id: taskId }, select: { projectId: true } });
     await prisma.notification.createMany({
       data: mentionIds.map((userId: string) => ({
         userId,
@@ -51,7 +52,7 @@ export async function POST(
         title: `${user.name ?? user.email}님이 회원님을 멘션했습니다`,
         body: body.slice(0, 100),
         taskId,
-        link: `/dashboard/projects?taskId=${taskId}`,
+        link: task?.projectId ? `/dashboard?project=${task.projectId}&task=${taskId}` : undefined,
       })),
     });
   }
