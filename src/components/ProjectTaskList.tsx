@@ -44,6 +44,12 @@ interface Props {
 export function ProjectTaskList({ projectId, projectName }: Props) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [project, setProject] = useState<{
+    status: string;
+    company: { name: string; contactName?: string; contactEmail?: string } | null;
+    currentPhase: number;
+    phases: string[];
+  } | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -51,6 +57,12 @@ export function ProjectTaskList({ projectId, projectName }: Props) {
       .then((r) => r.json())
       .then((d) => {
         setTasks(d.project?.tasks ?? []);
+        setProject(d.project ? {
+          status: d.project.status,
+          company: d.project.company,
+          currentPhase: d.project.currentPhase,
+          phases: d.project.phases ?? [],
+        } : null);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -73,11 +85,27 @@ export function ProjectTaskList({ projectId, projectName }: Props) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* 헤더 */}
+      {/* 헤더 — 프로젝트명 + 상태 + 기업정보 */}
       <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4">
-        <div className="flex items-center gap-2.5 font-mono text-xs font-bold tracking-widest text-brand-light">
-          <span className="h-2 w-2 rounded-full bg-brand-light" />
-          {projectName}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 font-mono text-xs font-bold tracking-widest text-brand-light">
+            <span className="h-2 w-2 rounded-full bg-brand-light" />
+            {projectName}
+          </div>
+          {project && (
+            <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${
+              project.status === "IN_PROGRESS" ? "border-[#55689b]/40 bg-[#55689b]/15 text-[#8fa8c4]"
+              : project.status === "DONE" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-400"
+              : "border-white/15 bg-white/5 text-white/50"
+            }`}>
+              {project.status === "IN_PROGRESS" ? "In Progress" : project.status === "DONE" ? "Done" : "Pending"}
+            </span>
+          )}
+          {project?.company && (
+            <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] text-white/40">
+              🏢 {project.company.name}
+            </span>
+          )}
         </div>
         <span className="font-mono text-[10px] text-white/30">{tasks.length}개 작업</span>
       </div>
