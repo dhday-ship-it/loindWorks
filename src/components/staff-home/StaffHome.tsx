@@ -67,6 +67,7 @@ export function StaffHome({
   const [taggedItems, setTaggedItems] = useState(initialTaggedItems);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [activeView, setActiveView] = useState<"home" | string>("home"); // "home" or projectId
   const displayName = currentUser.name ?? currentUser.email;
   const initial = displayName.charAt(0).toUpperCase();
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -175,13 +176,15 @@ export function StaffHome({
           <div className="glass-panel flex flex-1 overflow-hidden rounded-2xl shadow-2xl lg:col-span-8">
             {/* 왼쪽 프로젝트 사이드바 */}
             <aside className="hidden w-48 shrink-0 flex-col overflow-y-auto border-r border-white/10 p-4 md:flex">
-            <Link
-              href="/dashboard"
-              className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold text-white/70 transition-all hover:bg-white/8 hover:text-white"
+            <button
+              onClick={() => setActiveView("home")}
+              className={`mb-4 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold transition-all ${
+                activeView === "home" ? "bg-white/10 text-white" : "text-white/70 hover:bg-white/8 hover:text-white"
+              }`}
             >
               <span>🏠</span>
               <span>홈</span>
-            </Link>
+            </button>
             <div className="mb-3 font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
               프로젝트
             </div>
@@ -190,14 +193,18 @@ export function StaffHome({
             )}
             <div className="flex flex-col gap-1">
               {activeProjects.map((p) => (
-                <Link
+                <button
                   key={p.id}
-                  href={`/dashboard/projects?project=${p.id}`}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium text-white/55 transition-all hover:bg-white/8 hover:text-white"
+                  onClick={() => setActiveView(p.id)}
+                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[12px] font-medium transition-all ${
+                    activeView === p.id
+                      ? "bg-white/10 text-white"
+                      : "text-white/55 hover:bg-white/8 hover:text-white"
+                  }`}
                 >
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${activeView === p.id ? "bg-brand-light" : "bg-white/25"}`} />
                   <span className="truncate">{p.name}</span>
-                </Link>
+                </button>
               ))}
             </div>
             {doneProjects.length > 0 && (
@@ -210,14 +217,16 @@ export function StaffHome({
                 href="/dashboard/projects"
                 className="flex items-center gap-2 rounded-lg border border-dashed border-white/10 px-3 py-2 text-[11px] text-white/30 transition-all hover:border-white/20 hover:text-white/60"
               >
-                📁 전체 보기
+                📁 프로젝트 관리
               </Link>
             </div>
           </aside>
 
             {/* 메인 콘텐츠 */}
             <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-7">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4 font-mono">
+              {activeView === "home" ? (
+                <>
+                  <div className="flex items-center justify-between border-b border-white/10 pb-4 font-mono">
               <div className="flex items-center gap-2.5 text-xs font-bold tracking-widest text-brand-light">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-brand-light shadow-[0_0_8px_rgba(143,168,196,0.6)]" />
                 LOIND FLOW STATION
@@ -243,6 +252,20 @@ export function StaffHome({
                 myProjects={myProjects}
               />
             </div>
+                </>
+              ) : (
+                <div className="flex h-full flex-col">
+                  <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4 font-mono">
+                    <div className="flex items-center gap-2.5 text-xs font-bold tracking-widest text-brand-light">
+                      <span className="h-2 w-2 rounded-full bg-brand-light" />
+                      {myProjects.find((p) => p.id === activeView)?.name ?? "프로젝트"}
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto text-center text-sm text-white/30">
+                    <p className="py-12">프로젝트 칸반 보드 (구현 예정)</p>
+                  </div>
+                </div>
+              )}
           </div>
           </div>{/* 합쳐진 카드 닫기 */}
 
