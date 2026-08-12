@@ -55,6 +55,7 @@ interface Props {
   onClose: () => void;
   onUpdate: (task: Partial<TaskDetailData>) => void;
   onArchive?: () => void;
+  onStatusChange?: (status: TaskStatus) => void;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -75,6 +76,8 @@ const STATUS_STYLE: Record<TaskStatus, string> = {
   DONE: "badge-done",
 };
 
+const STATUS_ORDER: TaskStatus[] = ["WAIT", "IN_PROGRESS", "REVIEW", "FEEDBACK", "DONE"];
+
 const PRIORITY_LABEL: Record<TaskPriority, string> = {
   HIGH: "🔴 긴급",
   NORMAL: "🔵 보통",
@@ -83,7 +86,7 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive }: Props) {
+export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, onStatusChange }: Props) {
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -176,9 +179,22 @@ export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive }:
 
         {/* Meta */}
         <div className="flex flex-wrap items-center gap-3 border-b border-white/5 px-6 py-3">
-          <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${STATUS_STYLE[task.status]}`}>
-            {STATUS_LABEL[task.status]}
-          </span>
+          <div className="flex shrink-0 flex-wrap gap-1">
+            {STATUS_ORDER.map((s) => (
+              <button
+                key={s}
+                onClick={() => onStatusChange?.(s)}
+                disabled={!onStatusChange}
+                className={`cursor-pointer rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all disabled:cursor-default ${
+                  task.status === s
+                    ? STATUS_STYLE[s] + " scale-105 shadow-sm"
+                    : "border-white/10 bg-transparent text-white/30 hover:text-white"
+                }`}
+              >
+                {STATUS_LABEL[s]}
+              </button>
+            ))}
+          </div>
           <span className="text-[10px] font-bold text-white/50">
             {PRIORITY_LABEL[task.priority]}
           </span>

@@ -242,6 +242,18 @@ export function ProjectContent({
             });
             setSelectedTask(null);
           }}
+          onStatusChange={async (status) => {
+            const updated = (project.tasks ?? []).map((t) =>
+              t.id === selectedTask.id ? { ...t, status } : t
+            );
+            updateProject({ tasks: updated });
+            setSelectedTask((prev) => (prev ? { ...prev, status } : null));
+            await fetch(`/api/tasks/${selectedTask.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status }),
+            });
+          }}
         />
       )}
 
