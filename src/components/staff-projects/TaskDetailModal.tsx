@@ -54,6 +54,7 @@ interface Props {
   members: { id: string; user: Person }[];
   onClose: () => void;
   onUpdate: (task: Partial<TaskDetailData>) => void;
+  onArchive?: () => void;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -82,7 +83,7 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function TaskDetailModal({ task, members, onClose, onUpdate }: Props) {
+export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive }: Props) {
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -194,6 +195,14 @@ export function TaskDetailModal({ task, members, onClose, onUpdate }: Props) {
             <span className="font-mono text-[10px] text-white/35">
               마감: {new Date(task.dueDate).toLocaleDateString("ko-KR")}
             </span>
+          )}
+          {task.status === "DONE" && onArchive && (
+            <button
+              onClick={onArchive}
+              className="ml-auto cursor-pointer rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[10px] font-bold text-white/40 transition-all hover:bg-white/10 hover:text-white"
+            >
+              📦 아카이브
+            </button>
           )}
         </div>
 

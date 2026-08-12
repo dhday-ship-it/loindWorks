@@ -9,6 +9,7 @@ import { ProjectStreamTab } from "./ProjectStreamTab";
 import { ProjectInfoPanel } from "./ProjectInfoPanel";
 import { KanbanBoard, type KanbanTask } from "./KanbanBoard";
 import { TaskDetailModal, type TaskDetailData } from "./TaskDetailModal";
+import { NewTaskModal } from "./NewTaskModal";
 import { ArchivePanel } from "./ArchivePanel";
 import type { Person, ProjectDetail } from "./types";
 
@@ -25,6 +26,7 @@ export function ProjectContent({
   const [retryTick, setRetryTick] = useState(0);
   const [viewTab, setViewTab] = useState<"kanban" | "stream" | "archive">("kanban");
   const [selectedTask, setSelectedTask] = useState<TaskDetailData | null>(null);
+  const [showNewTask, setShowNewTask] = useState(false);
 
   const person: Person = { id: currentUser.id, name: currentUser.name, email: currentUser.email };
 
@@ -121,24 +123,34 @@ export function ProjectContent({
         </div>
 
         {/* 탭 전환 */}
-        <div className="flex shrink-0 items-center gap-2 border-b border-white/10 pb-3">
-          {([
-            { id: "kanban", label: "칸반 보드" },
-            { id: "stream", label: "스트림" },
-            { id: "archive", label: "아카이브" },
-          ] as { id: typeof viewTab; label: string }[]).map((tab) => (
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 pb-3">
+          <div className="flex items-center gap-2">
+            {([
+              { id: "kanban", label: "칸반 보드" },
+              { id: "stream", label: "스트림" },
+              { id: "archive", label: "아카이브" },
+            ] as { id: typeof viewTab; label: string }[]).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setViewTab(tab.id)}
+                className={`cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${
+                  viewTab === tab.id
+                    ? "bg-white/10 text-white"
+                    : "text-white/40 hover:text-white/70"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {viewTab === "kanban" && (
             <button
-              key={tab.id}
-              onClick={() => setViewTab(tab.id)}
-              className={`cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${
-                viewTab === tab.id
-                  ? "bg-white/10 text-white"
-                  : "text-white/40 hover:text-white/70"
-              }`}
+              onClick={() => setShowNewTask(true)}
+              className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-white/60 transition-all hover:bg-white/10 hover:text-white"
             >
-              {tab.label}
+              + 새 작업
             </button>
-          ))}
+          )}
         </div>
 
         {/* 탭 콘텐츠 */}
@@ -223,6 +235,28 @@ export function ProjectContent({
           members={project.members}
           onClose={() => setSelectedTask(null)}
           onUpdate={(patch) => setSelectedTask((prev) => prev ? { ...prev, ...patch } : null)}
+          onArchive={async () => {
+            await fetch(`/api/tasks/${selectedTask.id}/archive`, { method: "POST" });
+            updateProject({
+              tasks: (project.tasks ?? []).filter((t) => t.id !== selectedTask.id),
+            });
+            setSelectedTask(null);
+          }}
+        />
+      )}
+
+      {showNewTask && (
+        <NewTaskModal
+          projectId={project.id}
+          members={project.members}
+          defaultAssigneeId={currentUser.id}
+          onClose={() => setShowNewTask(false)}
+          onCreated={(task) => {
+            updateProject({
+              tasks: [...(project.tasks ?? []), task as ProjectDetail["tasks"][number]],
+            });
+            setShowNewTask(false);
+          }}
         />
       )}
     </div>
