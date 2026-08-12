@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 
 import type { TaskPriority, TaskStatus } from "@/generated/prisma/enums";
 import { colorForId, initials, type Person } from "./types";
-import { fmtFileSize, uploadFile } from "@/lib/file-format";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -25,14 +24,6 @@ export interface TaskHistoryEntry {
   actorId: string;
 }
 
-export interface TaskFile {
-  id: string;
-  name: string;
-  url: string;
-  size: number;
-  createdAt: string;
-}
-
 export interface TaskDetailData {
   id: string;
   title: string;
@@ -46,7 +37,6 @@ export interface TaskDetailData {
   createdAt: string;
   comments: TaskComment[];
   history: TaskHistoryEntry[];
-  files: TaskFile[];
 }
 
 export interface TaskEditPatch {
@@ -98,7 +88,6 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
 export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, onStatusChange, onEdit }: Props) {
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -172,34 +161,6 @@ export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, o
     setCommentText((prev) => prev + `@${name} `);
     setShowMentions(false);
     inputRef.current?.focus();
-  };
-
-  const handleFileUpload = async (fileList: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
-    setUploading(true);
-    try {
-      for (const file of Array.from(fileList)) {
-        const uploaded = await uploadFile(file, task.projectId);
-        // 서버에 파일을 태스크에 연결
-        await fetch(`/api/tasks/${task.id}/files`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(uploaded),
-        });
-        const newFile: TaskFile = {
-          id: crypto.randomUUID(),
-          name: uploaded.name,
-          url: uploaded.url,
-          size: uploaded.size,
-          createdAt: new Date().toISOString(),
-        };
-        onUpdate({ files: [...task.files, newFile] });
-      }
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : "업로드 실패");
-    } finally {
-      setUploading(false);
-    }
   };
 
   return (
@@ -363,29 +324,6 @@ export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, o
 
         {/* Content area — tabs */}
         <div className="flex max-h-[60vh] flex-1 flex-col overflow-y-auto">
-          {/* Files */}
-          {task.files.length > 0 && (
-            <div className="border-b border-white/5 px-6 py-3">
-              <div className="mb-2 font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
-                첨부파일
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {task.files.map((f) => (
-                  <a
-                    key={f.id}
-                    href={f.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/5 px-2.5 py-1 font-mono text-[10px] text-white/55 hover:bg-white/10 hover:text-white"
-                  >
-                    📎 {f.name}
-                    <span className="text-white/25">{fmtFileSize(f.size)}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* History */}
           {task.history.length > 0 && (
             <div className="border-b border-white/5 px-6 py-3">
@@ -485,17 +423,6 @@ export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, o
               className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none placeholder:text-white/20"
               placeholder="댓글 입력... (@로 멘션)"
             />
-
-            <label className="shrink-0 cursor-pointer rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-[10px] font-bold text-white/40 hover:text-white">
-              {uploading ? "..." : "📎"}
-              <input
-                type="file"
-                multiple
-                className="hidden"
-                disabled={uploading}
-                onChange={(e) => { handleFileUpload(e.target.files); e.target.value = ""; }}
-              />
-            </label>
 
             <button
               onClick={submitComment}

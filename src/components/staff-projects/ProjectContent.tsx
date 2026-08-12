@@ -43,7 +43,6 @@ export function ProjectContent({
       createdAt: "",
       comments: commentsData.comments ?? [],
       history: [],
-      files: [],
     });
   };
 
@@ -117,7 +116,6 @@ export function ProjectContent({
           createdAt: "",
           comments: commentsData.comments ?? [],
           history: [],
-          files: [],
         });
       });
   }, [project, initialTaskId, openedInitialTask, projectId]);

@@ -3,8 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { getStaffHomeData } from "@/lib/staff-home-data";
 import { StaffHome } from "@/components/staff-home/StaffHome";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ project?: string; task?: string }>;
+}) {
   const user = await requireUser();
+  const { project: deepLinkProject, task: deepLinkTask } = await searchParams;
 
   // SUPER_ADMIN, PM, STAFF 모두 StaffHome으로
   const [{ tasks, events, taggedItems }, memos, folders, myProjects, notifications] =
@@ -47,6 +52,8 @@ export default async function DashboardPage() {
       initialFolders={folders}
       myProjects={myProjects}
       taggedItems={taggedItems}
+      initialActiveView={deepLinkProject || "home"}
+      initialDeepLinkTaskId={deepLinkTask ?? null}
       initialNotifications={notifications.map((n) => ({
         ...n,
         createdAt: n.createdAt.toISOString(),

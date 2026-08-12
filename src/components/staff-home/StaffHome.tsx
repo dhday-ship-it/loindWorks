@@ -53,6 +53,8 @@ export function StaffHome({
   myProjects,
   taggedItems: initialTaggedItems,
   initialNotifications = [],
+  initialActiveView = "home",
+  initialDeepLinkTaskId = null,
 }: {
   currentUser: { id: string; name: string | null; email: string; role: Role };
   initialTasks: TaskItem[];
@@ -62,29 +64,20 @@ export function StaffHome({
   myProjects: ProjectSummary[];
   taggedItems: TaggedItem[];
   initialNotifications?: NotificationItem[];
+  initialActiveView?: string;
+  initialDeepLinkTaskId?: string | null;
 }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [events, setEvents] = useState(initialEvents);
   const [taggedItems, setTaggedItems] = useState(initialTaggedItems);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [activeView, setActiveView] = useState<"home" | string>("home"); // "home" or projectId
-  const [deepLinkTaskId, setDeepLinkTaskId] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<"home" | string>(initialActiveView); // "home" or projectId
+  const [deepLinkTaskId, setDeepLinkTaskId] = useState<string | null>(initialDeepLinkTaskId);
   const [showDone, setShowDone] = useState(false);
   const displayName = currentUser.name ?? currentUser.email;
   const initial = displayName.charAt(0).toUpperCase();
   const unreadCount = notifications.filter((n) => !n.read).length;
-
-  // 알림/태그 항목의 딥링크(?project=&task=) 진입 처리
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      const params = new URLSearchParams(window.location.search);
-      const project = params.get("project");
-      const task = params.get("task");
-      if (project) setActiveView(project);
-      if (task) setDeepLinkTaskId(task);
-    });
-  }, []);
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -97,6 +90,13 @@ export function StaffHome({
     }, 8000);
     return () => clearInterval(interval);
   }, []);
+
+  const selectView = (id: "home" | string) => {
+    setActiveView(id);
+    setDeepLinkTaskId(null);
+    const url = id === "home" ? "/dashboard" : `/dashboard?project=${id}`;
+    window.history.replaceState(null, "", url);
+  };
 
   const myTasks = tasks.filter((t) => t.assignee.id === currentUser.id);
   const doneCount = myTasks.filter((t) => t.status === "DONE").length;
@@ -166,7 +166,7 @@ export function StaffHome({
             {/* 왼쪽 프로젝트 사이드바 */}
             <aside className="hidden w-48 shrink-0 flex-col overflow-y-auto border-r border-white/10 p-4 md:flex">
             <button
-              onClick={() => setActiveView("home")}
+              onClick={() => selectView("home")}
               className={`mb-4 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-semibold transition-all ${
                 activeView === "home" ? "bg-white/10 text-white" : "text-white/70 hover:bg-white/8 hover:text-white"
               }`}
@@ -184,7 +184,7 @@ export function StaffHome({
               {activeProjects.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setActiveView(p.id)}
+                  onClick={() => selectView(p.id)}
                   className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[12px] font-medium transition-all ${
                     activeView === p.id
                       ? "bg-white/10 text-white"
@@ -209,7 +209,7 @@ export function StaffHome({
                     {doneProjects.map((p) => (
                       <button
                         key={p.id}
-                        onClick={() => setActiveView(p.id)}
+                        onClick={() => selectView(p.id)}
                         className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[12px] font-medium transition-all ${
                           activeView === p.id
                             ? "bg-white/10 text-white"
