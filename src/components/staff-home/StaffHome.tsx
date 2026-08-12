@@ -10,6 +10,7 @@ import { UserMenu } from "@/components/nav/UserMenu";
 import { CalendarPanel } from "@/components/calendar/CalendarPanel";
 import { WorkStationPanel } from "./WorkStationPanel";
 import { MemoPanel } from "./MemoPanel";
+import { ProjectKanban } from "@/components/ProjectKanban";
 import { MusicWidget } from "./MusicWidget";
 import type {
   CalendarEventItem,
@@ -254,17 +255,7 @@ export function StaffHome({
             </div>
                 </>
               ) : (
-                <div className="flex h-full flex-col">
-                  <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4 font-mono">
-                    <div className="flex items-center gap-2.5 text-xs font-bold tracking-widest text-brand-light">
-                      <span className="h-2 w-2 rounded-full bg-brand-light" />
-                      {myProjects.find((p) => p.id === activeView)?.name ?? "프로젝트"}
-                    </div>
-                  </div>
-                  <div className="flex-1 overflow-y-auto text-center text-sm text-white/30">
-                    <p className="py-12">프로젝트 칸반 보드 (구현 예정)</p>
-                  </div>
-                </div>
+                <ProjectKanban projectId={activeView} />
               )}
           </div>
           </div>{/* 합쳐진 카드 닫기 */}
