@@ -91,7 +91,7 @@ function SortableCard({
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`kanban-card cursor-grab p-3 active:cursor-grabbing ${isDragging ? "dragging" : ""}`}
+      className={`kanban-card cursor-grab p-4 active:cursor-grabbing ${isDragging ? "dragging" : ""}`}
     >
       {/* Priority dot + title */}
       <div className="mb-2 flex items-start gap-2">
@@ -116,7 +116,7 @@ function SortableCard({
         </div>
         {due && (
           <span
-            className={`rounded-full px-1.5 py-0.5 font-mono text-[9px] font-bold ${
+            className={`rounded-full px-1.5 py-0.5 font-mono text-[10px] font-bold ${
               due.urgent
                 ? "bg-[#c9595a]/15 text-[#c9595a]"
                 : "bg-white/5 text-white/35"
@@ -135,7 +135,7 @@ function SortableCard({
 function CardOverlay({ task }: { task: KanbanTask }) {
   const due = fmtDue(task.dueDate);
   return (
-    <div className="kanban-card w-64 p-3 shadow-2xl">
+    <div className="kanban-card w-64 p-4 shadow-2xl">
       <div className="mb-2 flex items-start gap-2">
         <div className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${PRIORITY_DOT[task.priority]}`} />
         <span className="flex-1 text-xs font-medium leading-snug text-white/90">
@@ -152,7 +152,7 @@ function CardOverlay({ task }: { task: KanbanTask }) {
           </div>
         </div>
         {due && (
-          <span className={`rounded-full px-1.5 py-0.5 font-mono text-[9px] font-bold ${due.urgent ? "bg-[#c9595a]/15 text-[#c9595a]" : "bg-white/5 text-white/35"}`}>
+          <span className={`rounded-full px-1.5 py-0.5 font-mono text-[10px] font-bold ${due.urgent ? "bg-[#c9595a]/15 text-[#c9595a]" : "bg-white/5 text-white/35"}`}>
             {due.label}
           </span>
         )}
@@ -230,7 +230,7 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, onTaskClick }: P
                   <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-white/50">
                     {col.label}
                   </span>
-                  <span className="rounded-full bg-white/8 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white/35">
+                  <span className="rounded-full bg-white/8 px-1.5 py-0.5 font-mono text-[10px] font-bold text-white/35">
                     {columnTasks.length}
                   </span>
                 </div>
@@ -244,7 +244,7 @@ export function KanbanBoard({ tasks, onStatusChange, onReorder, onTaskClick }: P
               >
                 <div className="flex flex-1 flex-col gap-2 px-2 pb-2">
                   {columnTasks.length === 0 && (
-                    <div className="py-6 text-center font-mono text-[10px] text-white/15">
+                    <div className="py-6 text-center font-mono text-[10px] text-white/40">
                       비어 있음
                     </div>
                   )}

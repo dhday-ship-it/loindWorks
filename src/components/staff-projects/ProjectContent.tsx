@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import type { Role } from "@/generated/prisma/enums";
+import type { ProjectStatus, Role } from "@/generated/prisma/enums";
 import { usePolling } from "@/lib/hooks/usePolling";
 import { CalendarPanel } from "@/components/calendar/CalendarPanel";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
@@ -20,10 +20,12 @@ export function ProjectContent({
   projectId,
   currentUser,
   initialTaskId,
+  onProjectStatusChange,
 }: {
   projectId: string;
   currentUser: { id: string; name: string | null; email: string; role: Role };
   initialTaskId?: string | null;
+  onProjectStatusChange?: (projectId: string, newStatus: ProjectStatus) => void;
 }) {
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -125,6 +127,9 @@ export function ProjectContent({
   const updateProject = (patch: Partial<ProjectDetail>) => {
     if (!project) return;
     setProject({ ...project, ...patch });
+    if (patch.status) {
+      onProjectStatusChange?.(projectId, patch.status);
+    }
   };
 
   if (loading) {
@@ -275,6 +280,7 @@ export function ProjectContent({
         <TaskDetailModal
           task={selectedTask}
           members={project.members}
+          currentUserId={currentUser.id}
           onClose={() => setSelectedTask(null)}
           onUpdate={(patch) => setSelectedTask((prev) => prev ? { ...prev, ...patch } : null)}
           onArchive={async () => {

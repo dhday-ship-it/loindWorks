@@ -112,7 +112,7 @@ export function SuperAdminDashboard({
         <div className="flex h-[54px] shrink-0 items-center justify-between border-b border-white/9 bg-[rgba(6,8,10,0.78)] px-6 backdrop-blur-2xl">
           <div className="flex items-center gap-3.5">
             <span
-              className="font-[family-name:var(--font-bebas)] text-xl tracking-widest text-white"
+              className="font-[family-name:var(--font-quicksand)] text-xl font-bold tracking-tight text-white"
             >
               LOIND
             </span>
@@ -124,7 +124,7 @@ export function SuperAdminDashboard({
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
-              className="rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
+              className="rounded-lg border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
             >
               워크스테이션으로
             </Link>

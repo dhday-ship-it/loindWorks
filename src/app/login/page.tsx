@@ -4,14 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
-import { DM_Sans } from "next/font/google";
-
 import { ParticleBackground } from "@/components/ParticleBackground";
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,7 +37,7 @@ export default function LoginPage() {
 
   return (
     <main
-      className={`${dmSans.className} relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#0e1116]`}
+      className="font-[family-name:var(--font-dm-sans)] relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#0e1116]"
     >
       <ParticleBackground />
 

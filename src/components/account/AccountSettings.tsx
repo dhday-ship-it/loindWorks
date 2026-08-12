@@ -75,7 +75,7 @@ export function AccountSettings({
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
-              className="cursor-pointer rounded-md border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
+              className="cursor-pointer rounded-lg border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
             >
               ← 돌아가기
             </Link>

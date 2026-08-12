@@ -27,14 +27,14 @@ export function DashboardNav({
   return (
     <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-white/10 bg-black/30 px-4 backdrop-blur-2xl md:px-10">
       <div className="flex min-w-0 shrink-0 items-center gap-3 md:gap-6">
-        <div className="font-[family-name:var(--font-bebas)] shrink-0 cursor-pointer border-r border-white/10 pr-3 text-xl tracking-widest text-white transition-all hover:opacity-60 md:pr-5">
+        <div className="font-[family-name:var(--font-quicksand)] shrink-0 cursor-pointer border-r border-white/10 pr-3 text-xl font-bold tracking-tight text-white transition-all hover:opacity-60 md:pr-5">
           LOIND
         </div>
         <div className="flex shrink-0 gap-1 md:gap-2">
           {currentUser.role === "SUPER_ADMIN" && (
             <Link
               href="/admin"
-              className="cursor-pointer whitespace-nowrap rounded-sm px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
+              className="cursor-pointer whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
             >
               관리자
             </Link>

@@ -22,7 +22,7 @@ export function DashboardLayout({
         {nav}
 
         <div className="w-full px-6 pb-4 pt-6 md:px-10">
-          <h2 className="font-[family-name:var(--font-bebas)] text-3xl font-light leading-none tracking-widest text-white/90 md:text-4xl">
+          <h2 className="font-[family-name:var(--font-quicksand)] text-3xl font-bold leading-none tracking-tight text-white/90 md:text-4xl">
             LOIND CORPORATION
           </h2>
         </div>

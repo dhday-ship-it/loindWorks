@@ -13,6 +13,7 @@
   --font-mono: var(--font-geist-mono);
   --font-bebas: var(--font-bebas);
   --font-dm: var(--font-dm-sans);
+  --font-quicksand: var(--font-quicksand);
 
   /* Brand */
   --color-brand:       #55689b;
@@ -145,7 +146,7 @@ body {
 .kanban-card:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.12);
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1.01);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 .kanban-card.dragging {
@@ -222,7 +223,7 @@ body {
 }
 
 .admin-tbl th {
-  font-size: 9px;
+  font-size: 10px;
   font-family: var(--font-geist-mono), monospace;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.28);
@@ -326,6 +327,53 @@ body {
 }
 .admin-btn-danger:hover { background: rgba(201, 89, 90, 0.2); }
 
+/* ─── Unified Button Variants ─────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, rgba(143, 168, 196, 0.22), rgba(85, 104, 155, 0.18));
+  border: 1px solid rgba(143, 168, 196, 0.38);
+  color: #c3d3e6;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, rgba(143, 168, 196, 0.35), rgba(85, 104, 155, 0.28));
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+.btn-danger {
+  background: rgba(201, 89, 90, 0.1);
+  border: 1px solid rgba(201, 89, 90, 0.22);
+  color: #e07070;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.btn-danger:hover {
+  background: rgba(201, 89, 90, 0.2);
+}
+
 .admin-input {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.09);
@@ -384,6 +432,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
   opacity: 0.4;
   cursor: pointer;
+}
+
+/* ─── Focus Ring ──────────────────────────────────────────────── */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(143, 168, 196, 0.4);
 }
 
 /* 선택 하이라이트 */

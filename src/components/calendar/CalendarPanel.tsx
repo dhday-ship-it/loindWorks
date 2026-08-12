@@ -45,16 +45,71 @@ function daysInView(
   return days;
 }
 
+type SegmentPosition = "start" | "middle" | "end" | "single";
+
+interface MultiDaySegment {
+  eventId: string;
+  position: SegmentPosition;
+}
+
+// 특정 날짜에 대해 multi-day 이벤트의 bar segment 위치를 결정
+function getMultiDaySegments(
+  events: CalendarEventItem[],
+  dayOfMonth: number,
+  viewYear: number,
+  viewMonth: number
+): MultiDaySegment[] {
+  const segments: MultiDaySegment[] = [];
+  for (const event of events) {
+    const start = new Date(event.startAt);
+    const end = event.endAt ? new Date(event.endAt) : start;
+    const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+    // 이벤트가 하루짜리이면 skip (dot으로 표시)
+    if (startDate.getTime() === endDate.getTime()) continue;
+
+    // 이 날짜가 이벤트 범위에 포함되는지 확인
+    const currentDate = new Date(viewYear, viewMonth, dayOfMonth);
+    if (currentDate < startDate || currentDate > endDate) continue;
+
+    let position: SegmentPosition;
+    if (startDate.getTime() === endDate.getTime()) {
+      position = "single";
+    } else if (currentDate.getTime() === startDate.getTime()) {
+      position = "start";
+    } else if (currentDate.getTime() === endDate.getTime()) {
+      position = "end";
+    } else {
+      position = "middle";
+    }
+
+    segments.push({ eventId: event.id, position });
+  }
+  return segments;
+}
+
+// 이벤트가 단일 날짜인지 확인하는 헬퍼
+function isSingleDayEvent(event: CalendarEventItem): boolean {
+  const start = new Date(event.startAt);
+  const end = event.endAt ? new Date(event.endAt) : start;
+  const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  return startDate.getTime() === endDate.getTime();
+}
+
 export function CalendarPanel({
   initialEvents,
   tasks = [],
   projectId,
   myProjects = [],
+  readOnly = false,
 }: {
   initialEvents: CalendarEventItem[];
   tasks?: TaskItem[];
   projectId?: string;
   myProjects?: ProjectSummary[];
+  readOnly?: boolean;
 }) {
   const [events, setEvents] = useState(initialEvents);
   const [syncedEvents, setSyncedEvents] = useState(initialEvents);
@@ -220,12 +275,14 @@ export function CalendarPanel({
               </button>
             </div>
           </div>
-          <button
-            onClick={() => openAddForm()}
-            className="cursor-pointer rounded-md border border-white/10 px-2 py-0.5 text-xs font-bold text-white/60 transition-all hover:text-white"
-          >
-            + 일정 생성
-          </button>
+          {!readOnly && (
+            <button
+              onClick={() => openAddForm()}
+              className="cursor-pointer rounded-lg border border-white/10 px-2 py-0.5 text-xs font-bold text-white/60 transition-all hover:text-white"
+            >
+              + 일정 생성
+            </button>
+          )}
         </div>
 
         <div className="mb-2 grid grid-cols-7 gap-y-2 text-center text-xs font-medium text-white/50">
@@ -246,8 +303,10 @@ export function CalendarPanel({
             const d = i + 1;
             const isToday = isCurrentMonth && d === today;
             const dow = (firstDayIdx + d - 1) % 7;
-            const hasEvent = eventsByDay.has(d);
+            const dayEvts = eventsByDay.get(d) ?? [];
+            const hasSingleDayEvent = dayEvts.some(isSingleDayEvent);
             const hasDue = tasksDueByDay.has(d);
+            const multiDayInfo = getMultiDaySegments(events, d, viewYear, viewMonth);
 
             return (
               <div
@@ -255,8 +314,8 @@ export function CalendarPanel({
                 onClick={() => setSelectedDay(d)}
                 className={
                   isToday
-                    ? "flex min-h-[38px] scale-105 flex-col items-center justify-center rounded-md bg-white font-bold text-slate-900 shadow-md"
-                    : `flex min-h-[38px] cursor-pointer flex-col items-center justify-center rounded-md hover:bg-white/10 hover:text-white ${
+                    ? "relative flex min-h-[38px] scale-105 flex-col items-center justify-center rounded-md bg-white font-bold text-slate-900 shadow-md"
+                    : `relative flex min-h-[38px] cursor-pointer flex-col items-center justify-center rounded-md hover:bg-white/10 hover:text-white ${
                         dow === 0
                           ? "text-red-400/60"
                           : dow === 6
@@ -266,9 +325,9 @@ export function CalendarPanel({
                 }
               >
                 <span>{d}</span>
-                {(hasEvent || hasDue) && (
+                {(hasSingleDayEvent || hasDue) && (
                   <div className="mt-0.5 flex items-center justify-center gap-0.5">
-                    {hasEvent && (
+                    {hasSingleDayEvent && (
                       <div
                         className={`h-1 w-1 rounded-full ${isToday ? "bg-slate-900" : "bg-brand-light"}`}
                       />
@@ -280,12 +339,28 @@ export function CalendarPanel({
                     )}
                   </div>
                 )}
+                {multiDayInfo.length > 0 && (
+                  <div className="absolute bottom-0.5 left-0 right-0 flex flex-col gap-[2px]">
+                    {multiDayInfo.slice(0, 2).map((seg) => (
+                      <div
+                        key={seg.eventId}
+                        className={`h-[3px] w-full ${
+                          seg.position === "start"
+                            ? "rounded-l-full"
+                            : seg.position === "end"
+                              ? "rounded-r-full"
+                              : ""
+                        } ${isToday ? "bg-slate-900/50" : "bg-brand-light/50"}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
-        {showForm && (
+        {showForm && !readOnly && (
           <div className="animate-fade-up mt-4 rounded-xl border border-white/10 bg-black/40 p-3">
             <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-brand-light">
               NEW SCHEDULE
@@ -423,13 +498,13 @@ export function CalendarPanel({
             <div className="mt-2.5 flex gap-2 text-xs font-bold">
               <button
                 onClick={submitEvent}
-                className="flex-1 cursor-pointer rounded-md bg-white py-1 text-slate-900"
+                className="flex-1 cursor-pointer rounded-lg bg-white py-1 text-slate-900"
               >
                 등록
               </button>
               <button
                 onClick={() => setShowForm(false)}
-                className="flex-1 cursor-pointer rounded-md bg-white/5 py-1 text-white/40"
+                className="flex-1 cursor-pointer rounded-lg bg-white/5 py-1 text-white/40"
               >
                 취소
               </button>
@@ -476,12 +551,14 @@ export function CalendarPanel({
                   {e.title}
                 </span>
               </div>
-              <button
-                onClick={() => removeEvent(e.id)}
-                className="shrink-0 cursor-pointer pl-1.5 text-white/20 hover:text-white"
-              >
-                ✕
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => removeEvent(e.id)}
+                  className="shrink-0 cursor-pointer pl-1.5 text-white/20 hover:text-white"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           );
         })}
@@ -581,16 +658,18 @@ export function CalendarPanel({
               ))}
             </div>
             <div className="flex justify-end gap-1.5 border-t border-white/10 bg-black/20 px-5 py-3 text-xs font-bold">
-              <button
-                onClick={() => {
-                  const d = selectedDay;
-                  setSelectedDay(null);
-                  openAddForm(d ?? undefined);
-                }}
-                className="cursor-pointer rounded bg-white/10 px-3 py-1 text-white hover:bg-white/20"
-              >
-                + 일정 추가
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => {
+                    const d = selectedDay;
+                    setSelectedDay(null);
+                    openAddForm(d ?? undefined);
+                  }}
+                  className="cursor-pointer rounded bg-white/10 px-3 py-1 text-white hover:bg-white/20"
+                >
+                  + 일정 추가
+                </button>
+              )}
               <button
                 onClick={() => setSelectedDay(null)}
                 className="cursor-pointer rounded bg-white px-3 py-1 text-slate-900"

@@ -50,6 +50,7 @@ export interface TaskEditPatch {
 interface Props {
   task: TaskDetailData;
   members: { id: string; user: Person }[];
+  currentUserId: string;
   onClose: () => void;
   onUpdate: (task: Partial<TaskDetailData>) => void;
   onArchive?: () => void;
@@ -85,10 +86,12 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, onStatusChange, onEdit }: Props) {
+export function TaskDetailModal({ task, members, currentUserId, onClose, onUpdate, onArchive, onStatusChange, onEdit }: Props) {
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentText, setEditCommentText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -161,6 +164,22 @@ export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, o
     setCommentText((prev) => prev + `@${name} `);
     setShowMentions(false);
     inputRef.current?.focus();
+  };
+
+  const saveEditComment = async (commentId: string) => {
+    if (!editCommentText.trim()) return;
+    const res = await fetch(`/api/tasks/${task.id}/comments/${commentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: editCommentText }),
+    });
+    if (res.ok) {
+      const { comment: updated } = await res.json();
+      onUpdate({
+        comments: task.comments.map((c) => c.id === commentId ? updated : c),
+      });
+      setEditingCommentId(null);
+    }
   };
 
   return (
@@ -358,7 +377,7 @@ export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, o
             </div>
             <div className="space-y-3">
               {task.comments.map((c) => (
-                <div key={c.id} className="flex items-start gap-2.5">
+                <div key={c.id} className="group flex items-start gap-2.5">
                   <div
                     className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white"
                     style={{ background: colorForId(c.author.id) }}
@@ -373,10 +392,32 @@ export function TaskDetailModal({ task, members, onClose, onUpdate, onArchive, o
                       <span className="font-mono text-[9px] text-white/25">
                         {new Date(c.createdAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
                       </span>
+                      {c.author.id === currentUserId && editingCommentId !== c.id && (
+                        <button
+                          onClick={() => { setEditingCommentId(c.id); setEditCommentText(c.body); }}
+                          className="cursor-pointer text-[10px] text-white/30 opacity-0 transition-opacity hover:text-white group-hover:opacity-100"
+                        >
+                          ✎
+                        </button>
+                      )}
                     </div>
-                    <p className="mt-0.5 text-xs leading-relaxed text-white/65">
-                      {c.body}
-                    </p>
+                    {editingCommentId === c.id ? (
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <input
+                          value={editCommentText}
+                          onChange={(e) => setEditCommentText(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") saveEditComment(c.id); if (e.key === "Escape") setEditingCommentId(null); }}
+                          className="flex-1 rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-xs text-white outline-none"
+                          autoFocus
+                        />
+                        <button onClick={() => saveEditComment(c.id)} className="cursor-pointer text-[10px] font-bold text-brand-light">저장</button>
+                        <button onClick={() => setEditingCommentId(null)} className="cursor-pointer text-[10px] font-bold text-white/40">취소</button>
+                      </div>
+                    ) : (
+                      <p className="mt-0.5 text-xs leading-relaxed text-white/65">
+                        {c.body}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
