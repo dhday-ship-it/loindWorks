@@ -10,7 +10,7 @@ import { UserMenu } from "@/components/nav/UserMenu";
 import { CalendarPanel } from "@/components/calendar/CalendarPanel";
 import { WorkStationPanel } from "./WorkStationPanel";
 import { MemoPanel } from "./MemoPanel";
-import { ProjectKanban } from "@/components/ProjectKanban";
+import { ProjectContent } from "@/components/staff-projects/ProjectContent";
 import { MusicWidget } from "./MusicWidget";
 import type {
   CalendarEventItem,
@@ -255,7 +255,11 @@ export function StaffHome({
             </div>
                 </>
               ) : (
-                <ProjectKanban projectId={activeView} />
+                <ProjectContent
+                  projectId={activeView}
+                  currentUser={currentUser}
+                  staff={[]}
+                />
               )}
           </div>
           </div>{/* 합쳐진 카드 닫기 */}
