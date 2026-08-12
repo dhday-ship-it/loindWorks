@@ -27,6 +27,7 @@ export function ProjectSummaryCard({
   const current = project.currentPhase;
   const pct = progressPercent(project.status, current, total);
   const [saving, setSaving] = useState(false);
+  const [showAllPhases, setShowAllPhases] = useState(false);
 
   const patchProject = async (
     data: Partial<Pick<ProjectDetail, "currentPhase" | "status">>
@@ -190,31 +191,43 @@ export function ProjectSummaryCard({
         </div>
       )}
 
-      <div className="flex flex-col gap-1.5 rounded-xl border border-white/5 bg-black/40 p-3.5 font-mono text-xs">
-        {project.phases.map((phase, i) => (
-          <div
-            key={i}
-            className={`flex items-center gap-2 ${
-              i < current || project.status === "DONE"
-                ? "text-white/40"
-                : i === current
-                  ? "font-semibold text-white"
-                  : "text-white/20"
-            }`}
+      {total > 0 && (
+        <div>
+          <button
+            onClick={() => setShowAllPhases((v) => !v)}
+            className="flex w-full cursor-pointer items-center gap-1.5 font-mono text-[10px] font-bold text-white/30 transition-all hover:text-white/60"
           >
-            <div
-              className={`h-1.5 w-1.5 rounded-full ${
-                i < current || project.status === "DONE"
-                  ? "bg-white/30"
-                  : i === current
-                    ? "animate-pulse bg-brand-light shadow-[0_0_6px_rgba(143,168,196,0.5)]"
-                    : "bg-white/10"
-              }`}
-            />
-            {String(i + 1).padStart(2, "0")}. {phase}
-          </div>
-        ))}
-      </div>
+            <span>{showAllPhases ? "▾" : "▸"}</span> 전체 단계 보기 ({total})
+          </button>
+          {showAllPhases && (
+            <div className="animate-fade-up mt-2 flex flex-col gap-1.5 rounded-xl border border-white/5 bg-black/40 p-3.5 font-mono text-xs">
+              {project.phases.map((phase, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-2 ${
+                    i < current || project.status === "DONE"
+                      ? "text-white/40"
+                      : i === current
+                        ? "font-semibold text-white"
+                        : "text-white/20"
+                  }`}
+                >
+                  <div
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      i < current || project.status === "DONE"
+                        ? "bg-white/30"
+                        : i === current
+                          ? "animate-pulse bg-brand-light shadow-[0_0_6px_rgba(143,168,196,0.5)]"
+                          : "bg-white/10"
+                    }`}
+                  />
+                  {String(i + 1).padStart(2, "0")}. {phase}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {project.members.length > 0 && (
         <div className="mt-1 flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">

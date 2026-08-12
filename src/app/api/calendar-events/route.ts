@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await requireStaff();
-  const { title, startAt, sharedWith, projectId } = await request.json();
+  const { title, startAt, endAt, sharedWith, projectId } = await request.json();
 
   if (!title || !startAt) {
     return NextResponse.json(
@@ -27,10 +27,19 @@ export async function POST(request: Request) {
     );
   }
 
+  const parsedEndAt = endAt ? new Date(endAt) : null;
+  if (parsedEndAt && parsedEndAt < new Date(startAt)) {
+    return NextResponse.json(
+      { error: "종료일은 시작일보다 빠를 수 없습니다." },
+      { status: 400 }
+    );
+  }
+
   const event = await prisma.calendarEvent.create({
     data: {
       title,
       startAt: new Date(startAt),
+      endAt: parsedEndAt,
       sharedWith: Array.isArray(sharedWith) ? sharedWith : [],
       ownerId: user.id,
       projectId: projectId || undefined,

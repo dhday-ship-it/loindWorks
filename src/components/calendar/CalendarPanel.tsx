@@ -25,6 +25,26 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
+// 이벤트가 시작일~종료일 사이에 걸쳐있는 날짜 중, 보고 있는 달에 속한 날짜(day-of-month)만 반환
+function daysInView(
+  event: CalendarEventItem,
+  viewYear: number,
+  viewMonth: number
+): number[] {
+  const start = new Date(event.startAt);
+  const end = event.endAt ? new Date(event.endAt) : start;
+  const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  const days: number[] = [];
+  while (cursor <= last) {
+    if (cursor.getFullYear() === viewYear && cursor.getMonth() === viewMonth) {
+      days.push(cursor.getDate());
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
 export function CalendarPanel({
   initialEvents,
   tasks = [],
@@ -52,6 +72,10 @@ export function CalendarPanel({
   const [day, setDay] = useState(now.getDate());
   const [hour, setHour] = useState(now.getHours());
   const [minute, setMinute] = useState(0);
+  const [multiDay, setMultiDay] = useState(false);
+  const [endYear, setEndYear] = useState(now.getFullYear());
+  const [endMonth, setEndMonth] = useState(now.getMonth() + 1);
+  const [endDay, setEndDay] = useState(now.getDate());
   const [share, setShare] = useState("");
   // 대시보드 모드(myProjects 있을 때)에서 선택한 프로젝트
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -70,11 +94,10 @@ export function CalendarPanel({
 
   const eventsByDay = new Map<number, CalendarEventItem[]>();
   for (const e of events) {
-    const d = new Date(e.startAt);
-    if (d.getFullYear() === viewYear && d.getMonth() === viewMonth) {
-      const list = eventsByDay.get(d.getDate()) ?? [];
+    for (const dayNum of daysInView(e, viewYear, viewMonth)) {
+      const list = eventsByDay.get(dayNum) ?? [];
       list.push(e);
-      eventsByDay.set(d.getDate(), list);
+      eventsByDay.set(dayNum, list);
     }
   }
 
@@ -94,11 +117,18 @@ export function CalendarPanel({
   );
 
   const openAddForm = (presetDay?: number) => {
-    setYear(now.getFullYear());
-    setMonth(now.getMonth() + 1);
-    setDay(presetDay ?? now.getDate());
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    const d = presetDay ?? now.getDate();
+    setYear(y);
+    setMonth(m);
+    setDay(d);
     setHour(now.getHours());
     setMinute(0);
+    setMultiDay(false);
+    setEndYear(y);
+    setEndMonth(m);
+    setEndDay(d);
     setShare("");
     setTitle("");
     setSelectedProjectId(myProjects[0]?.id ?? "");
@@ -108,6 +138,9 @@ export function CalendarPanel({
   const submitEvent = async () => {
     if (!title.trim()) return;
     const startAt = new Date(year, month - 1, day, hour, minute).toISOString();
+    const endAt = multiDay
+      ? new Date(endYear, endMonth - 1, endDay, 23, 59, 59).toISOString()
+      : undefined;
     const sharedWith = share
       .split(",")
       .map((s) => s.trim())
@@ -125,6 +158,7 @@ export function CalendarPanel({
       body: JSON.stringify({
         title,
         startAt,
+        endAt,
         sharedWith,
         projectId: resolvedProjectId,
       }),
@@ -278,6 +312,54 @@ export function CalendarPanel({
                 placeholder="분"
               />
             </div>
+
+            <label className="mb-2 flex cursor-pointer items-center gap-1.5 text-[10px] font-medium text-white/50">
+              <input
+                type="checkbox"
+                checked={multiDay}
+                onChange={(e) => {
+                  setMultiDay(e.target.checked);
+                  if (e.target.checked) {
+                    setEndYear(year);
+                    setEndMonth(month);
+                    setEndDay(day);
+                  }
+                }}
+                className="accent-brand-light"
+              />
+              여러 날에 걸쳐 진행
+            </label>
+
+            {multiDay && (
+              <div className="mb-2 grid grid-cols-3 gap-1 text-center font-mono text-xs">
+                <input
+                  type="number"
+                  value={endYear}
+                  onChange={(e) => setEndYear(Number(e.target.value))}
+                  className="rounded border border-brand-light/20 bg-white/5 py-0.5 text-white outline-none"
+                  placeholder="종료 년"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  max={12}
+                  value={endMonth}
+                  onChange={(e) => setEndMonth(Number(e.target.value))}
+                  className="rounded border border-brand-light/20 bg-white/5 py-0.5 text-white outline-none"
+                  placeholder="종료 월"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={endDay}
+                  onChange={(e) => setEndDay(Number(e.target.value))}
+                  className="rounded border border-brand-light/20 bg-white/5 py-0.5 text-white outline-none"
+                  placeholder="종료 일"
+                />
+              </div>
+            )}
+
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -344,6 +426,12 @@ export function CalendarPanel({
         )}
         {sortedEvents.map((e) => {
           const d = new Date(e.startAt);
+          const ed = e.endAt ? new Date(e.endAt) : null;
+          const isMultiDay =
+            ed &&
+            (ed.getFullYear() !== d.getFullYear() ||
+              ed.getMonth() !== d.getMonth() ||
+              ed.getDate() !== d.getDate());
           const projName = myProjects.find((p) => p.id === e.projectId)?.name;
           return (
             <div
@@ -352,7 +440,9 @@ export function CalendarPanel({
             >
               <div className="flex min-w-0 flex-1 items-center gap-2 truncate font-mono">
                 <span className="shrink-0 rounded border border-brand-light/20 bg-brand-light/5 px-1 text-[9px] font-bold text-brand-light">
-                  {pad(d.getMonth() + 1)}.{pad(d.getDate())} {pad(d.getHours())}:{pad(d.getMinutes())}
+                  {isMultiDay
+                    ? `${pad(d.getMonth() + 1)}.${pad(d.getDate())}~${pad(ed.getMonth() + 1)}.${pad(ed.getDate())}`
+                    : `${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
                 </span>
                 {projName && (
                   <span className="shrink-0 rounded border border-blue-400/20 bg-blue-400/5 px-1 text-[9px] font-bold text-blue-300">
@@ -406,6 +496,12 @@ export function CalendarPanel({
               )}
               {dayEvents.map((e) => {
                 const d = new Date(e.startAt);
+                const ed = e.endAt ? new Date(e.endAt) : null;
+                const isMultiDay =
+                  ed &&
+                  (ed.getFullYear() !== d.getFullYear() ||
+                    ed.getMonth() !== d.getMonth() ||
+                    ed.getDate() !== d.getDate());
                 const projName = myProjects.find((p) => p.id === e.projectId)?.name;
                 return (
                   <div
@@ -414,7 +510,9 @@ export function CalendarPanel({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 font-mono text-[10px] font-semibold text-brand-light">
-                        {pad(d.getHours())}:{pad(d.getMinutes())}
+                        {isMultiDay
+                          ? `${pad(d.getMonth() + 1)}.${pad(d.getDate())} ~ ${pad(ed.getMonth() + 1)}.${pad(ed.getDate())}`
+                          : `${pad(d.getHours())}:${pad(d.getMinutes())}`}
                       </div>
                       {projName && (
                         <span className="rounded border border-blue-400/20 bg-blue-400/5 px-1.5 text-[9px] font-bold text-blue-300">

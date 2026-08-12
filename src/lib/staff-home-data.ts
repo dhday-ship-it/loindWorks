@@ -80,6 +80,7 @@ export async function getStaffHomeData(userId: string) {
     events: events.map((e) => ({
       ...e,
       startAt: e.startAt.toISOString(),
+      endAt: e.endAt ? e.endAt.toISOString() : null,
     })),
     taggedItems,
   };
