@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { CreateCompanyModal } from "./CreateCompanyModal";
+import { EditCompanyModal } from "./EditCompanyModal";
 import type { CompanyItem } from "./types";
 
 export function CompaniesPage({
@@ -15,6 +16,7 @@ export function CompaniesPage({
   showToast: (msg: string) => void;
 }) {
   const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<CompanyItem | null>(null);
 
   const deleteCompany = async (id: string, name: string) => {
     if (
@@ -58,6 +60,7 @@ export function CompaniesPage({
                 <th>Company ID</th>
                 <th>담당자</th>
                 <th>이메일</th>
+                <th>연락처</th>
                 <th>연결 프로젝트</th>
                 <th>계정 수</th>
                 <th>관리</th>
@@ -66,7 +69,7 @@ export function CompaniesPage({
             <tbody>
               {companies.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-6 text-center text-white/30">
+                  <td colSpan={8} className="py-6 text-center text-white/30">
                     등록된 고객사가 없습니다.
                   </td>
                 </tr>
@@ -79,6 +82,9 @@ export function CompaniesPage({
                   <td className="font-mono text-[11px] text-white/50">
                     {c.contactEmail ?? "-"}
                   </td>
+                  <td className="font-mono text-[11px] text-white/50">
+                    {c.contactPhone ?? "-"}
+                  </td>
                   <td className="text-[11px] text-white/55">
                     {c._count.projects}개
                   </td>
@@ -88,12 +94,20 @@ export function CompaniesPage({
                     </span>
                   </td>
                   <td>
-                    <button
-                      onClick={() => deleteCompany(c.id, c.name)}
-                      className="admin-btn-danger"
-                    >
-                      삭제
-                    </button>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => setEditing(c)}
+                        className="admin-btn-ghost"
+                      >
+                        수정
+                      </button>
+                      <button
+                        onClick={() => deleteCompany(c.id, c.name)}
+                        className="admin-btn-danger"
+                      >
+                        삭제
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -109,6 +123,20 @@ export function CompaniesPage({
             onCompaniesChange([...companies, company]);
             setShowCreate(false);
             showToast(`${company.name} 고객사가 등록되었습니다.`);
+          }}
+        />
+      )}
+
+      {editing && (
+        <EditCompanyModal
+          company={editing}
+          onClose={() => setEditing(null)}
+          onSaved={(updated) => {
+            onCompaniesChange(
+              companies.map((c) => (c.id === updated.id ? updated : c))
+            );
+            setEditing(null);
+            showToast(`${updated.name} 정보가 수정되었습니다.`);
           }}
         />
       )}

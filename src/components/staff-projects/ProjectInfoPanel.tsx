@@ -77,6 +77,14 @@ export function ProjectInfoPanel({
             {project.company?.contactEmail ?? "-"}
           </div>
         </div>
+        <div>
+          <span className="mb-0.5 block font-mono text-[9px] uppercase tracking-wider text-white/40">
+            연락처
+          </span>
+          <div className="truncate rounded-lg border border-white/5 bg-black/30 px-3 py-1.5 select-all font-mono text-white/50">
+            {project.company?.contactPhone ?? "-"}
+          </div>
+        </div>
         {project.brandColors.length > 0 && (
           <div>
             <span className="mb-1 block font-mono text-[9px] uppercase tracking-wider text-white/40">

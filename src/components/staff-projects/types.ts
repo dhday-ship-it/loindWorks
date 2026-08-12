@@ -86,6 +86,7 @@ export interface CompanyRef {
   companyId: string;
   contactName: string | null;
   contactEmail: string | null;
+  contactPhone: string | null;
 }
 
 export interface ProjectTaskItem {

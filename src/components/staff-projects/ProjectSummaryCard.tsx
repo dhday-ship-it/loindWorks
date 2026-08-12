@@ -87,6 +87,16 @@ export function ProjectSummaryCard({
                 담당자 {project.company.contactName}
               </div>
             )}
+            {project.company?.contactEmail && (
+              <div className="truncate font-mono text-[10px] text-white/40">
+                {project.company.contactEmail}
+              </div>
+            )}
+            {project.company?.contactPhone && (
+              <div className="truncate font-mono text-[10px] text-white/40">
+                {project.company.contactPhone}
+              </div>
+            )}
           </div>
         </div>
       </div>

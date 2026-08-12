@@ -6,6 +6,7 @@ export interface CompanyItem {
   companyId: string;
   contactName: string | null;
   contactEmail: string | null;
+  contactPhone: string | null;
   _count: { users: number; projects: number };
 }
 

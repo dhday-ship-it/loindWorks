@@ -18,7 +18,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   await requireSuperAdmin();
-  const { name, companyId, contactName, contactEmail } = await request.json();
+  const { name, companyId, contactName, contactEmail, contactPhone } =
+    await request.json();
 
   if (!name || !companyId) {
     return NextResponse.json(
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
       companyId: slug,
       contactName: contactName || undefined,
       contactEmail: contactEmail || undefined,
+      contactPhone: contactPhone || undefined,
     },
     include: {
       _count: { select: { users: true, projects: true } },

@@ -110,9 +110,6 @@ export function StaffHome({
               LOIND
             </div>
             <div className="flex shrink-0 gap-1 md:gap-2">
-              <button className="cursor-pointer whitespace-nowrap rounded-sm bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 md:px-4">
-                홈
-              </button>
               {currentUser.role === "SUPER_ADMIN" && (
                 <Link
                   href="/admin"
@@ -233,14 +230,6 @@ export function StaffHome({
                 )}
               </div>
             )}
-            <div className="mt-auto pt-4">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 rounded-lg border border-dashed border-white/10 px-3 py-2 text-[11px] text-white/30 transition-all hover:border-white/20 hover:text-white/60"
-              >
-                📁 프로젝트 관리
-              </Link>
-            </div>
           </aside>
 
             {/* 메인 콘텐츠 */}

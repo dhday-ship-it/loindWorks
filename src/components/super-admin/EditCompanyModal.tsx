@@ -5,56 +5,50 @@ import { useState } from "react";
 import { Modal } from "./Modal";
 import type { CompanyItem } from "./types";
 
-export function CreateCompanyModal({
+export function EditCompanyModal({
+  company,
   onClose,
-  onCreated,
+  onSaved,
 }: {
+  company: CompanyItem;
   onClose: () => void;
-  onCreated: (company: CompanyItem) => void;
+  onSaved: (company: CompanyItem) => void;
 }) {
-  const [name, setName] = useState("");
-  const [companyId, setCompanyId] = useState("");
-  const [contactName, setContactName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
+  const [name, setName] = useState(company.name);
+  const [contactName, setContactName] = useState(company.contactName ?? "");
+  const [contactEmail, setContactEmail] = useState(company.contactEmail ?? "");
+  const [contactPhone, setContactPhone] = useState(company.contactPhone ?? "");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
-    setError(null);
-    if (!name.trim() || !companyId.trim()) {
-      setError("회사명과 Company ID는 필수입니다.");
+    if (!name.trim()) {
+      setError("회사명을 입력해주세요.");
       return;
     }
-
+    setError(null);
     setSubmitting(true);
-    const res = await fetch("/api/admin/companies", {
-      method: "POST",
+    const res = await fetch(`/api/admin/companies/${company.id}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        companyId,
-        contactName,
-        contactEmail,
-        contactPhone,
-      }),
+      body: JSON.stringify({ name, contactName, contactEmail, contactPhone }),
     });
     setSubmitting(false);
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "고객사 등록에 실패했습니다.");
+      setError(data.error ?? "수정에 실패했습니다.");
       return;
     }
 
-    const { company } = await res.json();
-    onCreated(company);
+    const { company: updated } = await res.json();
+    onSaved(updated);
   };
 
   return (
     <Modal
-      title="고객사 등록"
-      subtitle="고객사 Company ID와 기본 정보를 등록합니다."
+      title="고객사 수정"
+      subtitle="고객사 정보를 수정합니다."
       onClose={onClose}
     >
       <div className="flex flex-col gap-3.5">
@@ -67,7 +61,6 @@ export function CreateCompanyModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="admin-input"
-              placeholder="주식회사 OOO"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -75,10 +68,9 @@ export function CreateCompanyModal({
               Company ID
             </span>
             <input
-              value={companyId}
-              onChange={(e) => setCompanyId(e.target.value)}
-              className="admin-input"
-              placeholder="예: aheba"
+              value={company.companyId}
+              disabled
+              className="admin-input opacity-40"
             />
           </div>
         </div>
@@ -129,7 +121,7 @@ export function CreateCompanyModal({
             disabled={submitting}
             className="admin-btn-primary disabled:opacity-50"
           >
-            {submitting ? "등록 중..." : "등록"}
+            {submitting ? "저장 중..." : "저장"}
           </button>
         </div>
       </div>
