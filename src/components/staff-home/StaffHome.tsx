@@ -60,7 +60,7 @@ export function StaffHome({
     setProjects(prev => prev.map(p => p.id === projectId ? { ...p, status: newStatus } : p));
   };
 
-  usePolling({
+  const { refresh } = usePolling({
     url: "/api/dashboard/home",
     interval: 8000,
     enabled: activeView === "home",
@@ -77,7 +77,14 @@ export function StaffHome({
   const upcomingEvents = events.filter((e) => new Date(e.startAt).getTime() >= Date.now()).length;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const selectView = (id: "home" | string) => { setActiveView(id); setDeepLinkTaskId(null); window.history.replaceState(null, "", id === "home" ? "/dashboard" : `/dashboard?project=${id}`); };
+  const selectView = (id: "home" | string) => {
+    setActiveView(id);
+    setDeepLinkTaskId(null);
+    window.history.replaceState(null, "", id === "home" ? "/dashboard" : `/dashboard?project=${id}`);
+    if (id === "home") {
+      refresh();
+    }
+  };
 
   return (
     <>

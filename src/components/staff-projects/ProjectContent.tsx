@@ -283,18 +283,18 @@ export function ProjectContent({
           currentUserId={currentUser.id}
           onClose={() => setSelectedTask(null)}
           onUpdate={(patch) => setSelectedTask((prev) => prev ? { ...prev, ...patch } : null)}
-          onArchive={async () => {
+          onDelete={async () => {
             const previous = project.tasks ?? [];
             updateProject({
               tasks: previous.filter((t) => t.id !== selectedTask.id),
             });
             setSelectedTask(null);
             try {
-              const res = await fetch(`/api/tasks/${selectedTask.id}/archive`, { method: "POST" });
+              const res = await fetch(`/api/tasks/${selectedTask.id}`, { method: "DELETE" });
               if (!res.ok) throw new Error();
             } catch {
               updateProject({ tasks: previous });
-              showToast("작업 아카이브에 실패했습니다", "error");
+              showToast("작업 삭제에 실패했습니다", "error");
             }
           }}
           onStatusChange={async (status) => {

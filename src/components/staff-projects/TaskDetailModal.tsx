@@ -53,7 +53,7 @@ interface Props {
   currentUserId: string;
   onClose: () => void;
   onUpdate: (task: Partial<TaskDetailData>) => void;
-  onArchive?: () => void;
+  onDelete?: () => void;
   onStatusChange?: (status: TaskStatus) => void;
   onEdit?: (patch: TaskEditPatch) => void;
 }
@@ -86,7 +86,7 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function TaskDetailModal({ task, members, currentUserId, onClose, onUpdate, onArchive, onStatusChange, onEdit }: Props) {
+export function TaskDetailModal({ task, members, currentUserId, onClose, onUpdate, onDelete, onStatusChange, onEdit }: Props) {
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
@@ -179,6 +179,17 @@ export function TaskDetailModal({ task, members, currentUserId, onClose, onUpdat
         comments: task.comments.map((c) => c.id === commentId ? updated : c),
       });
       setEditingCommentId(null);
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    const res = await fetch(`/api/tasks/${task.id}/comments/${commentId}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      onUpdate({
+        comments: task.comments.filter((c) => c.id !== commentId),
+      });
     }
   };
 
@@ -331,12 +342,12 @@ export function TaskDetailModal({ task, members, currentUserId, onClose, onUpdat
               )}
             </>
           )}
-          {task.status === "DONE" && onArchive && (
+          {onDelete && (
             <button
-              onClick={onArchive}
-              className="ml-auto cursor-pointer rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[10px] font-bold text-white/40 transition-all hover:bg-white/10 hover:text-white"
+              onClick={onDelete}
+              className="ml-auto cursor-pointer rounded-lg border border-red-400/20 bg-red-400/5 px-2.5 py-1 font-mono text-[10px] font-bold text-red-400/70 transition-all hover:bg-red-400/15 hover:text-red-400"
             >
-              📦 아카이브
+              🗑️ 삭제
             </button>
           )}
         </div>
@@ -393,12 +404,20 @@ export function TaskDetailModal({ task, members, currentUserId, onClose, onUpdat
                         {new Date(c.createdAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
                       </span>
                       {c.author.id === currentUserId && editingCommentId !== c.id && (
-                        <button
-                          onClick={() => { setEditingCommentId(c.id); setEditCommentText(c.body); }}
-                          className="cursor-pointer text-[10px] text-white/30 opacity-0 transition-opacity hover:text-white group-hover:opacity-100"
-                        >
-                          ✎
-                        </button>
+                        <>
+                          <button
+                            onClick={() => { setEditingCommentId(c.id); setEditCommentText(c.body); }}
+                            className="cursor-pointer text-[10px] text-white/30 opacity-0 transition-opacity hover:text-white group-hover:opacity-100"
+                          >
+                            ✎
+                          </button>
+                          <button
+                            onClick={() => deleteComment(c.id)}
+                            className="cursor-pointer text-[10px] text-red-400/50 opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
+                          >
+                            🗑
+                          </button>
+                        </>
                       )}
                     </div>
                     {editingCommentId === c.id ? (
