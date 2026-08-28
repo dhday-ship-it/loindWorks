@@ -25,6 +25,8 @@ const INDENT = 32;
 const CATEGORY_Y = 190;
 const HUB_Y = 40;
 const HUB_WIDTH = 170;
+const GUIDE_OFFSET = 16;
+const TRUNK_COLOR = "#8b93a1";
 
 interface LaidOutNode extends FlowNodeItem {
   x: number;
@@ -42,9 +44,43 @@ function nextColor(usedCount: number) {
   return COLOR_PALETTE[usedCount % COLOR_PALETTE.length];
 }
 
-function elbow(x1: number, y1: number, x2: number, y2: number) {
-  const midY = (y1 + y2) / 2;
-  return `M ${x1} ${y1} V ${midY} H ${x2} V ${y2}`;
+// 부모 아래로 자식들을 하나의 세로 스파인 + 개별 가로 가지로 연결 (겹침 없는 트리 커넥터)
+function spineAndTicks(
+  guideX: number,
+  spineTopY: number,
+  children: { x: number; y: number; color: string }[],
+  lines: Line[],
+  spineColor: string
+) {
+  if (children.length === 0) return;
+  const lastCenterY = children[children.length - 1].y + ROW_HEIGHT / 2;
+  lines.push({ path: `M ${guideX} ${spineTopY} V ${lastCenterY}`, color: spineColor });
+  for (const child of children) {
+    const cy = child.y + ROW_HEIGHT / 2;
+    lines.push({ path: `M ${guideX} ${cy} H ${child.x}`, color: child.color });
+  }
+}
+
+// 허브 → 카테고리들: 세로 줄기 하나 + 가로 레일 하나 + 카테고리별 세로 가지 (겹침 없는 부채꼴)
+function fanOutHorizontal(
+  trunkX: number,
+  trunkTopY: number,
+  railY: number,
+  children: { x: number; y: number; color: string }[],
+  lines: Line[],
+  trunkColor: string
+) {
+  if (children.length === 0) return;
+  lines.push({ path: `M ${trunkX} ${trunkTopY} V ${railY}`, color: trunkColor });
+  const xs = [trunkX, ...children.map((c) => c.x)];
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  if (minX !== maxX) {
+    lines.push({ path: `M ${minX} ${railY} H ${maxX}`, color: trunkColor });
+  }
+  for (const child of children) {
+    lines.push({ path: `M ${child.x} ${railY} V ${child.y}`, color: child.color });
+  }
 }
 
 function layout(nodes: FlowNodeItem[]) {
@@ -62,7 +98,7 @@ function layout(nodes: FlowNodeItem[]) {
   const lines: Line[] = [];
 
   let columnX = 0;
-  const categoryPositions: { x: number; color: string }[] = [];
+  const categoryPositions: { x: number; y: number; color: string }[] = [];
 
   categories.forEach((cat, i) => {
     const catColor = cat.color || nextColor(i);
@@ -73,36 +109,47 @@ function layout(nodes: FlowNodeItem[]) {
     const visit = (
       node: FlowNodeItem,
       depth: number,
-      parentColor: string,
-      parentPos: { x: number; y: number } | null
-    ) => {
+      parentColor: string
+    ): { x: number; y: number; effectiveColor: string } => {
       const x = colStartX + depth * INDENT;
       const y = cursorY;
       const effectiveColor = node.color || parentColor;
       maxDepthX = Math.max(maxDepthX, x);
       laidOut.push({ ...node, x, y, depth, effectiveColor });
-      if (parentPos) {
-        lines.push({
-          path: elbow(parentPos.x + 16, parentPos.y + ROW_HEIGHT, x + 16, y),
-          color: effectiveColor,
-        });
-      }
       cursorY += ROW_HEIGHT + ROW_GAP;
+
       const children = byParent.get(node.id) ?? [];
-      for (const child of children) visit(child, depth + 1, effectiveColor, { x, y });
+      const childPositions = children.map((child) => ({
+        ...visit(child, depth + 1, effectiveColor),
+      }));
+      spineAndTicks(
+        x + GUIDE_OFFSET,
+        y + ROW_HEIGHT,
+        childPositions.map((c) => ({ x: c.x, y: c.y, color: c.effectiveColor })),
+        lines,
+        effectiveColor
+      );
+
+      return { x, y, effectiveColor };
     };
 
-    visit(cat, 0, catColor, null);
-    categoryPositions.push({ x: colStartX + NODE_WIDTH / 2, color: catColor });
+    const catPos = visit(cat, 0, catColor);
+    categoryPositions.push({ x: catPos.x, y: catPos.y, color: catColor });
     columnX = maxDepthX + NODE_WIDTH + COLUMN_GAP;
   });
 
   const totalWidth = Math.max(columnX - COLUMN_GAP, HUB_WIDTH) + 40;
   const hubX = totalWidth / 2 - HUB_WIDTH / 2;
-  const hubLines: Line[] = categoryPositions.map((c) => ({
-    path: elbow(hubX + HUB_WIDTH / 2, HUB_Y + ROW_HEIGHT, c.x + 16, CATEGORY_Y),
-    color: c.color,
-  }));
+  const railY = HUB_Y + ROW_HEIGHT + (CATEGORY_Y - (HUB_Y + ROW_HEIGHT)) / 2;
+  const hubLines: Line[] = [];
+  fanOutHorizontal(
+    hubX + HUB_WIDTH / 2,
+    HUB_Y + ROW_HEIGHT,
+    railY,
+    categoryPositions.map((c) => ({ x: c.x + GUIDE_OFFSET, y: CATEGORY_Y, color: c.color })),
+    hubLines,
+    TRUNK_COLOR
+  );
 
   const maxY = laidOut.reduce((m, n) => Math.max(m, n.y), CATEGORY_Y) + ROW_HEIGHT + 80;
 
