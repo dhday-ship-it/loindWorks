@@ -313,7 +313,7 @@ export function FlowCanvas({ initialNodes }: { initialNodes: FlowNodeItem[] }) {
             ← 홈으로
           </Link>
           <span className="h-4 w-px bg-white/10" />
-          <h1 className="text-sm font-bold tracking-wide text-white/90">🗺️ flow</h1>
+          <h1 className="text-sm font-bold tracking-wide text-white/90">flow</h1>
         </div>
         <div className="flex items-center gap-2">
           <span className="font-mono text-[10px] text-white/25">
