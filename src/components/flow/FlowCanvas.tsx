@@ -17,14 +17,14 @@ const COLOR_PALETTE = [
   "#facc15",
 ];
 
-const NODE_WIDTH = 190;
-const ROW_HEIGHT = 40;
-const ROW_GAP = 10;
-const COLUMN_GAP = 90;
-const INDENT = 22;
-const CATEGORY_Y = 170;
-const HUB_Y = 30;
-const HUB_WIDTH = 160;
+const NODE_WIDTH = 220;
+const ROW_HEIGHT = 46;
+const ROW_GAP = 16;
+const COLUMN_GAP = 110;
+const INDENT = 32;
+const CATEGORY_Y = 190;
+const HUB_Y = 40;
+const HUB_WIDTH = 170;
 
 interface LaidOutNode extends FlowNodeItem {
   x: number;
@@ -34,15 +34,17 @@ interface LaidOutNode extends FlowNodeItem {
 }
 
 interface Line {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
+  path: string;
   color: string;
 }
 
 function nextColor(usedCount: number) {
   return COLOR_PALETTE[usedCount % COLOR_PALETTE.length];
+}
+
+function elbow(x1: number, y1: number, x2: number, y2: number) {
+  const midY = (y1 + y2) / 2;
+  return `M ${x1} ${y1} V ${midY} H ${x2} V ${y2}`;
 }
 
 function layout(nodes: FlowNodeItem[]) {
@@ -71,38 +73,34 @@ function layout(nodes: FlowNodeItem[]) {
     const visit = (
       node: FlowNodeItem,
       depth: number,
+      parentColor: string,
       parentPos: { x: number; y: number } | null
     ) => {
       const x = colStartX + depth * INDENT;
       const y = cursorY;
+      const effectiveColor = node.color || parentColor;
       maxDepthX = Math.max(maxDepthX, x);
-      laidOut.push({ ...node, x, y, depth, effectiveColor: catColor });
+      laidOut.push({ ...node, x, y, depth, effectiveColor });
       if (parentPos) {
         lines.push({
-          x1: parentPos.x + 14,
-          y1: parentPos.y + ROW_HEIGHT,
-          x2: x + 14,
-          y2: y,
-          color: catColor,
+          path: elbow(parentPos.x + 16, parentPos.y + ROW_HEIGHT, x + 16, y),
+          color: effectiveColor,
         });
       }
       cursorY += ROW_HEIGHT + ROW_GAP;
       const children = byParent.get(node.id) ?? [];
-      for (const child of children) visit(child, depth + 1, { x, y });
+      for (const child of children) visit(child, depth + 1, effectiveColor, { x, y });
     };
 
-    visit(cat, 0, null);
+    visit(cat, 0, catColor, null);
     categoryPositions.push({ x: colStartX + NODE_WIDTH / 2, color: catColor });
     columnX = maxDepthX + NODE_WIDTH + COLUMN_GAP;
   });
 
-  const totalWidth = Math.max(columnX - COLUMN_GAP, HUB_WIDTH);
+  const totalWidth = Math.max(columnX - COLUMN_GAP, HUB_WIDTH) + 40;
   const hubX = totalWidth / 2 - HUB_WIDTH / 2;
   const hubLines: Line[] = categoryPositions.map((c) => ({
-    x1: hubX + HUB_WIDTH / 2,
-    y1: HUB_Y + ROW_HEIGHT,
-    x2: c.x + 14,
-    y2: CATEGORY_Y,
+    path: elbow(hubX + HUB_WIDTH / 2, HUB_Y + ROW_HEIGHT, c.x + 16, CATEGORY_Y),
     color: c.color,
   }));
 
@@ -113,7 +111,7 @@ function layout(nodes: FlowNodeItem[]) {
 
 export function FlowCanvas({ initialNodes }: { initialNodes: FlowNodeItem[] }) {
   const [nodes, setNodes] = useState(initialNodes);
-  const [scale, setScale] = useState(0.85);
+  const [scale, setScale] = useState(0.9);
   const [pan, setPan] = useState({ x: 60, y: 40 });
   const dragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
@@ -128,7 +126,7 @@ export function FlowCanvas({ initialNodes }: { initialNodes: FlowNodeItem[] }) {
   const [selected, setSelected] = useState<FlowNodeItem | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDetail, setEditDetail] = useState("");
-  const [editColor, setEditColor] = useState(COLOR_PALETTE[0]);
+  const [editColor, setEditColor] = useState<string | null>(null);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryTitle, setNewCategoryTitle] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState(COLOR_PALETTE[0]);
@@ -139,6 +137,8 @@ export function FlowCanvas({ initialNodes }: { initialNodes: FlowNodeItem[] }) {
     () => layout(nodes),
     [nodes]
   );
+
+  const selectedLaidOut = selected ? laidOut.find((n) => n.id === selected.id) : undefined;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -185,7 +185,7 @@ export function FlowCanvas({ initialNodes }: { initialNodes: FlowNodeItem[] }) {
     setSelected(node);
     setEditTitle(node.title);
     setEditDetail(node.detail ?? "");
-    setEditColor(node.color || COLOR_PALETTE[0]);
+    setEditColor(node.color);
     setShowAddChild(false);
     setNewChildTitle("");
   };
@@ -195,7 +195,7 @@ export function FlowCanvas({ initialNodes }: { initialNodes: FlowNodeItem[] }) {
     const patch = {
       title: editTitle.trim(),
       detail: editDetail || null,
-      ...(selected.parentId === null ? { color: editColor } : {}),
+      color: selected.parentId === null ? (editColor || COLOR_PALETTE[0]) : editColor,
     };
     const res = await fetch(`/api/flow-nodes/${selected.id}`, {
       method: "PATCH",
@@ -310,10 +310,10 @@ export function FlowCanvas({ initialNodes }: { initialNodes: FlowNodeItem[] }) {
             {lines.map((l, i) => (
               <path
                 key={i}
-                d={`M ${l.x1} ${l.y1} C ${l.x1} ${(l.y1 + l.y2) / 2}, ${l.x2} ${(l.y1 + l.y2) / 2}, ${l.x2} ${l.y2}`}
+                d={l.path}
                 fill="none"
                 stroke={l.color}
-                strokeOpacity={0.4}
+                strokeOpacity={0.55}
                 strokeWidth={1.5}
               />
             ))}
@@ -327,28 +327,52 @@ export function FlowCanvas({ initialNodes }: { initialNodes: FlowNodeItem[] }) {
             LOIND
           </div>
 
-          {laidOut.map((node) => (
-            <button
-              key={node.id}
-              onClick={(e) => {
-                e.stopPropagation();
-                openDetail(node);
-              }}
-              style={{
-                left: node.x,
-                top: node.y,
-                width: NODE_WIDTH - node.depth * INDENT,
-                position: "absolute",
-                borderColor: `${node.effectiveColor}55`,
-                background: node.depth === 0 ? `${node.effectiveColor}22` : "rgba(255,255,255,0.04)",
-              }}
-              className="cursor-pointer truncate rounded-lg border px-3 py-2 text-left text-[11px] font-semibold text-white/90 shadow-md transition-all hover:brightness-125"
-              title={node.title}
-            >
-              {node.depth === 0 && <span className="mr-1">●</span>}
-              {node.title}
-            </button>
-          ))}
+          {laidOut.map((node) =>
+            node.depth === 0 ? (
+              <button
+                key={node.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDetail(node);
+                }}
+                style={{
+                  left: node.x,
+                  top: node.y,
+                  width: NODE_WIDTH,
+                  position: "absolute",
+                  borderColor: `${node.effectiveColor}90`,
+                  background: `${node.effectiveColor}22`,
+                }}
+                className="cursor-pointer truncate rounded-xl border-[1.5px] px-4 py-3 text-left text-[14px] font-bold text-white shadow-md transition-all hover:brightness-110"
+                title={node.title}
+              >
+                <span
+                  className="mr-2 inline-block h-2.5 w-2.5 rounded-sm align-middle"
+                  style={{ background: node.effectiveColor }}
+                />
+                {node.title}
+              </button>
+            ) : (
+              <button
+                key={node.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDetail(node);
+                }}
+                style={{
+                  left: node.x,
+                  top: node.y,
+                  width: NODE_WIDTH,
+                  position: "absolute",
+                  borderLeftColor: node.effectiveColor,
+                }}
+                className="cursor-pointer truncate rounded-lg border border-l-[3px] border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-left text-[13px] font-medium text-white/85 shadow-sm transition-all hover:bg-white/[0.08] hover:text-white"
+                title={node.title}
+              >
+                {node.title}
+              </button>
+            )
+          )}
         </div>
       </div>
 
@@ -427,25 +451,42 @@ export function FlowCanvas({ initialNodes }: { initialNodes: FlowNodeItem[] }) {
                 />
               </div>
 
-              {selected.parentId === null && (
-                <div>
-                  <label className="mb-1 block font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
-                    색상
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {COLOR_PALETTE.map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => setEditColor(c)}
-                        style={{ background: c }}
-                        className={`h-6 w-6 cursor-pointer rounded-full transition-all ${
-                          editColor === c ? "ring-2 ring-white ring-offset-2 ring-offset-[#0e1116]" : ""
-                        }`}
-                      />
-                    ))}
-                  </div>
+              <div>
+                <label className="mb-1 block font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
+                  색상
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {selected.parentId !== null && (
+                    <button
+                      onClick={() => setEditColor(null)}
+                      style={{ background: selectedLaidOut?.effectiveColor }}
+                      title="상위 카테고리 색상 자동 적용"
+                      className={`relative h-6 w-6 cursor-pointer rounded-full border-2 border-dashed border-white/60 transition-all ${
+                        editColor === null ? "ring-2 ring-white ring-offset-2 ring-offset-[#0e1116]" : ""
+                      }`}
+                    >
+                      <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white drop-shadow">
+                        A
+                      </span>
+                    </button>
+                  )}
+                  {COLOR_PALETTE.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setEditColor(c)}
+                      style={{ background: c }}
+                      className={`h-6 w-6 cursor-pointer rounded-full transition-all ${
+                        editColor === c ? "ring-2 ring-white ring-offset-2 ring-offset-[#0e1116]" : ""
+                      }`}
+                    />
+                  ))}
                 </div>
-              )}
+                {selected.parentId !== null && (
+                  <p className="mt-1.5 font-mono text-[9px] text-white/25">
+                    A = 상위 카테고리 색상을 자동으로 따라감
+                  </p>
+                )}
+              </div>
 
               <div>
                 <label className="mb-1 block font-mono text-[9px] font-bold uppercase tracking-widest text-white/30">
