@@ -102,6 +102,9 @@ model User {
   memoFolders    MemoFolder[]
   memos          Memo[]
 
+  // 회사 흐름도
+  flowNodes FlowNode[]
+
   // 프로젝트
   projectMemberships ProjectMember[]
   projectRequests    ProjectRequest[]
@@ -407,6 +410,25 @@ model Memo {
 
   folderId String?
   folder   MemoFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+}
+
+// ─── Company Flow Map ─────────────────────────────────────────────────────────
+
+model FlowNode {
+  id        String   @id @default(cuid())
+  title     String
+  detail    String?
+  color     String?             // 최상위 카테고리 노드 색상
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parentId String?
+  parent   FlowNode?  @relation("FlowNodeChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children FlowNode[] @relation("FlowNodeChildren")
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
 }
 
 // ─── Auth.js (NextAuth) ───────────────────────────────────────────────────────
