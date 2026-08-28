@@ -35,7 +35,7 @@ export function DashboardNav({
             href="/dashboard/flow"
             className="cursor-pointer whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white/60 transition-all hover:bg-white/5 hover:text-white md:px-4"
           >
-            🗺️ 흐름도
+            🗺️ flow
           </Link>
           {currentUser.role === "SUPER_ADMIN" && (
             <Link
