@@ -105,6 +105,10 @@ model User {
   // 회사 흐름도
   flowNodes FlowNode[]
 
+  // 법인 장부
+  corporateLedgerEntries CorporateLedgerEntry[]
+  loanAdvanceEntries     LoanAdvanceEntry[]
+
   // 프로젝트
   projectMemberships ProjectMember[]
   projectRequests    ProjectRequest[]
@@ -359,6 +363,44 @@ model ProjectRecord {
 
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// ─── 법인 지출 기록부 (현금출납부) ────────────────────────────────────────────
+
+model CorporateLedgerEntry {
+  id          String   @id @default(cuid())
+  date        DateTime
+  description String // 적요
+  income      Int? // 수입금액
+  expense     Int? // 지출금액
+  balance     Int // 잔액
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// ─── 대출·가지급금 관리 ────────────────────────────────────────────────────────
+
+enum LoanAdvanceType {
+  LOAN // 대출
+  ADVANCE // 가지급금
+}
+
+model LoanAdvanceEntry {
+  id           String          @id @default(cuid())
+  date         DateTime
+  type         LoanAdvanceType
+  counterparty String // 성명/거래처
+  amount       Int // 지급액(원금)
+  repaid       Int             @default(0) // 회수(상환)액
+  note         String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)

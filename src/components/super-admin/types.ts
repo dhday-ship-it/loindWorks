@@ -1,4 +1,4 @@
-import type { ProjectStatus, Role, TaxType } from "@/generated/prisma/enums";
+import type { LoanAdvanceType, ProjectStatus, Role, TaxType } from "@/generated/prisma/enums";
 
 export interface CompanyItem {
   id: string;
@@ -99,6 +99,29 @@ export interface ProjectRecordItem {
   outsourceTaxInvoiceIssued: boolean;
   projectId: string;
   project: { id: string; name: string };
+  createdAt: string;
+  author: { id: string; name: string | null; email: string };
+}
+
+export interface CorporateLedgerEntryItem {
+  id: string;
+  date: string;
+  description: string;
+  income: number | null;
+  expense: number | null;
+  balance: number;
+  createdAt: string;
+  author: { id: string; name: string | null; email: string };
+}
+
+export interface LoanAdvanceEntryItem {
+  id: string;
+  date: string;
+  type: LoanAdvanceType;
+  counterparty: string;
+  amount: number;
+  repaid: number;
+  note: string | null;
   createdAt: string;
   author: { id: string; name: string | null; email: string };
 }

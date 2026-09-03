@@ -94,7 +94,7 @@ export function ProjectRecordsPage({
       <div className="mb-6 flex items-start justify-between">
         <div>
           <div className="mb-1 text-[22px] font-bold text-white">
-            프로젝트 기록
+            프로젝트 장부
           </div>
           <div className="text-xs text-white/40">
             진행 컨디션과 비용 흐름(수금·외주 지출)을 기록하고 세금 반영 금액을 한눈에 확인합니다.
