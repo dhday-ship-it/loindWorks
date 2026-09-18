@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Modal } from "./Modal";
 import { calcTax, TAX_TYPE_LABEL, TAX_TYPES } from "@/lib/tax-calc";
@@ -49,6 +49,134 @@ function TaxBreakdownCard({
   );
 }
 
+interface OutsourceDraft {
+  key: string;
+  vendor: string;
+  totalAmount: string;
+  taxType: TaxType;
+  payment: string;
+  balanceSettled: boolean;
+  taxInvoiceIssued: boolean;
+}
+
+function draftFromItem(
+  item: ProjectRecordItem["outsources"][number],
+  key: string
+): OutsourceDraft {
+  return {
+    key,
+    vendor: item.vendor,
+    totalAmount: item.totalAmount?.toString() ?? "",
+    taxType: item.taxType,
+    payment: item.payment?.toString() ?? "",
+    balanceSettled: item.balanceSettled,
+    taxInvoiceIssued: item.taxInvoiceIssued,
+  };
+}
+
+function OutsourceBlock({
+  draft,
+  onChange,
+  onRemove,
+}: {
+  draft: OutsourceDraft;
+  onChange: (next: OutsourceDraft) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="rounded-[10px] border border-slate-100 bg-white/[0.03] p-3.5">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          외주 지출 내역
+        </span>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="text-[11px] text-red-400 hover:text-red-300"
+        >
+          삭제
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] text-slate-500">대상 (거래처)</span>
+          <input
+            value={draft.vendor}
+            onChange={(e) => onChange({ ...draft, vendor: e.target.value })}
+            className="admin-input"
+            placeholder="예: OO스튜디오"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] text-slate-500">금액 (원)</span>
+          <input
+            type="number"
+            value={draft.totalAmount}
+            onChange={(e) =>
+              onChange({ ...draft, totalAmount: e.target.value })
+            }
+            className="admin-input"
+            placeholder="0"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] text-slate-500">과세 방식</span>
+          <select
+            value={draft.taxType}
+            onChange={(e) =>
+              onChange({ ...draft, taxType: e.target.value as TaxType })
+            }
+            className="admin-input cursor-pointer"
+          >
+            {TAX_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {TAX_TYPE_LABEL[t]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] text-slate-500">지급 (원)</span>
+          <input
+            type="number"
+            value={draft.payment}
+            onChange={(e) => onChange({ ...draft, payment: e.target.value })}
+            className="admin-input"
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      <TaxBreakdownCard amount={draft.totalAmount} taxType={draft.taxType} />
+
+      <div className="mt-3 flex flex-wrap gap-4 border-t border-slate-100 pt-3">
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
+          <input
+            type="checkbox"
+            checked={draft.balanceSettled}
+            onChange={(e) =>
+              onChange({ ...draft, balanceSettled: e.target.checked })
+            }
+            className="accent-brand-light"
+          />
+          잔금 결산
+        </label>
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
+          <input
+            type="checkbox"
+            checked={draft.taxInvoiceIssued}
+            onChange={(e) =>
+              onChange({ ...draft, taxInvoiceIssued: e.target.checked })
+            }
+            className="accent-brand-light"
+          />
+          세금계산서 발행
+        </label>
+      </div>
+    </div>
+  );
+}
+
 export function ProjectRecordModal({
   projects,
   record,
@@ -62,6 +190,9 @@ export function ProjectRecordModal({
   onSaved: (record: ProjectRecordItem) => void;
   onDeleted: (id: string) => void;
 }) {
+  const keyCounter = useRef(0);
+  const nextKey = () => `k${keyCounter.current++}`;
+
   const [projectId, setProjectId] = useState(
     record?.projectId ?? projects[0]?.id ?? ""
   );
@@ -84,25 +215,24 @@ export function ProjectRecordModal({
     record?.taxInvoiceIssued ?? false
   );
 
-  const [outsourced, setOutsourced] = useState(record?.outsourced ?? false);
-  const [outsourceVendor, setOutsourceVendor] = useState(
-    record?.outsourceVendor ?? ""
+  const [outsources, setOutsources] = useState<OutsourceDraft[]>(() =>
+    (record?.outsources ?? []).map((o) => draftFromItem(o, o.id))
   );
-  const [outsourceTotalAmount, setOutsourceTotalAmount] = useState(
-    record?.outsourceTotalAmount?.toString() ?? ""
-  );
-  const [outsourceTaxType, setOutsourceTaxType] = useState<TaxType>(
-    record?.outsourceTaxType ?? "NONE"
-  );
-  const [outsourcePayment, setOutsourcePayment] = useState(
-    record?.outsourcePayment?.toString() ?? ""
-  );
-  const [outsourceBalanceSettled, setOutsourceBalanceSettled] = useState(
-    record?.outsourceBalanceSettled ?? false
-  );
-  const [outsourceTaxInvoiceIssued, setOutsourceTaxInvoiceIssued] = useState(
-    record?.outsourceTaxInvoiceIssued ?? false
-  );
+
+  const addOutsource = () => {
+    setOutsources((prev) => [
+      ...prev,
+      {
+        key: nextKey(),
+        vendor: "",
+        totalAmount: "",
+        taxType: "NONE",
+        payment: "",
+        balanceSettled: false,
+        taxInvoiceIssued: false,
+      },
+    ]);
+  };
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -126,13 +256,14 @@ export function ProjectRecordModal({
       balance,
       settled,
       taxInvoiceIssued,
-      outsourced,
-      outsourceVendor,
-      outsourceTotalAmount,
-      outsourceTaxType,
-      outsourcePayment,
-      outsourceBalanceSettled,
-      outsourceTaxInvoiceIssued,
+      outsources: outsources.map((o) => ({
+        vendor: o.vendor,
+        totalAmount: o.totalAmount,
+        taxType: o.taxType,
+        payment: o.payment,
+        balanceSettled: o.balanceSettled,
+        taxInvoiceIssued: o.taxInvoiceIssued,
+      })),
     };
 
     const res = record
@@ -311,97 +442,43 @@ export function ProjectRecordModal({
               />
               세금계산서 발행여부
             </label>
-            <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-800">
-              <input
-                type="checkbox"
-                checked={outsourced}
-                onChange={(e) => setOutsourced(e.target.checked)}
-                className="accent-brand-light"
-              />
-              외주 사용여부
-            </label>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-600">
+              Part 3 · 외주 지출 내역 ({outsources.length})
+            </span>
+            <button
+              type="button"
+              onClick={addOutsource}
+              className="admin-btn-ghost px-2.5 py-1 text-[11px]"
+            >
+              + 외주 추가
+            </button>
           </div>
 
-          {outsourced && (
-            <div className="animate-fade-up mt-3 rounded-[10px] border border-slate-100 bg-white/[0.03] p-3.5">
-              <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                외주 지출 내역
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] text-slate-500">대상 (거래처)</span>
-                  <input
-                    value={outsourceVendor}
-                    onChange={(e) => setOutsourceVendor(e.target.value)}
-                    className="admin-input"
-                    placeholder="예: OO스튜디오"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] text-slate-500">금액 (원)</span>
-                  <input
-                    type="number"
-                    value={outsourceTotalAmount}
-                    onChange={(e) => setOutsourceTotalAmount(e.target.value)}
-                    className="admin-input"
-                    placeholder="0"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] text-slate-500">과세 방식</span>
-                  <select
-                    value={outsourceTaxType}
-                    onChange={(e) =>
-                      setOutsourceTaxType(e.target.value as TaxType)
-                    }
-                    className="admin-input cursor-pointer"
-                  >
-                    {TAX_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {TAX_TYPE_LABEL[t]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] text-slate-500">지급 (원)</span>
-                  <input
-                    type="number"
-                    value={outsourcePayment}
-                    onChange={(e) => setOutsourcePayment(e.target.value)}
-                    className="admin-input"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              <TaxBreakdownCard
-                amount={outsourceTotalAmount}
-                taxType={outsourceTaxType}
-              />
-
-              <div className="mt-3 flex flex-wrap gap-4 border-t border-slate-100 pt-3">
-                <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={outsourceBalanceSettled}
-                    onChange={(e) => setOutsourceBalanceSettled(e.target.checked)}
-                    className="accent-brand-light"
-                  />
-                  잔금 결산
-                </label>
-                <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={outsourceTaxInvoiceIssued}
-                    onChange={(e) => setOutsourceTaxInvoiceIssued(e.target.checked)}
-                    className="accent-brand-light"
-                  />
-                  세금계산서 발행
-                </label>
-              </div>
-            </div>
+          {outsources.length === 0 && (
+            <p className="text-[11px] text-slate-400">
+              등록된 외주 내역이 없습니다.
+            </p>
           )}
+
+          {outsources.map((o) => (
+            <OutsourceBlock
+              key={o.key}
+              draft={o}
+              onChange={(next) =>
+                setOutsources((prev) =>
+                  prev.map((p) => (p.key === o.key ? next : p))
+                )
+              }
+              onRemove={() =>
+                setOutsources((prev) => prev.filter((p) => p.key !== o.key))
+              }
+            />
+          ))}
         </div>
 
         {error && <p className="text-xs text-red-400">{error}</p>}

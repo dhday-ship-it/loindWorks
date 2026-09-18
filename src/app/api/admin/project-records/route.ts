@@ -7,6 +7,42 @@ import type { TaxType } from "@/generated/prisma/enums";
 
 const authorSelect = { select: { id: true, name: true, email: true } } as const;
 const projectSelect = { select: { id: true, name: true } } as const;
+const outsourcesSelect = {
+  orderBy: { createdAt: "asc" as const },
+} as const;
+
+interface OutsourceInput {
+  vendor?: string;
+  totalAmount?: unknown;
+  taxType?: unknown;
+  payment?: unknown;
+  balanceSettled?: unknown;
+  taxInvoiceIssued?: unknown;
+}
+
+function numOrNull(v: unknown) {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function taxTypeOrDefault(v: unknown, fallback: TaxType): TaxType {
+  return TAX_TYPES.includes(v as TaxType) ? (v as TaxType) : fallback;
+}
+
+function parseOutsources(input: unknown) {
+  if (!Array.isArray(input)) return [];
+  return (input as OutsourceInput[])
+    .filter((o) => o && o.vendor && String(o.vendor).trim())
+    .map((o) => ({
+      vendor: String(o.vendor).trim(),
+      totalAmount: numOrNull(o.totalAmount),
+      taxType: taxTypeOrDefault(o.taxType, "NONE"),
+      payment: numOrNull(o.payment),
+      balanceSettled: !!o.balanceSettled,
+      taxInvoiceIssued: !!o.taxInvoiceIssued,
+    }));
+}
 
 export async function GET(request: Request) {
   await requireSuperAdmin();
@@ -16,7 +52,11 @@ export async function GET(request: Request) {
   const records = await prisma.projectRecord.findMany({
     where: projectId ? { projectId } : undefined,
     orderBy: { date: "desc" },
-    include: { author: authorSelect, project: projectSelect },
+    include: {
+      author: authorSelect,
+      project: projectSelect,
+      outsources: outsourcesSelect,
+    },
   });
 
   return NextResponse.json({
@@ -53,15 +93,13 @@ export async function POST(request: Request) {
       balance: numOrNull(body.balance),
       settled: !!body.settled,
       taxInvoiceIssued: !!body.taxInvoiceIssued,
-      outsourced: !!body.outsourced,
-      outsourceVendor: body.outsourceVendor || null,
-      outsourceTotalAmount: numOrNull(body.outsourceTotalAmount),
-      outsourceTaxType: taxTypeOrDefault(body.outsourceTaxType, "NONE"),
-      outsourcePayment: numOrNull(body.outsourcePayment),
-      outsourceBalanceSettled: !!body.outsourceBalanceSettled,
-      outsourceTaxInvoiceIssued: !!body.outsourceTaxInvoiceIssued,
+      outsources: { create: parseOutsources(body.outsources) },
     },
-    include: { author: authorSelect, project: projectSelect },
+    include: {
+      author: authorSelect,
+      project: projectSelect,
+      outsources: outsourcesSelect,
+    },
   });
 
   return NextResponse.json(
@@ -74,14 +112,4 @@ export async function POST(request: Request) {
     },
     { status: 201 }
   );
-}
-
-function numOrNull(v: unknown) {
-  if (v === "" || v === null || v === undefined) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function taxTypeOrDefault(v: unknown, fallback: TaxType): TaxType {
-  return TAX_TYPES.includes(v as TaxType) ? (v as TaxType) : fallback;
 }

@@ -68,6 +68,16 @@ export interface ContactRequestItem {
   createdAt: string;
 }
 
+export interface ProjectRecordOutsourceItem {
+  id: string;
+  vendor: string;
+  totalAmount: number | null;
+  taxType: TaxType;
+  payment: number | null;
+  balanceSettled: boolean;
+  taxInvoiceIssued: boolean;
+}
+
 export interface ProjectRecordItem {
   id: string;
   date: string;
@@ -79,13 +89,7 @@ export interface ProjectRecordItem {
   balance: number | null;
   settled: boolean;
   taxInvoiceIssued: boolean;
-  outsourced: boolean;
-  outsourceVendor: string | null;
-  outsourceTotalAmount: number | null;
-  outsourceTaxType: TaxType;
-  outsourcePayment: number | null;
-  outsourceBalanceSettled: boolean;
-  outsourceTaxInvoiceIssued: boolean;
+  outsources: ProjectRecordOutsourceItem[];
   projectId: string;
   project: { id: string; name: string };
   createdAt: string;

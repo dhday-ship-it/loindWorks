@@ -350,13 +350,7 @@ model ProjectRecord {
   settled          Boolean @default(false)
   taxInvoiceIssued Boolean @default(false)
 
-  outsourced                Boolean @default(false)
-  outsourceVendor           String?
-  outsourceTotalAmount      Int?
-  outsourceTaxType          TaxType @default(NONE)
-  outsourcePayment          Int?
-  outsourceBalanceSettled   Boolean @default(false)
-  outsourceTaxInvoiceIssued Boolean @default(false)
+  outsources ProjectRecordOutsource[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -366,6 +360,20 @@ model ProjectRecord {
 
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model ProjectRecordOutsource {
+  id               String   @id @default(cuid())
+  vendor           String
+  totalAmount      Int?
+  taxType          TaxType  @default(NONE)
+  payment          Int?
+  balanceSettled   Boolean  @default(false)
+  taxInvoiceIssued Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  recordId String
+  record   ProjectRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
 }
 
 // ─── 법인 지출 기록부 (현금출납부) ────────────────────────────────────────────

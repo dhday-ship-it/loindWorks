@@ -17,10 +17,10 @@ function fmtWon(n: number | null) {
   return n.toLocaleString("ko-KR");
 }
 
-function Check({ on }: { on: boolean }) {
+function StatusBadge({ on, onLabel, offLabel }: { on: boolean; onLabel: string; offLabel: string }) {
   return (
-    <span className={on ? "text-brand-light" : "text-slate-300"}>
-      {on ? "✓" : "–"}
+    <span className={`admin-badge ${on ? "admin-b-done" : "admin-b-pending"}`}>
+      {on ? onLabel : offLabel}
     </span>
   );
 }
@@ -44,6 +44,30 @@ function MoneyCell({
         {taxType === "VAT_INCLUSIVE" && `공급 ${fmtWon(b.supply)} · VAT ${fmtWon(b.vat)} 포함`}
         {taxType === "NONE" && TAX_TYPE_LABEL.NONE}
       </div>
+    </div>
+  );
+}
+
+function OutsourceCell({ outsources }: { outsources: ProjectRecordItem["outsources"] }) {
+  if (outsources.length === 0) {
+    return <span className="text-[11px] text-slate-300">-</span>;
+  }
+  return (
+    <div className="flex min-w-[220px] flex-col gap-2 py-1">
+      {outsources.map((o) => (
+        <div
+          key={o.id}
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-1.5"
+        >
+          <span className="text-[11px] font-semibold text-slate-700">{o.vendor}</span>
+          <MoneyCell amount={o.totalAmount} taxType={o.taxType} />
+          <span className="text-[9.5px] text-slate-400">
+            지급 {fmtWon(o.payment)}
+          </span>
+          <StatusBadge on={o.balanceSettled} onLabel="정산완료" offLabel="미정산" />
+          <StatusBadge on={o.taxInvoiceIssued} onLabel="계산서 O" offLabel="계산서 X" />
+        </div>
+      ))}
     </div>
   );
 }
@@ -79,14 +103,22 @@ export function ProjectRecordsPage({
     let income = 0;
     let outsourceCost = 0;
     let unsettled = 0;
+    let outsourceUnsettled = 0;
     for (const r of records) {
       income += calcTax(r.amount, r.taxType).net;
-      if (r.outsourced) {
-        outsourceCost += calcTax(r.outsourceTotalAmount, r.outsourceTaxType).net;
+      for (const o of r.outsources) {
+        outsourceCost += calcTax(o.totalAmount, o.taxType).net;
+        if (!o.balanceSettled) outsourceUnsettled += 1;
       }
       if (!r.settled) unsettled += 1;
     }
-    return { income, outsourceCost, profit: income - outsourceCost, unsettled };
+    return {
+      income,
+      outsourceCost,
+      profit: income - outsourceCost,
+      unsettled,
+      outsourceUnsettled,
+    };
   }, [records]);
 
   return (
@@ -109,7 +141,7 @@ export function ProjectRecordsPage({
         </button>
       </div>
 
-      <div className="mb-5 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+      <div className="mb-5 grid grid-cols-2 gap-3.5 sm:grid-cols-5">
         <div className="admin-stat-card px-4 py-4">
           <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             수금 합계 (실수령)
@@ -144,11 +176,19 @@ export function ProjectRecordsPage({
             {summary.unsettled}건
           </div>
         </div>
+        <div className="admin-stat-card px-4 py-4">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+            외주 미정산
+          </div>
+          <div className="my-1 text-2xl tracking-wide text-slate-800">
+            {summary.outsourceUnsettled}건
+          </div>
+        </div>
       </div>
 
       <div className="admin-sec-card p-6">
         <div className="overflow-x-auto">
-          <table className="admin-tbl w-full min-w-[1400px] border-collapse">
+          <table className="admin-tbl w-full min-w-[1280px] border-collapse">
             <thead>
               <tr>
                 <th className="whitespace-nowrap">프로젝트</th>
@@ -157,28 +197,22 @@ export function ProjectRecordsPage({
                 <th className="whitespace-nowrap">수금액</th>
                 <th className="whitespace-nowrap">선지급</th>
                 <th className="whitespace-nowrap">잔금</th>
-                <th className="whitespace-nowrap">정산완료</th>
-                <th className="whitespace-nowrap">세금계산서</th>
-                <th className="whitespace-nowrap">외주</th>
-                <th className="whitespace-nowrap">외주 대상</th>
-                <th className="whitespace-nowrap">외주 금액</th>
-                <th className="whitespace-nowrap">외주 지급</th>
-                <th className="whitespace-nowrap">외주 잔금결산</th>
-                <th className="whitespace-nowrap">외주 세금계산서</th>
+                <th className="whitespace-nowrap">정산 상태</th>
+                <th className="whitespace-nowrap">외주 내역</th>
                 <th className="whitespace-nowrap">작성자</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={15} className="py-6 text-center text-slate-400">
+                  <td colSpan={9} className="py-6 text-center text-slate-400">
                     불러오는 중...
                   </td>
                 </tr>
               )}
               {!loading && records.length === 0 && (
                 <tr>
-                  <td colSpan={15} className="py-6 text-center text-slate-400">
+                  <td colSpan={9} className="py-6 text-center text-slate-400">
                     기록이 없습니다.
                   </td>
                 </tr>
@@ -209,37 +243,13 @@ export function ProjectRecordsPage({
                       {fmtWon(r.balance)}
                     </td>
                     <td>
-                      <Check on={r.settled} />
+                      <div className="flex flex-col items-start gap-1">
+                        <StatusBadge on={r.settled} onLabel="정산완료" offLabel="미정산" />
+                        <StatusBadge on={r.taxInvoiceIssued} onLabel="계산서 O" offLabel="계산서 X" />
+                      </div>
                     </td>
                     <td>
-                      <Check on={r.taxInvoiceIssued} />
-                    </td>
-                    <td>
-                      <Check on={r.outsourced} />
-                    </td>
-                    <td className="whitespace-nowrap text-[11px] text-slate-600">
-                      {r.outsourced ? (r.outsourceVendor ?? "-") : "-"}
-                    </td>
-                    <td>
-                      {r.outsourced ? (
-                        <MoneyCell
-                          amount={r.outsourceTotalAmount}
-                          taxType={r.outsourceTaxType}
-                        />
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap font-mono text-[11px]">
-                      {r.outsourced ? fmtWon(r.outsourcePayment) : "-"}
-                    </td>
-                    <td>{r.outsourced ? <Check on={r.outsourceBalanceSettled} /> : "-"}</td>
-                    <td>
-                      {r.outsourced ? (
-                        <Check on={r.outsourceTaxInvoiceIssued} />
-                      ) : (
-                        "-"
-                      )}
+                      <OutsourceCell outsources={r.outsources} />
                     </td>
                     <td className="whitespace-nowrap text-[11px] text-slate-600">
                       {r.author.name ?? r.author.email}
