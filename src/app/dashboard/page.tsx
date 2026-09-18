@@ -1,39 +1,10 @@
 import { requireUser } from "@/lib/auth-guards";
-import { prisma } from "@/lib/prisma";
-import { getStaffHomeData } from "@/lib/staff-home-data";
+import { getHomeData } from "@/lib/staff-home-data";
 import { StaffHome } from "@/components/staff-home/StaffHome";
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ project?: string; task?: string }>;
-}) {
+export default async function DashboardPage() {
   const user = await requireUser();
-  const { project: deepLinkProject, task: deepLinkTask } = await searchParams;
-
-  // SUPER_ADMIN, PM, STAFF 모두 StaffHome으로
-  const [{ tasks, events, taggedItems }, memos, folders, myProjects, notifications] =
-    await Promise.all([
-      getStaffHomeData(user.id),
-      prisma.memo.findMany({
-        where: { ownerId: user.id },
-        orderBy: { createdAt: "desc" },
-        include: { folder: { select: { id: true, name: true } } },
-      }),
-      prisma.memoFolder.findMany({
-        where: { ownerId: user.id },
-        orderBy: { createdAt: "asc" },
-      }),
-      prisma.project.findMany({
-        select: { id: true, name: true, status: true },
-        orderBy: { createdAt: "asc" },
-      }),
-      prisma.notification.findMany({
-        where: { userId: user.id, read: false },
-        orderBy: { createdAt: "desc" },
-        take: 20,
-      }),
-    ]);
+  const { works, events } = await getHomeData(user.id, user.role);
 
   return (
     <StaffHome
@@ -43,21 +14,8 @@ export default async function DashboardPage({
         email: user.email ?? "",
         role: user.role,
       }}
-      initialTasks={tasks}
+      initialWorks={works}
       initialEvents={events}
-      initialMemos={memos.map((m) => ({
-        ...m,
-        createdAt: m.createdAt.toISOString(),
-      }))}
-      initialFolders={folders}
-      myProjects={myProjects}
-      taggedItems={taggedItems}
-      initialActiveView={deepLinkProject || "home"}
-      initialDeepLinkTaskId={deepLinkTask ?? null}
-      initialNotifications={notifications.map((n) => ({
-        ...n,
-        createdAt: n.createdAt.toISOString(),
-      }))}
     />
   );
 }

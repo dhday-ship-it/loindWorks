@@ -32,7 +32,7 @@ const quicksand = Quicksand({
 });
 
 export const metadata: Metadata = {
-  title: "LOIND WORKS",
+  title: "LOIND CREATOR GROUND",
   description: "LOIND Corporation 내부 워크스페이스",
   icons: { icon: "/favicon.svg" },
 };

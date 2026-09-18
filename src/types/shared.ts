@@ -23,3 +23,11 @@ export interface ProjectSummary {
   summary?: string | null;
   statusNote?: string | null;
 }
+
+export interface WorkSummary {
+  id: string;
+  name: string;
+  status: ProjectStatus;
+  startDate: string | null;
+  endDate: string | null;
+}

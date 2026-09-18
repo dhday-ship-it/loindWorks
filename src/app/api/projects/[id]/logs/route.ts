@@ -12,6 +12,16 @@ export async function POST(
   const { type, title, body, withPerson, logDate, taggedUserIds, attachments } =
     await request.json();
 
+  const isManager = user.role === "SUPER_ADMIN" || user.role === "PM";
+  if (!isManager) {
+    const membership = await prisma.projectMember.findUnique({
+      where: { projectId_userId: { projectId, userId: user.id } },
+    });
+    if (!membership) {
+      return NextResponse.json({ error: "접근 권한이 없습니다." }, { status: 403 });
+    }
+  }
+
   if (!type || !title) {
     return NextResponse.json(
       { error: "유형과 제목은 필수입니다." },

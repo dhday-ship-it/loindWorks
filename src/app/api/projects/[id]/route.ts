@@ -10,8 +10,18 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await requireStaff();
+  const user = await requireStaff();
   const { id } = await params;
+
+  const isManager = user.role === "SUPER_ADMIN" || user.role === "PM";
+  if (!isManager) {
+    const membership = await prisma.projectMember.findUnique({
+      where: { projectId_userId: { projectId: id, userId: user.id } },
+    });
+    if (!membership) {
+      return NextResponse.json({ error: "접근 권한이 없습니다." }, { status: 403 });
+    }
+  }
 
   const project = await prisma.project.findUnique({
     where: { id },

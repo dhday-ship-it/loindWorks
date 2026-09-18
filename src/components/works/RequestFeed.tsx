@@ -1,0 +1,143 @@
+"use client";
+
+import { useState } from "react";
+import type { RequestEntryItem } from "./types";
+
+function fmtDateTime(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+export function RequestFeed({
+  workId,
+  entries,
+  onEntriesChange,
+}: {
+  workId: string;
+  entries: RequestEntryItem[];
+  onEntriesChange: (next: RequestEntryItem[]) => void;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [logDate, setLogDate] = useState(new Date().toISOString().slice(0, 10));
+
+  const submit = async () => {
+    if (!title.trim()) return;
+    const res = await fetch(`/api/projects/${workId}/logs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "NOTE", title, body, logDate }),
+    });
+    if (res.ok) {
+      const { log } = await res.json();
+      onEntriesChange([
+        { id: log.id, title: log.title, body: log.body, logDate: log.logDate ?? log.createdAt, author: log.author },
+        ...entries,
+      ]);
+      setTitle("");
+      setBody("");
+      setShowForm(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    onEntriesChange(entries.filter((e) => e.id !== id));
+    await fetch(`/api/projects/${workId}/logs/${id}`, { method: "DELETE" });
+  };
+
+  return (
+    <div className="rounded-2xl bg-white p-5 shadow-sm shadow-slate-200/60">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-sm font-bold text-slate-700">요청사항내용</div>
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="cursor-pointer rounded-lg bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-500 transition-all hover:bg-indigo-50 hover:text-indigo-500"
+        >
+          + 추가
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+          <div className="mb-2 flex gap-2">
+            <input
+              type="date"
+              value={logDate}
+              onChange={(e) => setLogDate(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-600 outline-none"
+            />
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="제목"
+              className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 outline-none placeholder:text-slate-300"
+            />
+          </div>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="내용"
+            rows={3}
+            className="mb-2 w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 outline-none placeholder:text-slate-300"
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setShowForm(false)}
+              className="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-bold text-slate-400"
+            >
+              취소
+            </button>
+            <button
+              onClick={submit}
+              className="cursor-pointer rounded-lg bg-indigo-500 px-3 py-1.5 text-xs font-bold text-white"
+            >
+              등록
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2.5">
+        {entries.length === 0 && (
+          <div className="py-8 text-center text-xs text-slate-300">
+            등록된 요청사항이 없습니다.
+          </div>
+        )}
+        {entries.map((e) => (
+          <div
+            key={e.id}
+            className="group rounded-xl bg-slate-50 p-3.5 transition-all hover:bg-slate-100/70"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[10px] text-slate-400">
+                    {fmtDateTime(e.logDate)}
+                  </span>
+                  <span className="text-[10px] text-slate-300">
+                    {e.author.name ?? e.author.email}
+                  </span>
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-700">
+                  {e.title}
+                </div>
+                {e.body && (
+                  <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-slate-500">
+                    {e.body}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => remove(e.id)}
+                className="shrink-0 cursor-pointer text-slate-300 opacity-0 transition-all hover:text-red-400 group-hover:opacity-100"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
