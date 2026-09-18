@@ -31,16 +31,10 @@ export function AppSidebar({
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  const navItems = [
-    { href: "/dashboard", label: "Overview" },
-    { href: "/dashboard/flow", label: "Flow" },
-    ...(currentUser.role === "SUPER_ADMIN"
-      ? [{ href: "/admin", label: "관리자" }]
-      : []),
-  ];
+  const navItems = [{ href: "/dashboard", label: "Overview" }];
 
   return (
-    <aside className="flex w-[190px] shrink-0 flex-col justify-between px-2 py-1">
+    <div className="flex h-full flex-col justify-between">
       <div>
         <div className="px-3 pb-8 pt-2 text-sm font-bold tracking-wide text-slate-700">
           LOGO
@@ -48,17 +42,15 @@ export function AppSidebar({
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => {
             const active =
-              item.href === "/dashboard"
-                ? pathname === "/dashboard" || pathname?.startsWith("/dashboard/works")
-                : pathname?.startsWith(item.href);
+              pathname === "/dashboard" || pathname?.startsWith("/dashboard/works");
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`rounded-xl px-3 py-2 text-sm font-medium transition-all ${
                   active
-                    ? "bg-white text-indigo-500 shadow-sm shadow-slate-200"
-                    : "text-slate-400 hover:text-slate-600"
+                    ? "bg-indigo-50 text-indigo-500"
+                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                 }`}
               >
                 {item.label}
@@ -70,7 +62,7 @@ export function AppSidebar({
 
       <div className="relative px-1 pb-2" ref={ref}>
         {open && (
-          <div className="absolute bottom-full left-0 mb-2 w-44 overflow-hidden rounded-xl bg-white py-1.5 shadow-xl shadow-slate-300/40">
+          <div className="absolute bottom-full left-0 mb-2 w-44 overflow-hidden rounded-xl border border-slate-100 bg-white py-1.5 shadow-xl shadow-slate-300/40">
             <div className="border-b border-slate-50 px-3 py-2">
               <div className="truncate text-xs font-semibold text-slate-700">
                 {displayName}
@@ -79,6 +71,15 @@ export function AppSidebar({
                 {ROLE_LABEL[currentUser.role]}
               </div>
             </div>
+            {currentUser.role === "SUPER_ADMIN" && (
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="block px-3 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50"
+              >
+                관리자
+              </Link>
+            )}
             <Link
               href="/dashboard/settings"
               onClick={() => setOpen(false)}
@@ -96,7 +97,7 @@ export function AppSidebar({
         )}
         <button
           onClick={() => setOpen((v) => !v)}
-          className="flex w-full cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-all hover:bg-white/60"
+          className="flex w-full cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-all hover:bg-slate-50"
         >
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[11px] font-bold text-indigo-500">
             {initial}
@@ -111,6 +112,6 @@ export function AppSidebar({
           GROUND
         </div>
       </div>
-    </aside>
+    </div>
   );
 }

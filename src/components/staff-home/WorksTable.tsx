@@ -24,7 +24,7 @@ function fmtDate(iso: string | null) {
 
 export function WorksTable({ works }: { works: WorkSummary[] }) {
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm shadow-slate-200/60">
+    <div>
       <div className="mb-3 text-sm font-bold text-slate-700">Overview</div>
       <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 border-b border-slate-100 pb-2 text-[11px] font-semibold text-slate-400">
         <span>항목</span>

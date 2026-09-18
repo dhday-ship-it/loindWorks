@@ -81,7 +81,7 @@ export function CalendarPanelLight({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-2xl bg-white p-4 shadow-sm shadow-slate-200/60">
+      <div>
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <button
@@ -183,7 +183,7 @@ export function CalendarPanelLight({
         )}
       </div>
 
-      <div className="rounded-2xl bg-white p-4 shadow-sm shadow-slate-200/60">
+      <div className="border-t border-slate-100 pt-4">
         <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
           Total timeline
         </div>

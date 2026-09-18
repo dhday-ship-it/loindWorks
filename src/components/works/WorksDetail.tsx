@@ -37,7 +37,7 @@ export function WorksDetail({
             <h1 className="text-2xl font-bold text-slate-800">{work.name}</h1>
           </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm shadow-slate-200/60">
+          <div>
             <div className="mb-2 text-sm font-bold text-slate-700">의뢰서내용</div>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-500">
               {work.summary || "등록된 내용이 없습니다."}

@@ -47,7 +47,7 @@ export function RequestFeed({
   };
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm shadow-slate-200/60">
+    <div className="border-t border-slate-100 pt-6">
       <div className="mb-3 flex items-center justify-between">
         <div className="text-sm font-bold text-slate-700">요청사항내용</div>
         <button
