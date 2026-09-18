@@ -202,46 +202,45 @@ body {
   background: rgba(255, 255, 255, 0.22);
 }
 
-/* ─── Admin Dashboard ─────────────────────────────────────────── */
+/* ─── Admin Dashboard (light) ──────────────────────────────────── */
 .admin-stat-card {
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 1px 2px rgba(30, 41, 59, 0.04);
   transition: all 0.2s ease;
 }
 .admin-stat-card:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.13);
+  border-color: #e2e5ec;
 }
 
 .admin-sec-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #ffffff;
+  border: 1px solid #eef0f4;
   border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(30, 41, 59, 0.04);
 }
 
 .admin-tbl th {
   font-size: 10px;
   font-family: var(--font-geist-mono), monospace;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.28);
+  color: #94a3b8;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 0 14px 10px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid #eef0f4;
 }
 .admin-tbl td {
   padding: 11px 14px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #475569;
+  border-bottom: 1px solid #f4f5f8;
   vertical-align: middle;
 }
 .admin-tbl tr:last-child td { border-bottom: none; }
-.admin-tbl tr:hover td { background: rgba(255, 255, 255, 0.025); }
+.admin-tbl tr:hover td { background: #fafbfd; }
 
 .admin-badge {
   font-size: 9px;
@@ -252,40 +251,40 @@ body {
   border-radius: 99px;
 }
 .admin-b-super {
-  background: rgba(201, 89, 90, 0.12);
-  border: 1px solid rgba(201, 89, 90, 0.28);
-  color: #e07070;
+  background: #fef0f0;
+  border: 1px solid #fcd7d7;
+  color: #d6595a;
 }
 .admin-b-pm {
-  background: rgba(85, 104, 155, 0.18);
-  border: 1px solid rgba(85, 104, 155, 0.35);
-  color: #8fa8c4;
+  background: #eef1fd;
+  border: 1px solid #dbe0fa;
+  color: #5568b8;
 }
 .admin-b-staff {
-  background: rgba(143, 168, 196, 0.12);
-  border: 1px solid rgba(143, 168, 196, 0.25);
-  color: #b7c8dc;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
 }
 .admin-b-done {
-  background: rgba(91, 160, 138, 0.12);
-  border: 1px solid rgba(91, 160, 138, 0.25);
-  color: #6ee7b7;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  color: #10b981;
 }
 .admin-b-pending {
-  background: rgba(232, 149, 109, 0.1);
-  border: 1px solid rgba(232, 149, 109, 0.22);
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
   color: #e8956d;
 }
 .admin-b-wip {
-  background: rgba(85, 104, 155, 0.12);
-  border: 1px solid rgba(85, 104, 155, 0.25);
-  color: #93c5fd;
+  background: #eef2ff;
+  border: 1px solid #e0e7ff;
+  color: #6366f1;
 }
 
 .admin-btn-primary {
-  background: linear-gradient(135deg, rgba(143, 168, 196, 0.22), rgba(85, 104, 155, 0.18));
-  border: 1px solid rgba(143, 168, 196, 0.38);
-  color: #c3d3e6;
+  background: #6366f1;
+  border: 1px solid #6366f1;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 600;
   padding: 8px 16px;
@@ -297,12 +296,12 @@ body {
   gap: 6px;
 }
 .admin-btn-primary:hover {
-  background: linear-gradient(135deg, rgba(143, 168, 196, 0.35), rgba(85, 104, 155, 0.28));
+  background: #4f52d9;
 }
 .admin-btn-ghost {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  color: rgba(255, 255, 255, 0.5);
+  background: #f8fafc;
+  border: 1px solid #eef0f4;
+  color: #64748b;
   font-size: 11px;
   font-weight: 600;
   padding: 5px 12px;
@@ -311,13 +310,13 @@ body {
   transition: all 0.18s ease;
 }
 .admin-btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.09);
-  color: #fff;
+  background: #eef0f4;
+  color: #1e293b;
 }
 .admin-btn-danger {
-  background: rgba(201, 89, 90, 0.1);
-  border: 1px solid rgba(201, 89, 90, 0.22);
-  color: #e07070;
+  background: #fef0f0;
+  border: 1px solid #fcd7d7;
+  color: #d6595a;
   font-size: 11px;
   font-weight: 600;
   padding: 5px 12px;
@@ -325,7 +324,7 @@ body {
   cursor: pointer;
   transition: all 0.18s ease;
 }
-.admin-btn-danger:hover { background: rgba(201, 89, 90, 0.2); }
+.admin-btn-danger:hover { background: #fce0e0; }
 
 /* ─── Unified Button Variants ─────────────────────────────────── */
 .btn-primary {
@@ -375,21 +374,21 @@ body {
 }
 
 .admin-input {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: #ffffff;
+  border: 1px solid #e2e5ec;
   border-radius: 10px;
   padding: 10px 13px;
-  color: #fff;
+  color: #1e293b;
   font-size: 12px;
   outline: none;
   width: 100%;
   transition: all 0.2s ease;
 }
 .admin-input:focus {
-  border-color: rgba(143, 168, 196, 0.45);
-  box-shadow: 0 0 0 3px rgba(143, 168, 196, 0.08);
+  border-color: #a5b4fc;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
-.admin-input::placeholder { color: rgba(255, 255, 255, 0.2); }
+.admin-input::placeholder { color: #cbd5e1; }
 
 .admin-sb-item {
   display: flex;
@@ -400,31 +399,38 @@ body {
   margin: 0 8px 2px;
   cursor: pointer;
   transition: all 0.15s ease;
-  color: rgba(255, 255, 255, 0.45);
+  color: #94a3b8;
   font-size: 13px;
   font-weight: 500;
   border: 1px solid transparent;
 }
 .admin-sb-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.8);
+  background: #f8fafc;
+  color: #1e293b;
 }
 .admin-sb-item.active {
-  background: rgba(85, 104, 155, 0.2);
-  border-color: rgba(143, 168, 196, 0.3);
-  color: #fff;
+  background: #eef1fd;
+  border-color: #dbe0fa;
+  color: #4f52d9;
 }
 
 .admin-prog-track {
   height: 3px;
-  background: rgba(255, 255, 255, 0.07);
+  background: #eef0f4;
   border-radius: 99px;
   overflow: hidden;
 }
 .admin-prog-fill {
   height: 100%;
   border-radius: 99px;
-  background: linear-gradient(90deg, #55689b, #8fa8c4);
+  background: linear-gradient(90deg, #6366f1, #a5b4fc);
+}
+
+/* ─── Light UI (Home / Works / Admin) date input fix ──────────── */
+.light-ui input[type="date"]::-webkit-calendar-picker-indicator,
+.admin-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 0.45;
 }
 
 /* ─── Misc ────────────────────────────────────────────────────── */

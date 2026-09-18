@@ -12,7 +12,7 @@ export function AppShell({
 }) {
   return (
     <div
-      className="flex min-h-screen w-full justify-center p-6"
+      className="light-ui flex min-h-screen w-full justify-center p-6"
       style={{
         background:
           "linear-gradient(135deg, #cfe6ff 0%, #dfe3ff 45%, #ecdcff 100%)",

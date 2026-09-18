@@ -3,38 +3,21 @@
 import { useState } from "react";
 
 import { Modal } from "./Modal";
-import type { AdminUserItem, CompanyItem } from "./types";
+import type { AdminUserItem } from "./types";
 
 export function CreateAccountModal({
-  companies,
-  projects,
   onClose,
   onCreated,
 }: {
-  companies: CompanyItem[];
-  projects: { id: string; name: string }[];
   onClose: () => void;
   onCreated: (user: AdminUserItem) => void;
 }) {
-  const [role, setRole] = useState<"" | "STAFF" | "CLIENT">("");
+  const [role, setRole] = useState<"" | "PM" | "STAFF">("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [companyId, setCompanyId] = useState("");
-  const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
-    new Set()
-  );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const toggleProject = (id: string) => {
-    setSelectedProjects((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   const submit = async () => {
     setError(null);
@@ -51,14 +34,7 @@ export function CreateAccountModal({
     const res = await fetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-        role,
-        companyId: role === "CLIENT" ? companyId || undefined : undefined,
-        projectIds: role === "CLIENT" ? [...selectedProjects] : undefined,
-      }),
+      body: JSON.stringify({ name, email, password, role }),
     });
     setSubmitting(false);
 
@@ -80,29 +56,23 @@ export function CreateAccountModal({
     >
       <div className="flex flex-col gap-3.5">
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             역할 (Role)
           </span>
           <select
             value={role}
-            onChange={(e) => setRole(e.target.value as "STAFF" | "CLIENT")}
+            onChange={(e) => setRole(e.target.value as "PM" | "STAFF")}
             className="admin-input cursor-pointer"
           >
-            <option value="" className="bg-[#0c0e12]">
-              선택...
-            </option>
-            <option value="STAFF" className="bg-[#0c0e12]">
-              Staff (내부 직원)
-            </option>
-            <option value="CLIENT" className="bg-[#0c0e12]">
-              Client (고객사 담당자)
-            </option>
+            <option value="">선택...</option>
+            <option value="PM">PM (Works 생성·관리)</option>
+            <option value="STAFF">Creator (배정된 Works만 접근)</option>
           </select>
         </div>
 
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               이름
             </span>
             <input
@@ -113,7 +83,7 @@ export function CreateAccountModal({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               이메일
             </span>
             <input
@@ -127,7 +97,7 @@ export function CreateAccountModal({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             임시 비밀번호
           </span>
           <input
@@ -140,62 +110,9 @@ export function CreateAccountModal({
           />
         </div>
 
-        {role === "CLIENT" && (
-          <>
-            <div className="flex flex-col gap-1.5">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
-                소속 고객사
-              </span>
-              <select
-                value={companyId}
-                onChange={(e) => setCompanyId(e.target.value)}
-                className="admin-input cursor-pointer"
-              >
-                <option value="" className="bg-[#0c0e12]">
-                  고객사 선택...
-                </option>
-                {companies.map((c) => (
-                  <option key={c.id} value={c.id} className="bg-[#0c0e12]">
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
-                프로젝트 배정
-              </span>
-              <div className="flex min-h-[38px] flex-wrap gap-1.5 rounded-[10px] border border-white/10 bg-black/30 p-2">
-                {projects.length === 0 && (
-                  <span className="px-1 py-1 text-[11px] text-white/20">
-                    생성된 프로젝트가 없습니다.
-                  </span>
-                )}
-                {projects.map((p) => {
-                  const isSel = selectedProjects.has(p.id);
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => toggleProject(p.id)}
-                      className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-[3px] font-mono text-[10px] ${
-                        isSel
-                          ? "border-blue-400/40 bg-blue-400/15 text-blue-300"
-                          : "border-white/10 bg-white/5 text-white/40 hover:text-white"
-                      }`}
-                    >
-                      {p.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
-
         {error && <p className="text-xs text-red-400">{error}</p>}
 
-        <div className="mt-1.5 flex justify-end gap-2 border-t border-white/8 pt-4">
+        <div className="mt-1.5 flex justify-end gap-2 border-t border-slate-100 pt-4">
           <button onClick={onClose} className="admin-btn-ghost">
             취소
           </button>

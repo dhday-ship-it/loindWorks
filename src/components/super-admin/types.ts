@@ -33,23 +33,12 @@ export interface AdminProjectItem {
   memberNames: string[];
 }
 
-export interface UnhandledRequestItem {
-  id: string;
-  projectId: string;
-  projectName: string;
-  authorName: string;
-  body: string;
-  createdAt: string;
-}
-
 export interface AdminStats {
   activeProjects: number;
   totalProjects: number;
   staffCount: number;
   pmCount: number;
   companyCount: number;
-  unhandledCount: number;
-  newRequestsThisWeek: number;
 }
 
 export interface StaffOption {

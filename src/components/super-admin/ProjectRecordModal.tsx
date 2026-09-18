@@ -27,13 +27,13 @@ function TaxBreakdownCard({
   const b = calcTax(n, taxType);
 
   return (
-    <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2 font-mono text-[10.5px]">
-      <span className="text-white/40">
-        공급가액 <span className="text-white/70">{fmtWon(b.supply)}</span>
+    <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 rounded-lg border border-slate-100 bg-white/[0.03] px-3 py-2 font-mono text-[10.5px]">
+      <span className="text-slate-500">
+        공급가액 <span className="text-slate-700">{fmtWon(b.supply)}</span>
       </span>
       {taxType !== "WITHHOLD_3_3" && taxType !== "NONE" && (
-        <span className="text-white/40">
-          부가세 <span className="text-white/70">{fmtWon(b.vat)}</span>
+        <span className="text-slate-500">
+          부가세 <span className="text-slate-700">{fmtWon(b.vat)}</span>
         </span>
       )}
       {taxType === "WITHHOLD_3_3" && (
@@ -41,7 +41,7 @@ function TaxBreakdownCard({
           원천징수(3.3%) <span className="text-amber-300">-{fmtWon(b.withholding)}</span>
         </span>
       )}
-      <span className="text-white/40">
+      <span className="text-slate-500">
         {taxType === "WITHHOLD_3_3" ? "실지급액" : "합계금액"}{" "}
         <span className="font-bold text-brand-light">{fmtWon(b.net)}</span>
       </span>
@@ -179,7 +179,7 @@ export function ProjectRecordModal({
     >
       <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1">
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             프로젝트
           </span>
           <select
@@ -188,12 +188,12 @@ export function ProjectRecordModal({
             className="admin-input cursor-pointer"
           >
             {projects.length === 0 && (
-              <option value="" className="bg-[#0c0e12]">
+              <option value="">
                 생성된 프로젝트가 없습니다.
               </option>
             )}
             {projects.map((p) => (
-              <option key={p.id} value={p.id} className="bg-[#0c0e12]">
+              <option key={p.id} value={p.id}>
                 {p.name}
               </option>
             ))}
@@ -202,7 +202,7 @@ export function ProjectRecordModal({
 
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               진행 날짜
             </span>
             <input
@@ -213,7 +213,7 @@ export function ProjectRecordModal({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               제목
             </span>
             <input
@@ -226,7 +226,7 @@ export function ProjectRecordModal({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-white/50">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-600">
             Part 1 · 기본 정보 및 진행 컨디션
           </span>
           <textarea
@@ -237,13 +237,13 @@ export function ProjectRecordModal({
           />
         </div>
 
-        <div className="rounded-[10px] border border-white/10 bg-black/20 p-4">
-          <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-wider text-white/50">
+        <div className="rounded-[10px] border border-slate-100 bg-slate-50 p-4">
+          <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-600">
             Part 2 · 회계처리 — 수금 내역
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] text-white/40">금액 (원)</span>
+              <span className="text-[10px] text-slate-500">금액 (원)</span>
               <input
                 type="number"
                 value={amount}
@@ -253,14 +253,14 @@ export function ProjectRecordModal({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] text-white/40">과세 방식</span>
+              <span className="text-[10px] text-slate-500">과세 방식</span>
               <select
                 value={taxType}
                 onChange={(e) => setTaxType(e.target.value as TaxType)}
                 className="admin-input cursor-pointer"
               >
                 {TAX_TYPES.map((t) => (
-                  <option key={t} value={t} className="bg-[#0c0e12]">
+                  <option key={t} value={t}>
                     {TAX_TYPE_LABEL[t]}
                   </option>
                 ))}
@@ -272,7 +272,7 @@ export function ProjectRecordModal({
 
           <div className="mt-3 grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] text-white/40">선지급 (원)</span>
+              <span className="text-[10px] text-slate-500">선지급 (원)</span>
               <input
                 type="number"
                 value={advancePayment}
@@ -282,7 +282,7 @@ export function ProjectRecordModal({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] text-white/40">잔금 (원)</span>
+              <span className="text-[10px] text-slate-500">잔금 (원)</span>
               <input
                 type="number"
                 value={balance}
@@ -292,8 +292,8 @@ export function ProjectRecordModal({
               />
             </div>
           </div>
-          <div className="mt-3 flex flex-wrap gap-4 border-t border-white/5 pt-3">
-            <label className="flex cursor-pointer items-center gap-2 text-xs text-white/70">
+          <div className="mt-3 flex flex-wrap gap-4 border-t border-slate-100 pt-3">
+            <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
               <input
                 type="checkbox"
                 checked={settled}
@@ -302,7 +302,7 @@ export function ProjectRecordModal({
               />
               정산 완료
             </label>
-            <label className="flex cursor-pointer items-center gap-2 text-xs text-white/70">
+            <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
               <input
                 type="checkbox"
                 checked={taxInvoiceIssued}
@@ -311,7 +311,7 @@ export function ProjectRecordModal({
               />
               세금계산서 발행여부
             </label>
-            <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-white">
+            <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-800">
               <input
                 type="checkbox"
                 checked={outsourced}
@@ -323,13 +323,13 @@ export function ProjectRecordModal({
           </div>
 
           {outsourced && (
-            <div className="animate-fade-up mt-3 rounded-[10px] border border-white/10 bg-white/[0.03] p-3.5">
-              <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-wider text-white/40">
+            <div className="animate-fade-up mt-3 rounded-[10px] border border-slate-100 bg-white/[0.03] p-3.5">
+              <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 외주 지출 내역
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] text-white/40">대상 (거래처)</span>
+                  <span className="text-[10px] text-slate-500">대상 (거래처)</span>
                   <input
                     value={outsourceVendor}
                     onChange={(e) => setOutsourceVendor(e.target.value)}
@@ -338,7 +338,7 @@ export function ProjectRecordModal({
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] text-white/40">금액 (원)</span>
+                  <span className="text-[10px] text-slate-500">금액 (원)</span>
                   <input
                     type="number"
                     value={outsourceTotalAmount}
@@ -348,7 +348,7 @@ export function ProjectRecordModal({
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] text-white/40">과세 방식</span>
+                  <span className="text-[10px] text-slate-500">과세 방식</span>
                   <select
                     value={outsourceTaxType}
                     onChange={(e) =>
@@ -357,14 +357,14 @@ export function ProjectRecordModal({
                     className="admin-input cursor-pointer"
                   >
                     {TAX_TYPES.map((t) => (
-                      <option key={t} value={t} className="bg-[#0c0e12]">
+                      <option key={t} value={t}>
                         {TAX_TYPE_LABEL[t]}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] text-white/40">지급 (원)</span>
+                  <span className="text-[10px] text-slate-500">지급 (원)</span>
                   <input
                     type="number"
                     value={outsourcePayment}
@@ -380,8 +380,8 @@ export function ProjectRecordModal({
                 taxType={outsourceTaxType}
               />
 
-              <div className="mt-3 flex flex-wrap gap-4 border-t border-white/5 pt-3">
-                <label className="flex cursor-pointer items-center gap-2 text-xs text-white/70">
+              <div className="mt-3 flex flex-wrap gap-4 border-t border-slate-100 pt-3">
+                <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
                   <input
                     type="checkbox"
                     checked={outsourceBalanceSettled}
@@ -390,7 +390,7 @@ export function ProjectRecordModal({
                   />
                   잔금 결산
                 </label>
-                <label className="flex cursor-pointer items-center gap-2 text-xs text-white/70">
+                <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
                   <input
                     type="checkbox"
                     checked={outsourceTaxInvoiceIssued}
@@ -406,7 +406,7 @@ export function ProjectRecordModal({
 
         {error && <p className="text-xs text-red-400">{error}</p>}
 
-        <div className="flex items-center justify-between border-t border-white/8 pt-4">
+        <div className="flex items-center justify-between border-t border-slate-100 pt-4">
           {record ? (
             <button
               onClick={remove}

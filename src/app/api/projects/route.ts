@@ -33,7 +33,6 @@ export async function POST(request: Request) {
     name,
     status,
     summary,
-    phases,
     companyId,
     pmId,
     startDate,
@@ -45,9 +44,9 @@ export async function POST(request: Request) {
     clientUserIds,
   } = await request.json();
 
-  if (!name || !Array.isArray(phases) || phases.length === 0) {
+  if (!name || !String(name).trim()) {
     return NextResponse.json(
-      { error: "프로젝트명과 최소 1개 이상의 단계가 필요합니다." },
+      { error: "Works 이름을 입력해주세요." },
       { status: 400 }
     );
   }
@@ -61,10 +60,10 @@ export async function POST(request: Request) {
 
   const project = await prisma.project.create({
     data: {
-      name,
+      name: String(name).trim(),
       status: status || undefined,
       summary: summary || undefined,
-      phases,
+      phases: ["진행"],
       companyId: companyId || undefined,
       pmId: pmId || undefined,
       startDate: startDate ? new Date(startDate) : undefined,

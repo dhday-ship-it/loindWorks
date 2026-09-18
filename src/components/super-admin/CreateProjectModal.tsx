@@ -21,9 +21,7 @@ export function CreateProjectModal({
   const [pmId, setPmId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [phasesText, setPhasesText] = useState(
-    "기획 확정\n디자인 시안 검토\n개발 착수\nQA · 테스트\n최종 런칭"
-  );
+  const [summary, setSummary] = useState("");
   const [selectedStaff, setSelectedStaff] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,13 +37,9 @@ export function CreateProjectModal({
 
   const submit = async () => {
     setError(null);
-    const phases = phasesText
-      .split("\n")
-      .map((p) => p.trim())
-      .filter(Boolean);
 
-    if (!name.trim() || !companyId || !pmId || phases.length === 0) {
-      setError("프로젝트명, 고객사, 담당 PM은 필수입니다.");
+    if (!name.trim() || !companyId || !pmId) {
+      setError("Works 이름, 고객사, 담당 PM은 필수입니다.");
       return;
     }
 
@@ -55,7 +49,7 @@ export function CreateProjectModal({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
-        phases,
+        summary: summary || undefined,
         companyId,
         pmId,
         startDate: startDate || undefined,
@@ -67,7 +61,7 @@ export function CreateProjectModal({
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "프로젝트 생성에 실패했습니다.");
+      setError(data.error ?? "Works 생성에 실패했습니다.");
       return;
     }
 
@@ -80,7 +74,7 @@ export function CreateProjectModal({
       name,
       status: "PENDING",
       currentPhase: 0,
-      phaseCount: phases.length,
+      phaseCount: 1,
       startDate: startDate ? new Date(startDate).toISOString() : null,
       endDate: endDate ? new Date(endDate).toISOString() : null,
       company: company ? { id: company.id, name: company.name } : null,
@@ -91,14 +85,14 @@ export function CreateProjectModal({
 
   return (
     <Modal
-      title="프로젝트 생성"
-      subtitle="새 프로젝트를 생성하고 담당자와 고객사를 배정합니다."
+      title="Works 생성"
+      subtitle="새 Works를 생성하고 담당자와 고객사를 배정합니다."
       onClose={onClose}
     >
       <div className="flex flex-col gap-3.5">
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
-            프로젝트명
+          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+            Works 이름
           </span>
           <input
             value={name}
@@ -109,7 +103,7 @@ export function CreateProjectModal({
         </div>
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               고객사
             </span>
             <select
@@ -117,18 +111,16 @@ export function CreateProjectModal({
               onChange={(e) => setCompanyId(e.target.value)}
               className="admin-input cursor-pointer"
             >
-              <option value="" className="bg-[#0c0e12]">
-                선택...
-              </option>
+              <option value="">선택...</option>
               {companies.map((c) => (
-                <option key={c.id} value={c.id} className="bg-[#0c0e12]">
+                <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
               ))}
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               담당 PM
             </span>
             <select
@@ -136,11 +128,9 @@ export function CreateProjectModal({
               onChange={(e) => setPmId(e.target.value)}
               className="admin-input cursor-pointer"
             >
-              <option value="" className="bg-[#0c0e12]">
-                선택...
-              </option>
+              <option value="">선택...</option>
               {staff.map((s) => (
-                <option key={s.id} value={s.id} className="bg-[#0c0e12]">
+                <option key={s.id} value={s.id}>
                   {s.name ?? s.email}
                 </option>
               ))}
@@ -149,7 +139,7 @@ export function CreateProjectModal({
         </div>
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               시작일
             </span>
             <input
@@ -160,7 +150,7 @@ export function CreateProjectModal({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               마감일
             </span>
             <input
@@ -171,25 +161,27 @@ export function CreateProjectModal({
             />
           </div>
         </div>
+
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
-            단계 (줄바꿈으로 구분)
+          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+            의뢰서내용
           </span>
           <textarea
-            value={phasesText}
-            onChange={(e) => setPhasesText(e.target.value)}
-            className="admin-input min-h-[100px] resize-none leading-relaxed"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            className="admin-input min-h-[90px] resize-none leading-relaxed"
+            placeholder="Works 상세 페이지에 표시될 의뢰 내용을 입력하세요 (선택)"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
-            함께하는 스탭 (담당 PM 외 추가 배정)
+          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+            함께하는 팀원 (담당 PM 외 추가 배정)
           </span>
           <div className="flex flex-wrap gap-1.5">
             {staff.length === 0 && (
-              <span className="text-[11px] text-white/30">
-                배정 가능한 스탭이 없습니다.
+              <span className="text-[11px] text-slate-400">
+                배정 가능한 팀원이 없습니다.
               </span>
             )}
             {staff.map((s) => {
@@ -201,8 +193,8 @@ export function CreateProjectModal({
                   onClick={() => toggleStaff(s.id)}
                   className={`cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all ${
                     isSel
-                      ? "border-brand-light bg-brand-light text-slate-900"
-                      : "border-white/10 bg-white/5 text-white/50 hover:text-white"
+                      ? "border-indigo-400 bg-indigo-500 text-white"
+                      : "border-slate-100 bg-slate-50 text-slate-600 hover:text-slate-800"
                   }`}
                 >
                   {s.name ?? s.email}
@@ -214,7 +206,7 @@ export function CreateProjectModal({
 
         {error && <p className="text-xs text-red-400">{error}</p>}
 
-        <div className="mt-1.5 flex justify-end gap-2 border-t border-white/8 pt-4">
+        <div className="mt-1.5 flex justify-end gap-2 border-t border-slate-100 pt-4">
           <button onClick={onClose} className="admin-btn-ghost">
             취소
           </button>

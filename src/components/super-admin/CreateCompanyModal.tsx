@@ -60,7 +60,7 @@ export function CreateCompanyModal({
       <div className="flex flex-col gap-3.5">
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               회사명
             </span>
             <input
@@ -71,7 +71,7 @@ export function CreateCompanyModal({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               Company ID
             </span>
             <input
@@ -83,7 +83,7 @@ export function CreateCompanyModal({
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             담당자 이름
           </span>
           <input
@@ -95,7 +95,7 @@ export function CreateCompanyModal({
         </div>
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               담당자 이메일
             </span>
             <input
@@ -106,7 +106,7 @@ export function CreateCompanyModal({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               담당자 연락처
             </span>
             <input
@@ -120,7 +120,7 @@ export function CreateCompanyModal({
 
         {error && <p className="text-xs text-red-400">{error}</p>}
 
-        <div className="mt-1.5 flex justify-end gap-2 border-t border-white/8 pt-4">
+        <div className="mt-1.5 flex justify-end gap-2 border-t border-slate-100 pt-4">
           <button onClick={onClose} className="admin-btn-ghost">
             취소
           </button>

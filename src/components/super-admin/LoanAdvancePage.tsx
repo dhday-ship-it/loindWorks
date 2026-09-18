@@ -55,10 +55,10 @@ export function LoanAdvancePage({
     <div>
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <div className="mb-1 text-[22px] font-bold text-white">
+          <div className="mb-1 text-[22px] font-bold text-slate-800">
             대출·가지급금 관리
           </div>
-          <div className="text-xs text-white/40">
+          <div className="text-xs text-slate-500">
             법인 대출 및 가지급금의 지급·회수 내역을 관리하고 미납 잔액을 확인합니다.
           </div>
         </div>
@@ -72,15 +72,15 @@ export function LoanAdvancePage({
 
       <div className="mb-5 grid grid-cols-3 gap-3.5">
         <div className="admin-stat-card px-4 py-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             지급액 합계
           </div>
-          <div className="my-1 text-2xl tracking-wide text-white">
+          <div className="my-1 text-2xl tracking-wide text-slate-800">
             {fmtWon(summary.amount)}
           </div>
         </div>
         <div className="admin-stat-card px-4 py-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             회수액 합계
           </div>
           <div className="my-1 text-2xl tracking-wide text-brand-light">
@@ -88,11 +88,11 @@ export function LoanAdvancePage({
           </div>
         </div>
         <div className="admin-stat-card px-4 py-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             미납 잔액 합계
           </div>
           <div
-            className={`my-1 text-2xl tracking-wide ${summary.outstanding > 0 ? "text-amber-300" : "text-white"}`}
+            className={`my-1 text-2xl tracking-wide ${summary.outstanding > 0 ? "text-amber-300" : "text-slate-800"}`}
           >
             {fmtWon(summary.outstanding)}
           </div>
@@ -117,14 +117,14 @@ export function LoanAdvancePage({
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={8} className="py-6 text-center text-white/30">
+                  <td colSpan={8} className="py-6 text-center text-slate-400">
                     불러오는 중...
                   </td>
                 </tr>
               )}
               {!loading && entries.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-6 text-center text-white/30">
+                  <td colSpan={8} className="py-6 text-center text-slate-400">
                     기록이 없습니다.
                   </td>
                 </tr>
@@ -138,7 +138,7 @@ export function LoanAdvancePage({
                       onClick={() => setEditing(e)}
                       className="cursor-pointer"
                     >
-                      <td className="whitespace-nowrap font-mono text-[11px] text-white/50">
+                      <td className="whitespace-nowrap font-mono text-[11px] text-slate-600">
                         {fmtDate(e.date)}
                       </td>
                       <td className="whitespace-nowrap">
@@ -152,7 +152,7 @@ export function LoanAdvancePage({
                           {TYPE_LABEL[e.type]}
                         </span>
                       </td>
-                      <td className="min-w-[140px] font-semibold text-white">
+                      <td className="min-w-[140px] font-semibold text-slate-800">
                         {e.counterparty}
                       </td>
                       <td className="whitespace-nowrap font-mono text-[11px]">
@@ -162,14 +162,14 @@ export function LoanAdvancePage({
                         {fmtWon(e.repaid)}
                       </td>
                       <td
-                        className={`whitespace-nowrap font-mono text-[11px] font-bold ${outstanding > 0 ? "text-amber-300" : "text-white/40"}`}
+                        className={`whitespace-nowrap font-mono text-[11px] font-bold ${outstanding > 0 ? "text-amber-300" : "text-slate-500"}`}
                       >
                         {fmtWon(outstanding)}
                       </td>
-                      <td className="min-w-[140px] text-[11px] text-white/50">
+                      <td className="min-w-[140px] text-[11px] text-slate-600">
                         {e.note ?? "-"}
                       </td>
-                      <td className="whitespace-nowrap text-[11px] text-white/50">
+                      <td className="whitespace-nowrap text-[11px] text-slate-600">
                         {e.author.name ?? e.author.email}
                       </td>
                     </tr>

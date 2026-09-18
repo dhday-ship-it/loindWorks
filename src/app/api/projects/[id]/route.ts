@@ -85,7 +85,7 @@ export async function PATCH(
 ) {
   await requireStaff();
   const { id } = await params;
-  const { currentPhase, status, name, companyId, pmId, startDate, endDate, phases, memberUserIds } =
+  const { currentPhase, status, name, summary, companyId, pmId, startDate, endDate, phases, memberUserIds } =
     await request.json();
 
   const existing = await prisma.project.findUnique({
@@ -97,10 +97,12 @@ export async function PATCH(
   }
 
   const data: {
-    currentPhase?: number; status?: ProjectStatus; name?: string;
+    currentPhase?: number; status?: ProjectStatus; name?: string; summary?: string | null;
     companyId?: string | null; pmId?: string | null;
     startDate?: Date | null; endDate?: Date | null; phases?: string[];
   } = {};
+
+  if (summary !== undefined) data.summary = summary || null;
 
   if (phases !== undefined) {
     if (!Array.isArray(phases) || phases.length === 0) {
@@ -161,6 +163,7 @@ export async function PATCH(
   return NextResponse.json({
     project: {
       id: project.id, name: project.name, status: project.status,
+      summary: project.summary,
       currentPhase: project.currentPhase,
       phaseCount: (project.phases as string[]).length,
       startDate: project.startDate, endDate: project.endDate,

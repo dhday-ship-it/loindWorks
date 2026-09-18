@@ -36,10 +36,10 @@ export function CompaniesPage({
     <div>
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <div className="mb-1 text-[22px] font-bold text-white">
+          <div className="mb-1 text-[22px] font-bold text-slate-800">
             고객사 관리
           </div>
-          <div className="text-xs text-white/40">
+          <div className="text-xs text-slate-500">
             고객사 정보 및 Company ID를 관리합니다.
           </div>
         </div>
@@ -69,27 +69,27 @@ export function CompaniesPage({
             <tbody>
               {companies.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-6 text-center text-white/30">
+                  <td colSpan={8} className="py-6 text-center text-slate-400">
                     등록된 고객사가 없습니다.
                   </td>
                 </tr>
               )}
               {companies.map((c) => (
                 <tr key={c.id}>
-                  <td className="font-semibold text-white">{c.name}</td>
-                  <td className="font-mono text-white/55">{c.companyId}</td>
+                  <td className="font-semibold text-slate-800">{c.name}</td>
+                  <td className="font-mono text-slate-600">{c.companyId}</td>
                   <td>{c.contactName ?? "-"}</td>
-                  <td className="font-mono text-[11px] text-white/50">
+                  <td className="font-mono text-[11px] text-slate-600">
                     {c.contactEmail ?? "-"}
                   </td>
-                  <td className="font-mono text-[11px] text-white/50">
+                  <td className="font-mono text-[11px] text-slate-600">
                     {c.contactPhone ?? "-"}
                   </td>
-                  <td className="text-[11px] text-white/55">
+                  <td className="text-[11px] text-slate-600">
                     {c._count.projects}개
                   </td>
                   <td>
-                    <span className="admin-badge admin-b-client">
+                    <span className="admin-badge admin-b-staff">
                       {c._count.users}명
                     </span>
                   </td>

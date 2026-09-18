@@ -19,7 +19,7 @@ function fmtWon(n: number | null) {
 
 function Check({ on }: { on: boolean }) {
   return (
-    <span className={on ? "text-brand-light" : "text-white/20"}>
+    <span className={on ? "text-brand-light" : "text-slate-300"}>
       {on ? "✓" : "–"}
     </span>
   );
@@ -32,13 +32,13 @@ function MoneyCell({
   amount: number | null;
   taxType: TaxType;
 }) {
-  if (amount === null) return <span className="text-white/20">-</span>;
+  if (amount === null) return <span className="text-slate-300">-</span>;
   const b = calcTax(amount, taxType);
 
   return (
     <div className="whitespace-nowrap font-mono text-[11px] leading-tight">
-      <div className="font-bold text-white">{fmtWon(b.net)}</div>
-      <div className="text-[9.5px] text-white/35">
+      <div className="font-bold text-slate-800">{fmtWon(b.net)}</div>
+      <div className="text-[9.5px] text-slate-400">
         {taxType === "WITHHOLD_3_3" && `공급 ${fmtWon(b.supply)} · 원천 -${fmtWon(b.withholding)}`}
         {taxType === "VAT_EXCLUSIVE" && `공급 ${fmtWon(b.supply)} · +VAT ${fmtWon(b.vat)}`}
         {taxType === "VAT_INCLUSIVE" && `공급 ${fmtWon(b.supply)} · VAT ${fmtWon(b.vat)} 포함`}
@@ -93,10 +93,10 @@ export function ProjectRecordsPage({
     <div>
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <div className="mb-1 text-[22px] font-bold text-white">
+          <div className="mb-1 text-[22px] font-bold text-slate-800">
             프로젝트 장부
           </div>
-          <div className="text-xs text-white/40">
+          <div className="text-xs text-slate-500">
             진행 컨디션과 비용 흐름(수금·외주 지출)을 기록하고 세금 반영 금액을 한눈에 확인합니다.
           </div>
         </div>
@@ -111,7 +111,7 @@ export function ProjectRecordsPage({
 
       <div className="mb-5 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
         <div className="admin-stat-card px-4 py-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             수금 합계 (실수령)
           </div>
           <div className="my-1 text-2xl tracking-wide text-brand-light">
@@ -119,7 +119,7 @@ export function ProjectRecordsPage({
           </div>
         </div>
         <div className="admin-stat-card px-4 py-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             외주 지출 합계 (실지급)
           </div>
           <div className="my-1 text-2xl tracking-wide text-amber-300">
@@ -127,20 +127,20 @@ export function ProjectRecordsPage({
           </div>
         </div>
         <div className="admin-stat-card px-4 py-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             순수익 (수금 - 외주)
           </div>
           <div
-            className={`my-1 text-2xl tracking-wide ${summary.profit >= 0 ? "text-white" : "text-red-400"}`}
+            className={`my-1 text-2xl tracking-wide ${summary.profit >= 0 ? "text-slate-800" : "text-red-400"}`}
           >
             {fmtWon(summary.profit)}
           </div>
         </div>
         <div className="admin-stat-card px-4 py-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             정산 미완료
           </div>
-          <div className="my-1 text-2xl tracking-wide text-white">
+          <div className="my-1 text-2xl tracking-wide text-slate-800">
             {summary.unsettled}건
           </div>
         </div>
@@ -171,14 +171,14 @@ export function ProjectRecordsPage({
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={15} className="py-6 text-center text-white/30">
+                  <td colSpan={15} className="py-6 text-center text-slate-400">
                     불러오는 중...
                   </td>
                 </tr>
               )}
               {!loading && records.length === 0 && (
                 <tr>
-                  <td colSpan={15} className="py-6 text-center text-white/30">
+                  <td colSpan={15} className="py-6 text-center text-slate-400">
                     기록이 없습니다.
                   </td>
                 </tr>
@@ -190,13 +190,13 @@ export function ProjectRecordsPage({
                     onClick={() => setEditing(r)}
                     className="cursor-pointer"
                   >
-                    <td className="whitespace-nowrap text-[11px] text-white/60">
+                    <td className="whitespace-nowrap text-[11px] text-slate-600">
                       {r.project.name}
                     </td>
-                    <td className="whitespace-nowrap font-mono text-[11px] text-white/50">
+                    <td className="whitespace-nowrap font-mono text-[11px] text-slate-600">
                       {fmtDate(r.date)}
                     </td>
-                    <td className="min-w-[180px] font-semibold text-white">
+                    <td className="min-w-[180px] font-semibold text-slate-800">
                       {r.title}
                     </td>
                     <td>
@@ -217,7 +217,7 @@ export function ProjectRecordsPage({
                     <td>
                       <Check on={r.outsourced} />
                     </td>
-                    <td className="whitespace-nowrap text-[11px] text-white/60">
+                    <td className="whitespace-nowrap text-[11px] text-slate-600">
                       {r.outsourced ? (r.outsourceVendor ?? "-") : "-"}
                     </td>
                     <td>
@@ -241,7 +241,7 @@ export function ProjectRecordsPage({
                         "-"
                       )}
                     </td>
-                    <td className="whitespace-nowrap text-[11px] text-white/50">
+                    <td className="whitespace-nowrap text-[11px] text-slate-600">
                       {r.author.name ?? r.author.email}
                     </td>
                   </tr>

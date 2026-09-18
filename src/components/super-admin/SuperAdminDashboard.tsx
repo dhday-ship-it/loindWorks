@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ParticleBackground } from "@/components/ParticleBackground";
-import { UserMenu } from "@/components/nav/UserMenu";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { OverviewPage } from "./OverviewPage";
 import { AccountsPage } from "./AccountsPage";
@@ -18,7 +16,6 @@ import type {
   AdminUserItem,
   CompanyItem,
   StaffOption,
-  UnhandledRequestItem,
 } from "./types";
 
 type Page =
@@ -34,12 +31,10 @@ export function SuperAdminDashboard({
   currentUserName,
   stats,
   inProgressProjects,
-  unhandledRequests,
 }: {
   currentUserName: string;
   stats: AdminStats;
   inProgressProjects: AdminProjectItem[];
-  unhandledRequests: UnhandledRequestItem[];
 }) {
   const [page, setPage] = useState<Page>("dashboard");
   const [users, setUsers] = useState<AdminUserItem[] | null>(null);
@@ -101,7 +96,7 @@ export function SuperAdminDashboard({
       { id: "dashboard", label: "대시보드", icon: "📈" },
       { id: "accounts", label: "계정 목록", icon: "👥", section: "계정 관리" },
       { id: "companies", label: "고객사 목록", icon: "🏢", section: "고객사 관리" },
-      { id: "projects", label: "프로젝트 목록", icon: "📁", section: "프로젝트 관리" },
+      { id: "projects", label: "Works 목록", icon: "📁", section: "Works 관리" },
       { id: "records", label: "프로젝트 장부", icon: "🧾", section: "기록 관리" },
       { id: "ledger", label: "법인 지출 기록부", icon: "💰" },
       { id: "loans", label: "대출·가지급금 관리", icon: "🏦" },
@@ -109,44 +104,46 @@ export function SuperAdminDashboard({
 
   return (
     <div
-      className="font-[family-name:var(--font-dm-sans)] relative flex h-screen flex-col overflow-hidden text-white"
+      className="light-ui font-[family-name:var(--font-dm-sans)] relative flex h-screen w-full flex-col overflow-hidden p-5"
+      style={{
+        background: "linear-gradient(135deg, #cfe6ff 0%, #dfe3ff 45%, #ecdcff 100%)",
+      }}
     >
-      <ParticleBackground />
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
 
-      <div className="relative z-10 flex h-screen flex-col overflow-hidden">
-        <div className="flex h-[54px] shrink-0 items-center justify-between border-b border-white/9 bg-[rgba(6,8,10,0.78)] px-6 backdrop-blur-2xl">
+      <div className="relative z-10 flex flex-1 flex-col overflow-hidden rounded-3xl bg-white shadow-sm shadow-indigo-900/5">
+        <div className="flex h-[54px] shrink-0 items-center justify-between border-b border-slate-100 px-6">
           <div className="flex items-center gap-3.5">
             <span
-              className="font-[family-name:var(--font-quicksand)] text-xl font-bold tracking-tight text-white"
+              className="font-[family-name:var(--font-quicksand)] text-xl font-bold tracking-tight text-slate-800"
             >
               LOIND
             </span>
-            <div className="h-3.5 w-px bg-white/18" />
-            <span className="font-mono text-[9px] uppercase tracking-widest text-white/35">
+            <div className="h-3.5 w-px bg-slate-200" />
+            <span className="font-mono text-[9px] uppercase tracking-widest text-slate-400">
               Super Admin
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-slate-500">{currentUserName}</span>
             <Link
               href="/dashboard"
-              className="rounded-lg border border-white/10 px-3 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white"
+              className="rounded-lg border border-slate-100 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-800"
             >
               워크스테이션으로
             </Link>
-            <UserMenu name={currentUserName} roleLabel="최고관리자" />
           </div>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
-          <div className="flex w-[220px] shrink-0 flex-col overflow-hidden border-r border-white/8 bg-[rgba(6,8,10,0.65)] backdrop-blur-2xl">
-            <div className="px-3.5 pb-2 pt-4.5 text-[11px] font-bold text-white/45">
+          <div className="flex w-[220px] shrink-0 flex-col overflow-hidden overflow-y-auto border-r border-slate-100">
+            <div className="px-3.5 pb-2 pt-4.5 text-[11px] font-bold text-slate-500">
               메뉴
             </div>
             {navItems.map((item, i) => (
               <div key={item.id}>
                 {item.section && (
-                  <div className="px-3.5 pb-2 pt-5 font-mono text-[9px] font-bold uppercase tracking-wider text-white/28">
+                  <div className="px-3.5 pb-2 pt-5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-400">
                     {item.section}
                   </div>
                 )}
@@ -173,7 +170,6 @@ export function SuperAdminDashboard({
               <OverviewPage
                 stats={stats}
                 inProgressProjects={inProgressProjects}
-                unhandledRequests={unhandledRequests}
                 onNavigateProjects={() => switchPage("projects")}
               />
             )}
@@ -182,12 +178,10 @@ export function SuperAdminDashboard({
                 <AccountsPage
                   users={users}
                   onUsersChange={setUsers}
-                  companies={companies ?? []}
-                  projects={(projects ?? []).map((p) => ({ id: p.id, name: p.name }))}
                   showToast={handleShowToast}
                 />
               ) : tabLoading ? (
-                <div className="flex items-center justify-center py-20 text-sm text-white/30">
+                <div className="flex items-center justify-center py-20 text-sm text-slate-400">
                   불러오는 중...
                 </div>
               ) : null
@@ -200,7 +194,7 @@ export function SuperAdminDashboard({
                   showToast={handleShowToast}
                 />
               ) : tabLoading ? (
-                <div className="flex items-center justify-center py-20 text-sm text-white/30">
+                <div className="flex items-center justify-center py-20 text-sm text-slate-400">
                   불러오는 중...
                 </div>
               ) : null
@@ -215,7 +209,7 @@ export function SuperAdminDashboard({
                   showToast={handleShowToast}
                 />
               ) : tabLoading ? (
-                <div className="flex items-center justify-center py-20 text-sm text-white/30">
+                <div className="flex items-center justify-center py-20 text-sm text-slate-400">
                   불러오는 중...
                 </div>
               ) : null
@@ -224,7 +218,7 @@ export function SuperAdminDashboard({
               projects ? (
                 <ProjectRecordsPage projects={projects} showToast={handleShowToast} />
               ) : tabLoading ? (
-                <div className="flex items-center justify-center py-20 text-sm text-white/30">
+                <div className="flex items-center justify-center py-20 text-sm text-slate-400">
                   불러오는 중...
                 </div>
               ) : null

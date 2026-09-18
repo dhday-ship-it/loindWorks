@@ -55,10 +55,10 @@ export function CorporateLedgerPage({
     <div>
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <div className="mb-1 text-[22px] font-bold text-white">
+          <div className="mb-1 text-[22px] font-bold text-slate-800">
             법인 지출 기록부
           </div>
-          <div className="text-xs text-white/40">
+          <div className="text-xs text-slate-500">
             법인 자금의 수입·지출 내역을 날짜순으로 기록하고 잔액을 관리합니다.
           </div>
         </div>
@@ -72,7 +72,7 @@ export function CorporateLedgerPage({
 
       <div className="mb-5 grid grid-cols-3 gap-3.5">
         <div className="admin-stat-card px-4 py-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             수입 합계
           </div>
           <div className="my-1 text-2xl tracking-wide text-brand-light">
@@ -80,7 +80,7 @@ export function CorporateLedgerPage({
           </div>
         </div>
         <div className="admin-stat-card px-4 py-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             지출 합계
           </div>
           <div className="my-1 text-2xl tracking-wide text-amber-300">
@@ -88,10 +88,10 @@ export function CorporateLedgerPage({
           </div>
         </div>
         <div className="admin-stat-card px-4 py-4">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             현재 잔액
           </div>
-          <div className="my-1 text-2xl tracking-wide text-white">
+          <div className="my-1 text-2xl tracking-wide text-slate-800">
             {fmtWon(summary.balance)}
           </div>
         </div>
@@ -113,14 +113,14 @@ export function CorporateLedgerPage({
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-white/30">
+                  <td colSpan={6} className="py-6 text-center text-slate-400">
                     불러오는 중...
                   </td>
                 </tr>
               )}
               {!loading && entries.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-white/30">
+                  <td colSpan={6} className="py-6 text-center text-slate-400">
                     기록이 없습니다.
                   </td>
                 </tr>
@@ -132,10 +132,10 @@ export function CorporateLedgerPage({
                     onClick={() => setEditing(e)}
                     className="cursor-pointer"
                   >
-                    <td className="whitespace-nowrap font-mono text-[11px] text-white/50">
+                    <td className="whitespace-nowrap font-mono text-[11px] text-slate-600">
                       {fmtDate(e.date)}
                     </td>
-                    <td className="min-w-[200px] font-semibold text-white">
+                    <td className="min-w-[200px] font-semibold text-slate-800">
                       {e.description}
                     </td>
                     <td className="whitespace-nowrap font-mono text-[11px] text-brand-light">
@@ -144,10 +144,10 @@ export function CorporateLedgerPage({
                     <td className="whitespace-nowrap font-mono text-[11px] text-amber-300">
                       {fmtWon(e.expense)}
                     </td>
-                    <td className="whitespace-nowrap font-mono text-[11px] font-bold text-white">
+                    <td className="whitespace-nowrap font-mono text-[11px] font-bold text-slate-800">
                       {fmtWon(e.balance)}
                     </td>
-                    <td className="whitespace-nowrap text-[11px] text-white/50">
+                    <td className="whitespace-nowrap text-[11px] text-slate-600">
                       {e.author.name ?? e.author.email}
                     </td>
                   </tr>

@@ -106,7 +106,7 @@ export function LoanAdvanceModal({
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               일자
             </span>
             <input
@@ -117,7 +117,7 @@ export function LoanAdvanceModal({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               구분
             </span>
             <div className="flex gap-1.5">
@@ -129,7 +129,7 @@ export function LoanAdvanceModal({
                   className={`flex-1 cursor-pointer rounded-lg border px-3 py-2 text-xs font-bold transition-all ${
                     type === t
                       ? "border-brand-light/40 bg-brand-light/15 text-brand-light"
-                      : "border-white/10 bg-white/5 text-white/40 hover:text-white"
+                      : "border-slate-100 bg-slate-50 text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   {TYPE_LABEL[t]}
@@ -140,7 +140,7 @@ export function LoanAdvanceModal({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             성명/거래처
           </span>
           <input
@@ -153,7 +153,7 @@ export function LoanAdvanceModal({
 
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               지급액 (원)
             </span>
             <input
@@ -165,7 +165,7 @@ export function LoanAdvanceModal({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               회수(상환)액 (원)
             </span>
             <input
@@ -179,10 +179,10 @@ export function LoanAdvanceModal({
         </div>
 
         {outstanding !== null && (
-          <div className="rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2 font-mono text-[11px]">
-            <span className="text-white/40">미납잔액 </span>
+          <div className="rounded-lg border border-slate-100 bg-white/[0.03] px-3 py-2 font-mono text-[11px]">
+            <span className="text-slate-500">미납잔액 </span>
             <span
-              className={`font-bold ${outstanding > 0 ? "text-amber-300" : "text-white/70"}`}
+              className={`font-bold ${outstanding > 0 ? "text-amber-300" : "text-slate-700"}`}
             >
               {outstanding.toLocaleString("ko-KR")}
             </span>
@@ -190,7 +190,7 @@ export function LoanAdvanceModal({
         )}
 
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/38">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             비고
           </span>
           <input
@@ -203,7 +203,7 @@ export function LoanAdvanceModal({
 
         {error && <p className="text-xs text-red-400">{error}</p>}
 
-        <div className="flex items-center justify-between border-t border-white/8 pt-4">
+        <div className="flex items-center justify-between border-t border-slate-100 pt-4">
           {entry ? (
             <button
               onClick={remove}
