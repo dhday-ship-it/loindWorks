@@ -92,9 +92,14 @@ export function BannerModal({
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
-            배너 이미지
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+              배너 이미지
+            </span>
+            <span className="font-mono text-[10px] text-slate-400">
+              권장 사이즈 1600 × 300px (가로형)
+            </span>
+          </div>
           {imageUrl && (
             <div className="overflow-hidden rounded-xl border border-slate-100">
               {/* eslint-disable-next-line @next/next/no-img-element */}

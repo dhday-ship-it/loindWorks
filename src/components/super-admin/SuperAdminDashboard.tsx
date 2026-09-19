@@ -12,6 +12,7 @@ import { ProjectRecordsPage } from "./ProjectRecordsPage";
 import { CorporateLedgerPage } from "./CorporateLedgerPage";
 import { LoanAdvancePage } from "./LoanAdvancePage";
 import { BannersPage } from "./BannersPage";
+import { LoginImagePage } from "./LoginImagePage";
 import type {
   AdminProjectItem,
   AdminStats,
@@ -28,7 +29,8 @@ type Page =
   | "records"
   | "ledger"
   | "loans"
-  | "banners";
+  | "banners"
+  | "loginImage";
 
 export function SuperAdminDashboard({
   currentUserName,
@@ -104,6 +106,7 @@ export function SuperAdminDashboard({
       { id: "ledger", label: "법인 지출 기록부", icon: "wallet" },
       { id: "loans", label: "대출·가지급금 관리", icon: "landmark" },
       { id: "banners", label: "배너 관리", icon: "image", section: "화면 관리" },
+      { id: "loginImage", label: "로그인 화면", icon: "lock" },
     ];
 
   return (
@@ -241,6 +244,9 @@ export function SuperAdminDashboard({
             )}
             {page === "banners" && (
               <BannersPage showToast={handleShowToast} />
+            )}
+            {page === "loginImage" && (
+              <LoginImagePage showToast={handleShowToast} />
             )}
           </div>
         </div>

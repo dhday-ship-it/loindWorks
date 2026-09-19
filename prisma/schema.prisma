@@ -443,6 +443,12 @@ model Banner {
   createdAt DateTime @default(now())
 }
 
+model LoginPageImage {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  updatedAt DateTime @updatedAt
+}
+
 model MemoFolder {
   id        String   @id @default(cuid())
   name      String
