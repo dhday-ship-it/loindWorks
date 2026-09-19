@@ -34,7 +34,10 @@ const quicksand = Quicksand({
 export const metadata: Metadata = {
   title: "LOIND CREATOR GROUND",
   description: "LOIND Corporation 내부 워크스페이스",
-  icons: { icon: "/favicon.svg" },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

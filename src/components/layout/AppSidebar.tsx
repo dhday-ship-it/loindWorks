@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import type { Role } from "@/generated/prisma/enums";
+import { LoindWordmark } from "./LoindWordmark";
 
 const ROLE_LABEL: Record<Role, string> = {
   SUPER_ADMIN: "최고관리자",
@@ -36,8 +37,8 @@ export function AppSidebar({
   return (
     <div className="flex h-full flex-col justify-between">
       <div>
-        <div className="px-3 pb-8 pt-2 text-sm font-bold tracking-wide text-slate-700">
-          LOGO
+        <div className="px-3 pb-8 pt-2">
+          <LoindWordmark className="h-5 w-auto text-slate-800" />
         </div>
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => {
