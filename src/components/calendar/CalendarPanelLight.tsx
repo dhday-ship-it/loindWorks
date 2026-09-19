@@ -92,7 +92,7 @@ export function CalendarPanelLight({
             </button>
             <span
               onClick={() => setMonthOffset(0)}
-              className={`text-sm font-bold text-slate-700 ${isCurrentMonth ? "" : "cursor-pointer text-indigo-500"}`}
+              className={`text-sm font-bold text-slate-700 ${isCurrentMonth ? "" : "cursor-pointer text-brand"}`}
             >
               {MONTH_NAMES[viewMonth]} {viewYear}
             </span>
@@ -109,7 +109,7 @@ export function CalendarPanelLight({
               setTitle("");
               setShowForm(true);
             }}
-            className="cursor-pointer rounded-lg bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-500 transition-all hover:bg-indigo-50 hover:text-indigo-500"
+            className="cursor-pointer rounded-lg bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-500 transition-all hover:bg-brand-light/12 hover:text-brand"
           >
             + 일정
           </button>
@@ -134,14 +134,14 @@ export function CalendarPanelLight({
                 onClick={() => setSelectedDay(d)}
                 className={`flex h-8 cursor-pointer flex-col items-center justify-center rounded-lg transition-all ${
                   isToday
-                    ? "bg-indigo-500 font-bold text-white"
+                    ? "bg-brand font-bold text-white"
                     : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 <span>{d}</span>
                 {hasEvent && (
                   <div
-                    className={`mt-0.5 h-1 w-1 rounded-full ${isToday ? "bg-white" : "bg-indigo-400"}`}
+                    className={`mt-0.5 h-1 w-1 rounded-full ${isToday ? "bg-white" : "bg-brand-light"}`}
                   />
                 )}
               </div>
@@ -168,7 +168,7 @@ export function CalendarPanelLight({
             <div className="flex gap-2">
               <button
                 onClick={submitEvent}
-                className="flex-1 cursor-pointer rounded-lg bg-indigo-500 py-1.5 text-xs font-bold text-white"
+                className="flex-1 cursor-pointer rounded-lg bg-brand py-1.5 text-xs font-bold text-white"
               >
                 등록
               </button>

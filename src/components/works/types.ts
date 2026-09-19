@@ -8,4 +8,5 @@ export interface RequestEntryItem {
   body: string | null;
   logDate: string;
   author: Person;
+  projectId: string;
 }

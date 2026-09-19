@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { ProjectStatus } from "@/generated/prisma/enums";
 import type { WorkSummary } from "@/types/shared";
+import { Icon } from "@/components/ui/Icon";
 
 const STATUS_LABEL: Record<ProjectStatus, string> = {
   PENDING: "대기",
@@ -13,7 +14,7 @@ const STATUS_LABEL: Record<ProjectStatus, string> = {
 
 const STATUS_STYLE: Record<ProjectStatus, string> = {
   PENDING: "bg-slate-100 text-slate-500",
-  IN_PROGRESS: "bg-indigo-50 text-indigo-500",
+  IN_PROGRESS: "bg-brand-light/12 text-brand",
   DONE: "bg-emerald-50 text-emerald-500",
 };
 
@@ -29,7 +30,12 @@ function WorksRow({ w }: { w: WorkSummary }) {
       href={`/dashboard/works/${w.id}`}
       className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 border-b border-slate-50 py-3 text-sm transition-all last:border-b-0 hover:bg-slate-50/70"
     >
-      <span className="truncate font-medium text-slate-700">{w.name}</span>
+      <span className="flex min-w-0 items-center gap-2.5">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-light/12 text-brand">
+          <Icon name="folder" className="h-3.5 w-3.5" />
+        </span>
+        <span className="truncate font-medium text-slate-700">{w.name}</span>
+      </span>
       <span className="w-[170px] text-right font-mono text-[11px] text-slate-400">
         {fmtDate(w.startDate)} ~ {fmtDate(w.endDate)}
       </span>

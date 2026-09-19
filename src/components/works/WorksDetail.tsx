@@ -44,7 +44,12 @@ export function WorksDetail({
             </p>
           </div>
 
-          <RequestFeed workId={work.id} entries={entries} onEntriesChange={setEntries} />
+          <RequestFeed
+            workId={work.id}
+            entries={entries}
+            onEntriesChange={setEntries}
+            currentUser={currentUser}
+          />
         </div>
       }
       right={<CalendarPanelLight initialEvents={initialEvents} workId={work.id} />}

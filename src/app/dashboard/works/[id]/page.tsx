@@ -70,6 +70,7 @@ export default async function WorksDetailPage({
         body: l.body,
         logDate: l.logDate ? l.logDate.toISOString() : l.createdAt.toISOString(),
         author: l.author,
+        projectId: project.id,
       }))}
     />
   );

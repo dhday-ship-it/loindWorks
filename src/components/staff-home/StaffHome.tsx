@@ -4,6 +4,7 @@ import type { Role } from "@/generated/prisma/enums";
 import { AppShell } from "@/components/layout/AppShell";
 import { CalendarPanelLight } from "@/components/calendar/CalendarPanelLight";
 import { WorksTable } from "./WorksTable";
+import { StatsStrip } from "./StatsStrip";
 import type { CalendarEventItem, WorkSummary } from "./types";
 
 export function StaffHome({
@@ -23,6 +24,9 @@ export function StaffHome({
       main={
         <div className="flex flex-col gap-5">
           <div>
+            <div className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-brand-light">
+              LOIND Creator Ground
+            </div>
             <h1 className="text-2xl font-bold text-slate-800">
               Hey there, {displayName}!
             </h1>
@@ -30,6 +34,7 @@ export function StaffHome({
               오늘도 좋은 하루 되세요.
             </p>
           </div>
+          <StatsStrip works={initialWorks} />
           <WorksTable works={initialWorks} />
         </div>
       }

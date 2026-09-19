@@ -36,9 +36,9 @@ function MoneyCell({
   const b = calcTax(amount, taxType);
 
   return (
-    <div className="whitespace-nowrap font-mono text-[11px] leading-tight">
-      <div className="font-bold text-slate-800">{fmtWon(b.net)}</div>
-      <div className="text-[9.5px] text-slate-400">
+    <div className="font-mono text-[11px] leading-tight">
+      <div className="whitespace-nowrap font-bold text-slate-800">{fmtWon(b.net)}</div>
+      <div className="text-[9.5px] leading-snug text-slate-400">
         {taxType === "WITHHOLD_3_3" && `공급 ${fmtWon(b.supply)} · 원천 -${fmtWon(b.withholding)}`}
         {taxType === "VAT_EXCLUSIVE" && `공급 ${fmtWon(b.supply)} · +VAT ${fmtWon(b.vat)}`}
         {taxType === "VAT_INCLUSIVE" && `공급 ${fmtWon(b.supply)} · VAT ${fmtWon(b.vat)} 포함`}
@@ -53,19 +53,23 @@ function OutsourceCell({ outsources }: { outsources: ProjectRecordItem["outsourc
     return <span className="text-[11px] text-slate-300">-</span>;
   }
   return (
-    <div className="flex min-w-[220px] flex-col gap-2 py-1">
+    <div className="flex w-[210px] flex-col gap-2 py-1">
       {outsources.map((o) => (
         <div
           key={o.id}
-          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-1.5"
+          className="rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-2"
         >
-          <span className="text-[11px] font-semibold text-slate-700">{o.vendor}</span>
-          <MoneyCell amount={o.totalAmount} taxType={o.taxType} />
-          <span className="text-[9.5px] text-slate-400">
-            지급 {fmtWon(o.payment)}
-          </span>
-          <StatusBadge on={o.balanceSettled} onLabel="정산완료" offLabel="미정산" />
-          <StatusBadge on={o.taxInvoiceIssued} onLabel="계산서 O" offLabel="계산서 X" />
+          <div className="truncate text-[11px] font-semibold text-slate-700">
+            {o.vendor}
+          </div>
+          <div className="mt-1">
+            <MoneyCell amount={o.totalAmount} taxType={o.taxType} />
+          </div>
+          <div className="mt-1 text-[9.5px] text-slate-400">지급 {fmtWon(o.payment)}</div>
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            <StatusBadge on={o.balanceSettled} onLabel="정산완료" offLabel="미정산" />
+            <StatusBadge on={o.taxInvoiceIssued} onLabel="계산서 O" offLabel="계산서 X" />
+          </div>
         </div>
       ))}
     </div>
@@ -188,7 +192,7 @@ export function ProjectRecordsPage({
 
       <div className="admin-sec-card p-6">
         <div className="overflow-x-auto">
-          <table className="admin-tbl w-full min-w-[1280px] border-collapse">
+          <table className="admin-tbl w-full min-w-[1080px] border-collapse">
             <thead>
               <tr>
                 <th className="whitespace-nowrap">프로젝트</th>

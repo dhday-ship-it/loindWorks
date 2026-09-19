@@ -193,7 +193,7 @@ export function CreateProjectModal({
                   onClick={() => toggleStaff(s.id)}
                   className={`cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all ${
                     isSel
-                      ? "border-indigo-400 bg-indigo-500 text-white"
+                      ? "border-brand bg-brand text-white"
                       : "border-slate-100 bg-slate-50 text-slate-600 hover:text-slate-800"
                   }`}
                 >

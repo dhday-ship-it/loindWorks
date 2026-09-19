@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { OverviewPage } from "./OverviewPage";
 import { AccountsPage } from "./AccountsPage";
 import { CompaniesPage } from "./CompaniesPage";
@@ -91,27 +92,27 @@ export function SuperAdminDashboard({
     showToast(msg, "success");
   };
 
-  const navItems: { id: Page; label: string; icon: string; section?: string }[] =
+  const navItems: { id: Page; label: string; icon: IconName; section?: string }[] =
     [
-      { id: "dashboard", label: "대시보드", icon: "📈" },
-      { id: "accounts", label: "계정 목록", icon: "👥", section: "계정 관리" },
-      { id: "companies", label: "고객사 목록", icon: "🏢", section: "고객사 관리" },
-      { id: "projects", label: "Works 목록", icon: "📁", section: "Works 관리" },
-      { id: "records", label: "프로젝트 장부", icon: "🧾", section: "기록 관리" },
-      { id: "ledger", label: "법인 지출 기록부", icon: "💰" },
-      { id: "loans", label: "대출·가지급금 관리", icon: "🏦" },
+      { id: "dashboard", label: "대시보드", icon: "chart" },
+      { id: "accounts", label: "계정 목록", icon: "users", section: "계정 관리" },
+      { id: "companies", label: "고객사 목록", icon: "building", section: "고객사 관리" },
+      { id: "projects", label: "Works 목록", icon: "folder", section: "Works 관리" },
+      { id: "records", label: "프로젝트 장부", icon: "receipt", section: "기록 관리" },
+      { id: "ledger", label: "법인 지출 기록부", icon: "wallet" },
+      { id: "loans", label: "대출·가지급금 관리", icon: "landmark" },
     ];
 
   return (
     <div
       className="light-ui font-[family-name:var(--font-dm-sans)] relative flex h-screen w-full flex-col overflow-hidden p-5"
       style={{
-        background: "linear-gradient(135deg, #cfe6ff 0%, #dfe3ff 45%, #ecdcff 100%)",
+        background: "linear-gradient(135deg, #f6f8fa 0%, #ebeff4 50%, #ccd2e1 100%)",
       }}
     >
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
 
-      <div className="relative z-10 flex flex-1 flex-col overflow-hidden rounded-3xl bg-white shadow-sm shadow-indigo-900/5">
+      <div className="relative z-10 flex flex-1 flex-col overflow-hidden rounded-3xl bg-white shadow-sm shadow-brand/5">
         <div className="flex h-[54px] shrink-0 items-center justify-between border-b border-slate-100 px-6">
           <div className="flex items-center gap-3.5">
             <span
@@ -151,8 +152,14 @@ export function SuperAdminDashboard({
                   onClick={() => switchPage(item.id)}
                   className={`admin-sb-item ${page === item.id ? "active" : ""}`}
                 >
-                  <span className="w-4 text-center text-[13px]">
-                    {item.icon}
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${
+                      page === item.id
+                        ? "bg-brand text-white"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    <Icon name={item.icon} className="h-3.5 w-3.5" />
                   </span>
                   {item.label}
                   {i === 0 && (
@@ -165,7 +172,7 @@ export function SuperAdminDashboard({
             ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-8 py-7">
+          <div className="min-w-0 flex-1 overflow-y-auto px-8 py-7">
             {page === "dashboard" && (
               <OverviewPage
                 stats={stats}

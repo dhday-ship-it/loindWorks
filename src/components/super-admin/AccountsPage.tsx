@@ -66,14 +66,14 @@ export function AccountsPage({
     emptyLabel: string
   ) => (
     <div className="overflow-x-auto">
-      <table className="admin-tbl w-full border-collapse">
+      <table className="admin-tbl w-full min-w-[760px] border-collapse">
         <thead>
           <tr>
-            <th>이름</th>
-            <th>이메일</th>
-            <th>역할</th>
-            <th>배정 Works</th>
-            <th>관리</th>
+            <th className="whitespace-nowrap">이름</th>
+            <th className="whitespace-nowrap">이메일</th>
+            <th className="whitespace-nowrap">역할</th>
+            <th className="whitespace-nowrap">배정 Works</th>
+            <th className="whitespace-nowrap">관리</th>
           </tr>
         </thead>
         <tbody>
@@ -86,9 +86,9 @@ export function AccountsPage({
           )}
           {list.map((u) => (
             <tr key={u.id}>
-              <td>
+              <td className="whitespace-nowrap">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-indigo-100 bg-indigo-50 text-[10px] font-bold text-indigo-500">
+                  <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border border-brand-light/30 bg-brand-light/12 text-[10px] font-bold text-brand">
                     {initial(u)}
                   </div>
                   <span className="font-semibold text-slate-800">
@@ -96,27 +96,27 @@ export function AccountsPage({
                   </span>
                 </div>
               </td>
-              <td className="font-mono text-slate-600">{u.email}</td>
-              <td>
+              <td className="whitespace-nowrap font-mono text-slate-600">{u.email}</td>
+              <td className="whitespace-nowrap">
                 <span className={`admin-badge ${badgeClass}`}>{badgeLabel}</span>
               </td>
-              <td>
+              <td className="min-w-[220px]">
                 <div className="flex flex-wrap gap-1.5">
                   {u.projectMemberships.length === 0 && (
-                    <span className="text-[11px] text-slate-400">미배정</span>
+                    <span className="whitespace-nowrap text-[11px] text-slate-400">미배정</span>
                   )}
                   {u.projectMemberships.map((m) => (
                     <span
                       key={m.project.id}
-                      className="rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-[3px] font-mono text-[10px] text-indigo-500"
+                      className="whitespace-nowrap rounded-full border border-brand-light/30 bg-brand-light/12 px-2.5 py-[3px] font-mono text-[10px] text-brand"
                     >
                       {m.project.name}
                     </span>
                   ))}
                 </div>
               </td>
-              <td>
-                <div className="flex gap-1.5">
+              <td className="whitespace-nowrap">
+                <div className="flex flex-nowrap gap-1.5">
                   <button
                     onClick={() => switchRole(u)}
                     disabled={savingId === u.id}

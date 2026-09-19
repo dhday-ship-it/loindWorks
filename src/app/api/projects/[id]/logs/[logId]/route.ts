@@ -22,8 +22,15 @@ export async function PATCH(
 
   const existing = await prisma.activityLog.findUniqueOrThrow({
     where: { id: logId },
-    select: { title: true, body: true, edits: true },
+    select: { title: true, body: true, edits: true, authorId: true },
   });
+
+  if (existing.authorId !== user.id && user.role !== "SUPER_ADMIN") {
+    return NextResponse.json(
+      { error: "본인이 작성한 글만 수정할 수 있습니다." },
+      { status: 403 }
+    );
+  }
 
   const edits = Array.isArray(existing.edits)
     ? (existing.edits as unknown as Edit[])
@@ -58,8 +65,20 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string; logId: string }> }
 ) {
-  await requireStaff();
+  const user = await requireStaff();
   const { logId } = await params;
+
+  const existing = await prisma.activityLog.findUniqueOrThrow({
+    where: { id: logId },
+    select: { authorId: true },
+  });
+
+  if (existing.authorId !== user.id && user.role !== "SUPER_ADMIN") {
+    return NextResponse.json(
+      { error: "본인이 작성한 글만 삭제할 수 있습니다." },
+      { status: 403 }
+    );
+  }
 
   await prisma.activityLog.delete({ where: { id: logId } });
 

@@ -34,7 +34,7 @@ export function OverviewPage({
           <div className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
             진행 중 Works
           </div>
-          <div className="my-1 text-3xl tracking-wide text-indigo-500">
+          <div className="my-1 text-3xl tracking-wide text-brand">
             {stats.activeProjects}
           </div>
           <div className="mt-1 font-mono text-[10px] text-slate-400">

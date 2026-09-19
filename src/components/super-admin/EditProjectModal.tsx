@@ -152,7 +152,7 @@ export function EditProjectModal({
                 onClick={() => setStatus(s)}
                 className={`flex-1 cursor-pointer rounded-lg border px-3 py-2 text-xs font-bold transition-all ${
                   status === s
-                    ? "border-indigo-400 bg-indigo-50 text-indigo-500"
+                    ? "border-brand bg-brand-light/12 text-brand"
                     : "border-slate-100 bg-slate-50 text-slate-400 hover:text-slate-800"
                 }`}
               >
@@ -256,7 +256,7 @@ export function EditProjectModal({
                   disabled={loading}
                   className={`cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all disabled:opacity-40 ${
                     isSel
-                      ? "border-indigo-400 bg-indigo-500 text-white"
+                      ? "border-brand bg-brand text-white"
                       : "border-slate-100 bg-slate-50 text-slate-600 hover:text-slate-800"
                   }`}
                 >
