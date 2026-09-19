@@ -6,7 +6,12 @@ export default async function SettingsPage() {
 
   return (
     <AccountSettings
-      currentUser={{ name: user.name ?? null, email: user.email ?? "" }}
+      currentUser={{
+        id: user.id,
+        name: user.name ?? null,
+        email: user.email ?? "",
+        role: user.role,
+      }}
     />
   );
 }
