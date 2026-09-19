@@ -18,14 +18,12 @@ export function AppShell({
           "linear-gradient(135deg, #f6f8fa 0%, #ebeff4 50%, #ccd2e1 100%)",
       }}
     >
-      <div className="flex w-full max-w-[1400px] items-stretch gap-5">
-        <aside className="w-[190px] shrink-0 rounded-3xl bg-white p-4 shadow-sm shadow-brand/5">
+      <div className="flex w-full max-w-[1400px] overflow-hidden rounded-3xl bg-white shadow-sm shadow-brand/5">
+        <aside className="w-[190px] shrink-0 border-r border-slate-100 p-4">
           <AppSidebar currentUser={currentUser} />
         </aside>
-        <main className="min-w-0 flex-1 rounded-3xl bg-white p-7 shadow-sm shadow-brand/5">
-          {main}
-        </main>
-        <div className="w-[300px] shrink-0 rounded-3xl bg-white p-5 shadow-sm shadow-brand/5">
+        <main className="min-w-0 flex-1 p-7">{main}</main>
+        <div className="w-[300px] shrink-0 border-l border-slate-100 p-5">
           {right}
         </div>
       </div>

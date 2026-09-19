@@ -12,6 +12,18 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
+function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function startOfWeek(d: Date) {
+  const copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  copy.setDate(copy.getDate() - copy.getDay());
+  return copy;
+}
+
+type ViewMode = "month" | "week";
+
 export function CalendarPanelLight({
   initialEvents,
   workId,
@@ -27,9 +39,11 @@ export function CalendarPanelLight({
   }
 
   const now = new Date();
+  const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [monthOffset, setMonthOffset] = useState(0);
+  const [weekOffset, setWeekOffset] = useState(0);
   const [showForm, setShowForm] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [title, setTitle] = useState("");
   const [day, setDay] = useState(now.getDate());
 
@@ -37,20 +51,27 @@ export function CalendarPanelLight({
   const viewYear = viewBase.getFullYear();
   const viewMonth = viewBase.getMonth();
   const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
-  const today = now.getDate();
 
   const firstDayIdx = new Date(viewYear, viewMonth, 1).getDay();
   const lastDate = new Date(viewYear, viewMonth + 1, 0).getDate();
 
-  const eventsByDay = new Map<number, CalendarEventItem[]>();
+  const weekStart = startOfWeek(new Date(now.getFullYear(), now.getMonth(), now.getDate() + weekOffset * 7));
+  const weekDays = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+  const isCurrentWeek = weekOffset === 0;
+
+  const eventsByKey = new Map<string, CalendarEventItem[]>();
   for (const e of events) {
     const d = new Date(e.startAt);
-    if (d.getFullYear() === viewYear && d.getMonth() === viewMonth) {
-      const list = eventsByDay.get(d.getDate()) ?? [];
-      list.push(e);
-      eventsByDay.set(d.getDate(), list);
-    }
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    const list = eventsByKey.get(key) ?? [];
+    list.push(e);
+    eventsByKey.set(key, list);
   }
+  const keyOf = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
   const sortedEvents = [...events].sort(
     (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
@@ -77,7 +98,7 @@ export function CalendarPanelLight({
     await fetch(`/api/calendar-events/${id}`, { method: "DELETE" });
   };
 
-  const dayEvents = selectedDay !== null ? eventsByDay.get(selectedDay) ?? [] : [];
+  const dayEvents = selectedDay ? eventsByKey.get(keyOf(selectedDay)) ?? [] : [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -85,19 +106,29 @@ export function CalendarPanelLight({
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <button
-              onClick={() => setMonthOffset((o) => o - 1)}
+              onClick={() =>
+                viewMode === "month" ? setMonthOffset((o) => o - 1) : setWeekOffset((o) => o - 1)
+              }
               className="cursor-pointer rounded px-1 text-slate-300 transition-all hover:bg-slate-50 hover:text-slate-500"
             >
               ‹
             </button>
             <span
-              onClick={() => setMonthOffset(0)}
-              className={`text-sm font-bold text-slate-700 ${isCurrentMonth ? "" : "cursor-pointer text-brand"}`}
+              onClick={() => (viewMode === "month" ? setMonthOffset(0) : setWeekOffset(0))}
+              className={`text-sm font-bold text-slate-700 ${
+                viewMode === "month"
+                  ? isCurrentMonth ? "" : "cursor-pointer text-brand"
+                  : isCurrentWeek ? "" : "cursor-pointer text-brand"
+              }`}
             >
-              {MONTH_NAMES[viewMonth]} {viewYear}
+              {viewMode === "month"
+                ? `${MONTH_NAMES[viewMonth]} ${viewYear}`
+                : `${MONTH_NAMES[weekDays[0].getMonth()]} ${weekDays[0].getDate()}일 - ${weekDays[6].getDate()}일`}
             </span>
             <button
-              onClick={() => setMonthOffset((o) => o + 1)}
+              onClick={() =>
+                viewMode === "month" ? setMonthOffset((o) => o + 1) : setWeekOffset((o) => o + 1)
+              }
               className="cursor-pointer rounded px-1 text-slate-300 transition-all hover:bg-slate-50 hover:text-slate-500"
             >
               ›
@@ -115,39 +146,89 @@ export function CalendarPanelLight({
           </button>
         </div>
 
+        <div className="mb-2 flex gap-1 rounded-lg bg-slate-50 p-0.5 text-[11px] font-semibold">
+          <button
+            onClick={() => setViewMode("month")}
+            className={`flex-1 cursor-pointer rounded-md py-1 transition-all ${
+              viewMode === "month" ? "bg-white text-brand shadow-sm" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            월
+          </button>
+          <button
+            onClick={() => setViewMode("week")}
+            className={`flex-1 cursor-pointer rounded-md py-1 transition-all ${
+              viewMode === "week" ? "bg-white text-brand shadow-sm" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            주
+          </button>
+        </div>
+
         <div className="mb-1.5 grid grid-cols-7 text-center text-[10px] font-medium text-slate-300">
           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
             <div key={i}>{d}</div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
-          {Array.from({ length: firstDayIdx }).map((_, i) => (
-            <div key={`b-${i}`} />
-          ))}
-          {Array.from({ length: lastDate }).map((_, i) => {
-            const d = i + 1;
-            const isToday = isCurrentMonth && d === today;
-            const hasEvent = eventsByDay.has(d);
-            return (
-              <div
-                key={d}
-                onClick={() => setSelectedDay(d)}
-                className={`flex h-8 cursor-pointer flex-col items-center justify-center rounded-lg transition-all ${
-                  isToday
-                    ? "bg-brand font-bold text-white"
-                    : "text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                <span>{d}</span>
-                {hasEvent && (
-                  <div
-                    className={`mt-0.5 h-1 w-1 rounded-full ${isToday ? "bg-white" : "bg-brand-light"}`}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
+
+        {viewMode === "month" ? (
+          <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
+            {Array.from({ length: firstDayIdx }).map((_, i) => (
+              <div key={`b-${i}`} />
+            ))}
+            {Array.from({ length: lastDate }).map((_, i) => {
+              const d = new Date(viewYear, viewMonth, i + 1);
+              const today = isSameDay(d, now);
+              const hasEvent = eventsByKey.has(keyOf(d));
+              return (
+                <div
+                  key={i}
+                  onClick={() => setSelectedDay(d)}
+                  className="flex h-8 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg transition-all hover:bg-slate-50"
+                >
+                  <span
+                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
+                      today ? "bg-brand font-bold text-white" : "text-slate-600"
+                    }`}
+                  >
+                    {d.getDate()}
+                  </span>
+                  {hasEvent && <div className="h-1 w-1 rounded-full bg-brand-light" />}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-7 gap-1 text-center text-xs">
+            {weekDays.map((d) => {
+              const today = isSameDay(d, now);
+              const dayEvts = eventsByKey.get(keyOf(d)) ?? [];
+              return (
+                <div
+                  key={keyOf(d)}
+                  onClick={() => setSelectedDay(d)}
+                  className="flex min-h-[64px] cursor-pointer flex-col items-center gap-1 rounded-lg pt-0.5 transition-all hover:bg-slate-50"
+                >
+                  <span
+                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
+                      today ? "bg-brand font-bold text-white" : "text-slate-600"
+                    }`}
+                  >
+                    {d.getDate()}
+                  </span>
+                  <div className="flex flex-col items-center gap-0.5">
+                    {dayEvts.slice(0, 2).map((e) => (
+                      <span key={e.id} className="h-1 w-1 rounded-full bg-brand-light" />
+                    ))}
+                    {dayEvts.length > 2 && (
+                      <span className="text-[8.5px] font-semibold text-slate-400">+{dayEvts.length - 2}</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {showForm && (
           <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
@@ -218,7 +299,7 @@ export function CalendarPanelLight({
         </div>
       </div>
 
-      {selectedDay !== null && (
+      {selectedDay && (
         <div
           className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/20 p-4 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedDay(null); }}
@@ -226,7 +307,7 @@ export function CalendarPanelLight({
           <div className="w-full max-w-xs rounded-2xl bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
               <h5 className="text-sm font-bold text-slate-700">
-                {viewYear}.{pad(viewMonth + 1)}.{pad(selectedDay)}
+                {selectedDay.getFullYear()}.{pad(selectedDay.getMonth() + 1)}.{pad(selectedDay.getDate())}
               </h5>
               <button
                 onClick={() => setSelectedDay(null)}

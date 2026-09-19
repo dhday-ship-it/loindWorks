@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import type { Role } from "@/generated/prisma/enums";
 import { LoindWordmark } from "./LoindWordmark";
+import { Icon, type IconName } from "@/components/ui/Icon";
 
 const ROLE_LABEL: Record<Role, string> = {
   SUPER_ADMIN: "최고관리자",
@@ -32,7 +33,20 @@ export function AppSidebar({
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  const navItems = [{ href: "/dashboard", label: "Overview" }];
+  const navItems: { href: string; label: string; icon: IconName; match: (p: string | null) => boolean }[] = [
+    {
+      href: "/dashboard",
+      label: "Overview",
+      icon: "chart",
+      match: (p) => p === "/dashboard" || !!p?.startsWith("/dashboard/works"),
+    },
+    {
+      href: "/dashboard/calendar",
+      label: "Calendar",
+      icon: "calendar",
+      match: (p) => !!p?.startsWith("/dashboard/calendar"),
+    },
+  ];
 
   return (
     <div className="flex h-full flex-col justify-between">
@@ -42,18 +56,18 @@ export function AppSidebar({
         </div>
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => {
-            const active =
-              pathname === "/dashboard" || pathname?.startsWith("/dashboard/works");
+            const active = item.match(pathname);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-xl px-3 py-2 text-sm font-medium transition-all ${
+                className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
                   active
                     ? "bg-brand-light/12 text-brand"
                     : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                 }`}
               >
+                <Icon name={item.icon} className="h-4 w-4 shrink-0" />
                 {item.label}
               </Link>
             );

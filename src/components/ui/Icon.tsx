@@ -48,6 +48,16 @@ const ICONS = {
       <path d="M3.5 21.5h17" />
     </>
   ),
+  calendar: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 9.5h17" />
+      <path d="M8 3v4M16 3v4" />
+      <path d="M7.5 13h2M11 13h2M14.5 13h2M7.5 16.5h2M11 16.5h2" />
+    </>
+  ),
+  chevronLeft: <path d="M14.5 5 8 12l6.5 7" />,
+  chevronRight: <path d="M9.5 5 16 12l-6.5 7" />,
 } as const;
 
 export type IconName = keyof typeof ICONS;
