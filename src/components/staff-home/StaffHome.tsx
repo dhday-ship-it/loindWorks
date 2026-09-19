@@ -4,7 +4,6 @@ import type { Role } from "@/generated/prisma/enums";
 import { AppShell } from "@/components/layout/AppShell";
 import { CalendarPanelLight } from "@/components/calendar/CalendarPanelLight";
 import { WorksSplitView } from "./WorksSplitView";
-import { StatsStrip } from "./StatsStrip";
 import { HomeBanner } from "./HomeBanner";
 import type { CalendarEventItem, WorkSummary } from "./types";
 
@@ -36,7 +35,6 @@ export function StaffHome({
             </p>
           </div>
           <HomeBanner />
-          <StatsStrip works={initialWorks} />
           <WorksSplitView works={initialWorks} currentUser={currentUser} />
         </div>
       }

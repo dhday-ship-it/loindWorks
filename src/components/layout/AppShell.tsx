@@ -18,7 +18,7 @@ export function AppShell({
           "linear-gradient(135deg, #f6f8fa 0%, #ebeff4 50%, #ccd2e1 100%)",
       }}
     >
-      <div className="flex w-full max-w-[1400px] overflow-hidden rounded-3xl bg-white shadow-sm shadow-brand/5">
+      <div className="flex w-full max-w-[1680px] overflow-hidden rounded-3xl bg-white shadow-sm shadow-brand/5">
         <aside className="w-[190px] shrink-0 border-r border-slate-100 p-4">
           <AppSidebar currentUser={currentUser} />
         </aside>
