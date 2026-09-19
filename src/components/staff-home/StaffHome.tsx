@@ -3,8 +3,9 @@
 import type { Role } from "@/generated/prisma/enums";
 import { AppShell } from "@/components/layout/AppShell";
 import { CalendarPanelLight } from "@/components/calendar/CalendarPanelLight";
-import { WorksTable } from "./WorksTable";
+import { WorksSplitView } from "./WorksSplitView";
 import { StatsStrip } from "./StatsStrip";
+import { HomeBanner } from "./HomeBanner";
 import type { CalendarEventItem, WorkSummary } from "./types";
 
 export function StaffHome({
@@ -34,8 +35,9 @@ export function StaffHome({
               오늘도 좋은 하루 되세요.
             </p>
           </div>
+          <HomeBanner />
           <StatsStrip works={initialWorks} />
-          <WorksTable works={initialWorks} />
+          <WorksSplitView works={initialWorks} currentUser={currentUser} />
         </div>
       }
       right={<CalendarPanelLight initialEvents={initialEvents} />}

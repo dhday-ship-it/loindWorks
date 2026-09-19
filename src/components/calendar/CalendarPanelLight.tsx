@@ -73,9 +73,19 @@ export function CalendarPanelLight({
   }
   const keyOf = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
-  const sortedEvents = [...events].sort(
-    (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
-  );
+  const rangeStart =
+    viewMode === "month" ? new Date(viewYear, viewMonth, 1) : weekStart;
+  const rangeEnd =
+    viewMode === "month"
+      ? new Date(viewYear, viewMonth + 1, 1)
+      : new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 7);
+
+  const sortedEvents = events
+    .filter((e) => {
+      const t = new Date(e.startAt).getTime();
+      return t >= rangeStart.getTime() && t < rangeEnd.getTime();
+    })
+    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 
   const submitEvent = async () => {
     if (!title.trim()) return;
@@ -266,7 +276,7 @@ export function CalendarPanelLight({
 
       <div className="border-t border-slate-100 pt-4">
         <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-          Total timeline
+          {viewMode === "month" ? "이달의 일정" : "이번 주 일정"}
         </div>
         <div className="flex max-h-[220px] flex-col gap-1 overflow-y-auto">
           {sortedEvents.length === 0 && (

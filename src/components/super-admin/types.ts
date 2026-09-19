@@ -118,3 +118,12 @@ export interface LoanAdvanceEntryItem {
   createdAt: string;
   author: { id: string; name: string | null; email: string };
 }
+
+export interface BannerItem {
+  id: string;
+  imageUrl: string;
+  linkUrl: string | null;
+  active: boolean;
+  order: number;
+  createdAt: string;
+}

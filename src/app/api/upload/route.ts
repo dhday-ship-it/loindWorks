@@ -1,13 +1,11 @@
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
-import { requireStaff } from "@/lib/auth-guards";
+import { requireStaff, requireSuperAdmin } from "@/lib/auth-guards";
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 
 export async function POST(request: Request) {
-  await requireStaff();
-
   const formData = await request.formData();
   const file = formData.get("file");
 
@@ -18,12 +16,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "파일은 25MB 이하만 업로드할 수 있습니다." }, { status: 400 });
   }
 
-  const projectId = formData.get("projectId");
-  if (typeof projectId !== "string" || !projectId) {
-    return NextResponse.json({ error: "projectId가 필요합니다." }, { status: 400 });
+  const scope = formData.get("scope");
+  let pathPrefix: string;
+  if (scope === "banner") {
+    await requireSuperAdmin();
+    pathPrefix = "banners";
+  } else {
+    await requireStaff();
+    const projectId = formData.get("projectId");
+    if (typeof projectId !== "string" || !projectId) {
+      return NextResponse.json({ error: "projectId가 필요합니다." }, { status: 400 });
+    }
+    pathPrefix = `projects/${projectId}`;
   }
 
-  const blob = await put(`projects/${projectId}/${Date.now()}-${file.name}`, file, {
+  const blob = await put(`${pathPrefix}/${Date.now()}-${file.name}`, file, {
     access: "public",
     addRandomSuffix: true,
   });

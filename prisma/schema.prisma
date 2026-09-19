@@ -434,6 +434,15 @@ model CalendarEvent {
   project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
+model Banner {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  linkUrl   String?
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
 model MemoFolder {
   id        String   @id @default(cuid())
   name      String
