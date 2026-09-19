@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import type { Role } from "@/generated/prisma/enums";
-import { LoindWordmark } from "./LoindWordmark";
+import { LoindLogoFull } from "./LoindLogoFull";
 import { LoindMark } from "./LoindMark";
 import { Icon, type IconName } from "@/components/ui/Icon";
 
@@ -52,12 +52,9 @@ export function AppSidebar({
   return (
     <div className="flex h-full flex-col justify-between">
       <div>
-        <div className="px-1 pb-8 pt-2 sm:px-3">
+        <div className="px-1 pb-10 pt-3 sm:px-3">
           <LoindMark className="h-5 w-auto text-slate-800 sm:hidden" />
-          <LoindWordmark className="hidden h-5 w-auto text-slate-800 sm:block" />
-          <div className="mt-1 hidden font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400 sm:block">
-            Creator Ground
-          </div>
+          <LoindLogoFull className="hidden h-auto w-full sm:block" />
         </div>
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => {

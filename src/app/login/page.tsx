@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { LoindWordmark } from "@/components/layout/LoindWordmark";
+import { LoindLogoFull } from "@/components/layout/LoindLogoFull";
 import { Icon } from "@/components/ui/Icon";
 
 export default function LoginPage() {
@@ -40,7 +40,7 @@ export default function LoginPage() {
     <main className="light-ui flex min-h-screen w-full bg-white">
       {/* 좌측 — 로그인 폼 */}
       <div className="flex w-full flex-col justify-between px-8 py-8 sm:px-12 lg:w-1/2 lg:px-20 xl:px-28">
-        <LoindWordmark className="h-6 w-auto text-slate-800" />
+        <LoindLogoFull className="h-auto w-44 sm:w-48" />
 
         <div className="mx-auto w-full max-w-sm">
           <h1 className="text-4xl font-bold tracking-tight text-slate-900">
