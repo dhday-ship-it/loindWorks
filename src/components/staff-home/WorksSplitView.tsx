@@ -104,50 +104,52 @@ export function WorksSplitView({
   }, [selectedId]);
 
   return (
-    <div className="grid grid-cols-[240px_1fr] items-start gap-4">
-      <div className="flex flex-col rounded-2xl border border-slate-100 p-3">
-        <div className="mb-1 px-1.5 text-sm font-bold text-slate-700">Overview</div>
-        <div className="mb-1 px-1.5 text-[11px] font-semibold text-slate-400">항목</div>
-        <div className="flex flex-col gap-0.5">
-          {active.length === 0 && done.length === 0 && (
-            <div className="py-6 text-center text-xs text-slate-300">
-              등록된 Works가 없습니다.
-            </div>
-          )}
-          {active.map((w) => (
-            <WorkListRow
-              key={w.id}
-              w={w}
-              active={w.id === selectedId}
-              onClick={() => setSelectedId(w.id)}
-            />
-          ))}
-        </div>
-        {done.length > 0 && (
-          <div className="mt-1">
-            <button
-              onClick={() => setShowDone((v) => !v)}
-              className="flex cursor-pointer items-center gap-1 px-2.5 py-2 text-[11px] font-semibold text-slate-400 transition-all hover:text-slate-600"
-            >
-              <span>{showDone ? "▾" : "▸"}</span> 완료 {done.length}개
-            </button>
-            {showDone && (
-              <div className="flex flex-col gap-0.5">
-                {done.map((w) => (
-                  <WorkListRow
-                    key={w.id}
-                    w={w}
-                    active={w.id === selectedId}
-                    onClick={() => setSelectedId(w.id)}
-                  />
-                ))}
+    <div className="grid min-h-0 flex-1 grid-cols-[240px_1fr] gap-4">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-100 p-3">
+        <div className="mb-1 shrink-0 px-1.5 text-sm font-bold text-slate-700">Overview</div>
+        <div className="mb-1 shrink-0 px-1.5 text-[11px] font-semibold text-slate-400">항목</div>
+        <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
+          <div className="flex flex-col gap-0.5">
+            {active.length === 0 && done.length === 0 && (
+              <div className="py-6 text-center text-xs text-slate-300">
+                등록된 Works가 없습니다.
               </div>
             )}
+            {active.map((w) => (
+              <WorkListRow
+                key={w.id}
+                w={w}
+                active={w.id === selectedId}
+                onClick={() => setSelectedId(w.id)}
+              />
+            ))}
           </div>
-        )}
+          {done.length > 0 && (
+            <div className="mt-1">
+              <button
+                onClick={() => setShowDone((v) => !v)}
+                className="flex cursor-pointer items-center gap-1 px-2.5 py-2 text-[11px] font-semibold text-slate-400 transition-all hover:text-slate-600"
+              >
+                <span>{showDone ? "▾" : "▸"}</span> 완료 {done.length}개
+              </button>
+              {showDone && (
+                <div className="flex flex-col gap-0.5">
+                  {done.map((w) => (
+                    <WorkListRow
+                      key={w.id}
+                      w={w}
+                      active={w.id === selectedId}
+                      onClick={() => setSelectedId(w.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="min-w-0 rounded-2xl border border-slate-100 p-5">
+      <div className="flex h-full min-w-0 min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-100 p-5">
         {!selectedId && (
           <div className="py-16 text-center text-sm text-slate-300">
             왼쪽에서 Works를 선택하세요.
@@ -157,9 +159,9 @@ export function WorksSplitView({
           <div className="py-16 text-center text-sm text-slate-300">불러오는 중...</div>
         )}
         {!loading && detail && (
-          <div className="flex flex-col gap-5">
-            <h3 className="text-lg font-bold text-slate-800">{detail.name}</h3>
-            <div>
+          <div className="flex h-full min-h-0 flex-col gap-5">
+            <h3 className="shrink-0 text-lg font-bold text-slate-800">{detail.name}</h3>
+            <div className="shrink-0">
               <div className="mb-2 text-sm font-bold text-slate-700">의뢰서내용</div>
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-500">
                 {detail.summary || "등록된 내용이 없습니다."}

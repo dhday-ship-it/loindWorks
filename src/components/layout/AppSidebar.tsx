@@ -53,6 +53,9 @@ export function AppSidebar({
       <div>
         <div className="px-3 pb-8 pt-2">
           <LoindWordmark className="h-5 w-auto text-slate-800" />
+          <div className="mt-1 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">
+            Creator Ground
+          </div>
         </div>
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => {
@@ -121,14 +124,6 @@ export function AppSidebar({
             {displayName}
           </span>
         </button>
-        <div className="flex items-center gap-1.5 px-3 pt-4">
-          <span className="h-3 w-[3px] rounded-full bg-brand-light" />
-          <div className="font-mono text-[9.5px] font-bold uppercase leading-tight tracking-[0.1em] text-slate-400">
-            LOIND Creator
-            <br />
-            Ground
-          </div>
-        </div>
       </div>
     </div>
   );

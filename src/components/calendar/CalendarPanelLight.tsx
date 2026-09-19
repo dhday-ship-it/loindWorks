@@ -278,7 +278,7 @@ export function CalendarPanelLight({
         <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
           {viewMode === "month" ? "이달의 일정" : "이번 주 일정"}
         </div>
-        <div className="flex max-h-[220px] flex-col gap-1 overflow-y-auto">
+        <div className="scroll-thin flex max-h-[220px] flex-col gap-1 overflow-y-auto">
           {sortedEvents.length === 0 && (
             <div className="py-4 text-center text-[11px] text-slate-300">
               등록된 일정이 없습니다

@@ -22,8 +22,8 @@ export function StaffHome({
     <AppShell
       currentUser={currentUser}
       main={
-        <div className="flex flex-col gap-5">
-          <div>
+        <div className="flex h-full flex-col gap-5">
+          <div className="shrink-0">
             <div className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-brand-light">
               LOIND Creator Ground
             </div>
@@ -34,7 +34,9 @@ export function StaffHome({
               오늘도 좋은 하루 되세요.
             </p>
           </div>
-          <HomeBanner />
+          <div className="shrink-0">
+            <HomeBanner />
+          </div>
           <WorksSplitView works={initialWorks} currentUser={currentUser} />
         </div>
       }

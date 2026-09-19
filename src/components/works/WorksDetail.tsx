@@ -26,8 +26,8 @@ export function WorksDetail({
     <AppShell
       currentUser={currentUser}
       main={
-        <div className="flex flex-col gap-5">
-          <div>
+        <div className="flex h-full min-h-0 flex-col gap-5">
+          <div className="shrink-0">
             <Link
               href="/dashboard"
               className="mb-2 inline-flex cursor-pointer items-center gap-1 text-xs font-semibold text-slate-400 transition-all hover:text-slate-600"
@@ -37,7 +37,7 @@ export function WorksDetail({
             <h1 className="text-2xl font-bold text-slate-800">{work.name}</h1>
           </div>
 
-          <div>
+          <div className="shrink-0">
             <div className="mb-2 text-sm font-bold text-slate-700">의뢰서내용</div>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-500">
               {work.summary || "등록된 내용이 없습니다."}
