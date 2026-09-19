@@ -22,7 +22,7 @@ export function StaffHome({
     <AppShell
       currentUser={currentUser}
       main={
-        <div className="flex h-full flex-col gap-5">
+        <div className="flex min-h-full flex-col gap-5 sm:h-full">
           <div className="shrink-0">
             <div className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-brand-light">
               LOIND Creator Ground
