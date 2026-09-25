@@ -18,9 +18,9 @@ export async function POST(request: Request) {
 
   const scope = formData.get("scope");
   let pathPrefix: string;
-  if (scope === "banner") {
+  if (scope === "banner" || scope === "artisan") {
     await requireSuperAdmin();
-    pathPrefix = "banners";
+    pathPrefix = scope === "artisan" ? "artisan" : "banners";
   } else {
     await requireStaff();
     const projectId = formData.get("projectId");

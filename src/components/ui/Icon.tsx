@@ -97,6 +97,48 @@ const ICONS = {
       <path d="M15 7h6v6" />
     </>
   ),
+  link: (
+    <>
+      <path d="M9 15l6-6" />
+      <path d="M8 16.5 5.5 14a3 3 0 0 1 0-4.24L9 6.26a3 3 0 0 1 4.24 0L14 7" />
+      <path d="M16 7.5 18.5 10a3 3 0 0 1 0 4.24L15 17.74a3 3 0 0 1-4.24 0L10 17" />
+    </>
+  ),
+  chevronDown: <path d="M5 9.5 12 16l7-6.5" />,
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3c2.8 2.3 4.5 5.7 4.5 9s-1.7 6.7-4.5 9c-2.8-2.3-4.5-5.7-4.5-9S9.2 5.3 12 3Z" />
+    </>
+  ),
+  instagram: (
+    <>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M16.7 7.3v.01" />
+    </>
+  ),
+  youtube: (
+    <>
+      <rect x="2.5" y="5.5" width="19" height="13" rx="3.5" />
+      <path d="M10.5 9.3v5.4l4.8-2.7-4.8-2.7Z" />
+    </>
+  ),
+  server: (
+    <>
+      <rect x="3.5" y="4" width="17" height="6" rx="1.5" />
+      <rect x="3.5" y="14" width="17" height="6" rx="1.5" />
+      <path d="M7 7h.01M7 17h.01" />
+    </>
+  ),
+  rss: (
+    <>
+      <circle cx="6" cy="18" r="1.4" fill="currentColor" stroke="none" />
+      <path d="M5 11.5a7.5 7.5 0 0 1 7.5 7.5" />
+      <path d="M5 5.5A13.5 13.5 0 0 1 18.5 19" />
+    </>
+  ),
 } as const;
 
 export type IconName = keyof typeof ICONS;

@@ -443,6 +443,46 @@ model Banner {
   createdAt DateTime @default(now())
 }
 
+// 로인드 메인 사이트(loind-web)의 Story 게시판이 Supabase 클라이언트로 직접 관리하는 테이블.
+// 이 앱에서는 쓰지 않지만, `prisma db push`가 삭제 대상으로 잡지 않도록 스키마에 등록만 해둔다.
+// 절대 이 모델을 지우거나 컬럼을 변경하지 말 것 — 실제 게시된 콘텐츠가 들어있다.
+model Story {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category      String
+  title         String
+  img           String
+  text          String
+  summary       String?
+  detail        String
+  link          String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  isRecommended Boolean  @default(false) @map("is_recommended")
+
+  @@map("stories")
+}
+
+model ArtisanContent {
+  id          String   @id @default(cuid())
+  bannerUrl   String?
+  categories  Json
+  updatedAt   DateTime @updatedAt
+}
+
+// 아티즌 홈 "실시간 ONE-PICK" 섹션에 올라가는 상품/작업 게시물.
+// isAd로 표시된 게시물이 있으면 ONE-PICK 그리드의 광고 자리에 노출된다.
+model ArtisanWork {
+  id        String   @id @default(cuid())
+  category  String
+  title     String
+  text      String
+  imageUrl  String
+  color     String   @default("lavender")
+  isAd      Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model LoginPageImage {
   id        String   @id @default(cuid())
   imageUrl  String
