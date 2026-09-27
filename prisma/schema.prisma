@@ -109,6 +109,9 @@ model User {
   corporateLedgerEntries CorporateLedgerEntry[]
   loanAdvanceEntries     LoanAdvanceEntry[]
 
+  // 아티즌 주문 (담당 작업자로 배정된 주문들)
+  assignedArtisanOrders ArtisanOrder[]
+
   // 프로젝트
   projectMemberships ProjectMember[]
   projectRequests    ProjectRequest[]
@@ -468,17 +471,76 @@ model ArtisanContent {
   updatedAt   DateTime @updatedAt
 }
 
-// 아티즌 홈 "실시간 ONE-PICK" 섹션에 올라가는 상품/작업 게시물.
-// isAd로 표시된 게시물이 있으면 ONE-PICK 그리드의 광고 자리에 노출된다.
+// 아티즌 카테고리 페이지("의뢰 스테이션")에 뜨는 주문 가능한 "타입"(예: 포스터-인물중심형) 하나.
 model ArtisanWork {
-  id        String   @id @default(cuid())
-  category  String
-  title     String
-  text      String
-  imageUrl  String
-  color     String   @default("lavender")
-  isAd      Boolean  @default(false)
-  order     Int      @default(0)
+  id            String   @id @default(cuid())
+  category      String
+  title         String
+  text          String
+  description   String? // 상세 페이지용 긴 설명
+  imageUrl      String
+  galleryImages String[] @default([]) // 상세 페이지 추가 예시 이미지
+  color         String   @default("lavender")
+  isAd          Boolean  @default(false)
+  order         Int      @default(0)
+  tags          String[] @default([])
+  price         Int?
+  supportsPrint Boolean  @default(false) // 실물 인쇄·배송 옵션 제공 여부
+  viewCount     Int      @default(0) // 더 이상 앱 코드에서 쓰지 않지만, 기존 데이터 보존을 위해 컬럼은 유지
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orders ArtisanOrder[]
+}
+
+enum ArtisanOrderStatus {
+  PAID // 결제완료(접수) — 지금은 실제 결제 없이 이 상태로 바로 생성됨
+  IN_PRODUCTION // 제작중
+  INTERNAL_REVIEW // 운영진 검수중
+  DRAFT_SENT // 시안 전달됨
+  REVISION_REQUESTED // 고객 수정요청
+  APPROVED // 최종승인
+  DELIVERED // 전달완료
+  CANCELLED
+}
+
+enum ArtisanDeliveryType {
+  DIGITAL
+  PHYSICAL
+}
+
+// 고객이 특정 ArtisanWork(타입)를 골라 넣은 실제 주문 한 건.
+model ArtisanOrder {
+  id     String             @id @default(cuid())
+  status ArtisanOrderStatus @default(PAID)
+
+  workId String
+  work   ArtisanWork @relation(fields: [workId], references: [id])
+
+  customerName  String
+  customerPhone String
+  customerEmail String?
+  churchName    String?
+  requestText   String
+  size          String?
+  referenceFileUrl String?
+  referenceLink    String?
+  shootPreference  String?
+  shootLocation    String?
+  shootTime        String?
+  wantsEditing     Boolean @default(false)
+  quantity         String?
+  desiredDeadline  String?
+
+  deliveryType    ArtisanDeliveryType @default(DIGITAL)
+  shippingAddress String?
+
+  draftFileUrl String?
+  finalFileUrl String?
+
+  assignedStaffId String?
+  assignedStaff   User?   @relation(fields: [assignedStaffId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

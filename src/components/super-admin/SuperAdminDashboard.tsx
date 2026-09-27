@@ -14,6 +14,9 @@ import { LoanAdvancePage } from "./LoanAdvancePage";
 import { BannersPage } from "./BannersPage";
 import { LoginImagePage } from "./LoginImagePage";
 import { ArtisanPage } from "./ArtisanPage";
+import { ArtisanWorksPage } from "./ArtisanWorksPage";
+import { ArtisanAdSlotPage } from "./ArtisanAdSlotPage";
+import { ArtisanOrdersPage } from "./ArtisanOrdersPage";
 import type {
   AdminProjectItem,
   AdminStats,
@@ -32,7 +35,10 @@ type Page =
   | "loans"
   | "banners"
   | "loginImage"
-  | "artisan";
+  | "artisan"
+  | "artisanWorks"
+  | "artisanOrders"
+  | "artisanAdSlot";
 
 export function SuperAdminDashboard({
   currentUserName,
@@ -44,6 +50,7 @@ export function SuperAdminDashboard({
   inProgressProjects: AdminProjectItem[];
 }) {
   const [page, setPage] = useState<Page>("dashboard");
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [users, setUsers] = useState<AdminUserItem[] | null>(null);
   const [companies, setCompanies] = useState<CompanyItem[] | null>(null);
   const [projects, setProjects] = useState<AdminProjectItem[] | null>(null);
@@ -98,6 +105,10 @@ export function SuperAdminDashboard({
     showToast(msg, "success");
   };
 
+  const toggleSection = (section: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const navItems: { id: Page; label: string; icon: IconName; section?: string }[] =
     [
       { id: "dashboard", label: "대시보드", icon: "chart" },
@@ -108,9 +119,24 @@ export function SuperAdminDashboard({
       { id: "ledger", label: "법인 지출 기록부", icon: "wallet" },
       { id: "loans", label: "대출·가지급금 관리", icon: "landmark" },
       { id: "banners", label: "배너 관리", icon: "image", section: "화면 관리" },
-      { id: "artisan", label: "아티즌", icon: "image", section: "화면 관리" },
-      { id: "loginImage", label: "로그인 화면", icon: "lock" },
+      { id: "loginImage", label: "로그인 화면", icon: "lock", section: "화면 관리" },
+      { id: "artisan", label: "아티즌", icon: "image", section: "아티즌" },
+      { id: "artisanOrders", label: "의뢰 접수함", icon: "mail", section: "아티즌" },
+      { id: "artisanWorks", label: "의뢰 타입 관리", icon: "folder", section: "아티즌" },
+      { id: "artisanAdSlot", label: "광고 배너", icon: "image", section: "아티즌" },
     ];
+
+  // 연속으로 같은 section인 항목끼리 묶는다 (섹션 헤더가 항목마다 중복 렌더되는 걸 방지).
+  const navGroups: { section: string | null; items: typeof navItems }[] = [];
+  for (const item of navItems) {
+    const key = item.section ?? null;
+    const last = navGroups[navGroups.length - 1];
+    if (last && last.section === key) {
+      last.items.push(item);
+    } else {
+      navGroups.push({ section: key, items: [item] });
+    }
+  }
 
   return (
     <div
@@ -150,14 +176,10 @@ export function SuperAdminDashboard({
             <div className="px-3.5 pb-2 pt-4.5 text-[11px] font-bold text-slate-500">
               메뉴
             </div>
-            {navItems.map((item, i) => (
-              <div key={item.id}>
-                {item.section && (
-                  <div className="px-3.5 pb-2 pt-5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                    {item.section}
-                  </div>
-                )}
+            {navGroups.map((group, gi) => {
+              const rows = group.items.map((item) => (
                 <div
+                  key={item.id}
                   onClick={() => switchPage(item.id)}
                   className={`admin-sb-item ${page === item.id ? "active" : ""}`}
                 >
@@ -171,14 +193,34 @@ export function SuperAdminDashboard({
                     <Icon name={item.icon} className="h-3.5 w-3.5" />
                   </span>
                   {item.label}
-                  {i === 0 && (
+                  {item.id === "dashboard" && (
                     <span className="ml-auto rounded-full border border-brand-light/30 bg-brand-light/15 px-1.5 py-0.5 font-mono text-[9px] font-bold text-brand-light">
                       Live
                     </span>
                   )}
                 </div>
-              </div>
-            ))}
+              ));
+
+              if (!group.section) return <div key={gi}>{rows}</div>;
+
+              const collapsed = collapsedSections[group.section];
+              return (
+                <div key={group.section}>
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(group.section!)}
+                    className="flex w-full cursor-pointer items-center justify-between px-3.5 pb-2 pt-5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-400"
+                  >
+                    <span>{group.section}</span>
+                    <Icon
+                      name="chevronDown"
+                      className={`h-2.5 w-2.5 transition-transform ${collapsed ? "-rotate-90" : ""}`}
+                    />
+                  </button>
+                  {!collapsed && rows}
+                </div>
+              );
+            })}
           </div>
 
           <div className="min-w-0 flex-1 overflow-y-auto px-8 py-7">
@@ -250,6 +292,15 @@ export function SuperAdminDashboard({
             )}
             {page === "artisan" && (
               <ArtisanPage showToast={handleShowToast} />
+            )}
+            {page === "artisanOrders" && (
+              <ArtisanOrdersPage showToast={handleShowToast} />
+            )}
+            {page === "artisanWorks" && (
+              <ArtisanWorksPage showToast={handleShowToast} />
+            )}
+            {page === "artisanAdSlot" && (
+              <ArtisanAdSlotPage showToast={handleShowToast} />
             )}
             {page === "loginImage" && (
               <LoginImagePage showToast={handleShowToast} />

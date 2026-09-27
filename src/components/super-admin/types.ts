@@ -127,15 +127,3 @@ export interface BannerItem {
   order: number;
   createdAt: string;
 }
-
-export interface ArtisanWorkItem {
-  id: string;
-  category: string;
-  title: string;
-  text: string;
-  imageUrl: string;
-  color: string;
-  isAd: boolean;
-  order: number;
-  createdAt: string;
-}
