@@ -16,7 +16,6 @@ import { LoginImagePage } from "./LoginImagePage";
 import { ArtisanPage } from "./ArtisanPage";
 import { ArtisanWorksPage } from "./ArtisanWorksPage";
 import { ArtisanAdSlotPage } from "./ArtisanAdSlotPage";
-import { ArtisanOrdersPage } from "./ArtisanOrdersPage";
 import type {
   AdminProjectItem,
   AdminStats,
@@ -37,7 +36,6 @@ type Page =
   | "loginImage"
   | "artisan"
   | "artisanWorks"
-  | "artisanOrders"
   | "artisanAdSlot";
 
 export function SuperAdminDashboard({
@@ -121,7 +119,6 @@ export function SuperAdminDashboard({
       { id: "banners", label: "배너 관리", icon: "image", section: "화면 관리" },
       { id: "loginImage", label: "로그인 화면", icon: "lock", section: "화면 관리" },
       { id: "artisan", label: "아티즌", icon: "image", section: "아티즌" },
-      { id: "artisanOrders", label: "의뢰 접수함", icon: "mail", section: "아티즌" },
       { id: "artisanWorks", label: "의뢰 타입 관리", icon: "folder", section: "아티즌" },
       { id: "artisanAdSlot", label: "광고 배너", icon: "image", section: "아티즌" },
     ];
@@ -292,9 +289,6 @@ export function SuperAdminDashboard({
             )}
             {page === "artisan" && (
               <ArtisanPage showToast={handleShowToast} />
-            )}
-            {page === "artisanOrders" && (
-              <ArtisanOrdersPage showToast={handleShowToast} />
             )}
             {page === "artisanWorks" && (
               <ArtisanWorksPage showToast={handleShowToast} />

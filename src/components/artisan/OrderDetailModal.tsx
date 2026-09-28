@@ -1,12 +1,12 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useState } from "react";
 
-import { Modal } from "./Modal";
-import type { StaffOption } from "./types";
-import type { ArtisanOrderItem } from "../artisan/types";
+import { Modal } from "../super-admin/Modal";
+import type { StaffOption } from "../super-admin/types";
+import type { ArtisanOrderItem } from "./types";
 
-const STATUS_META: Record<string, { label: string; cls: string }> = {
+export const STATUS_META: Record<string, { label: string; cls: string }> = {
   PAID: { label: "접수완료", cls: "admin-b-pending" },
   IN_PRODUCTION: { label: "제작중", cls: "admin-b-wip" },
   INTERNAL_REVIEW: { label: "운영진 검수중", cls: "admin-b-wip" },
@@ -16,7 +16,7 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   DELIVERED: { label: "전달완료", cls: "admin-b-done" },
   CANCELLED: { label: "취소", cls: "admin-b-super" },
 };
-const STATUS_ORDER = Object.keys(STATUS_META);
+export const STATUS_ORDER = Object.keys(STATUS_META);
 
 // 카테고리마다 다르게 들어오는 부가 필드. 값이 있는 것만 상세 모달에 노출한다.
 type StringFieldKey = "size" | "referenceLink" | "shootPreference" | "shootLocation" | "shootTime" | "quantity" | "desiredDeadline" | "shippingAddress";
@@ -40,114 +40,7 @@ async function uploadFile(file: File) {
   return (await response.json()).url as string;
 }
 
-export function ArtisanOrdersPage({ showToast }: { showToast: (message: string) => void }) {
-  const [orders, setOrders] = useState<ArtisanOrderItem[] | null>(null);
-  const [staff, setStaff] = useState<StaffOption[]>([]);
-  const [selected, setSelected] = useState<ArtisanOrderItem | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-
-  const load = () => {
-    fetch("/api/admin/artisan-orders")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setOrders(Array.isArray(data?.orders) ? data.orders : []));
-  };
-
-  useEffect(() => {
-    load();
-    fetch("/api/staff")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setStaff(Array.isArray(data?.staff) ? data.staff : []));
-  }, []);
-
-  const filtered = useMemo(() => {
-    if (!orders) return [];
-    return statusFilter === "ALL" ? orders : orders.filter((o) => o.status === statusFilter);
-  }, [orders, statusFilter]);
-
-  const patch = async (id: string, patchBody: Record<string, unknown>) => {
-    const res = await fetch(`/api/admin/artisan-orders/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patchBody),
-    });
-    if (!res.ok) {
-      showToast("업데이트에 실패했습니다.");
-      return;
-    }
-    const data = await res.json();
-    setOrders((current) => (current ?? []).map((o) => (o.id === id ? data.order : o)));
-    setSelected((current) => (current && current.id === id ? data.order : current));
-  };
-
-  return (
-    <div>
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <div className="mb-1 text-[22px] font-bold text-slate-800">의뢰 접수함</div>
-          <div className="text-xs text-slate-500">아티즌 홈페이지에서 접수된 의뢰를 확인하고 진행 상태를 관리합니다.</div>
-        </div>
-        <select
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          className="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 outline-none focus:border-brand"
-        >
-          <option value="ALL">전체 상태</option>
-          {STATUS_ORDER.map((s) => (
-            <option key={s} value={s}>{STATUS_META[s].label}</option>
-          ))}
-        </select>
-      </div>
-
-      <section className="admin-sec-card p-6">
-        {orders === null && <div className="py-6 text-center text-sm text-slate-400">불러오는 중...</div>}
-        {orders !== null && filtered.length === 0 && (
-          <div className="py-6 text-center text-sm text-slate-400">접수된 의뢰가 없습니다.</div>
-        )}
-        {orders !== null && filtered.length > 0 && (
-          <table className="admin-tbl w-full">
-            <thead>
-              <tr>
-                <th>상태</th>
-                <th>카테고리 / 타입</th>
-                <th>고객</th>
-                <th>연락처</th>
-                <th>접수일</th>
-                <th>담당자</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((order) => (
-                <tr key={order.id} className="cursor-pointer" onClick={() => setSelected(order)}>
-                  <td>
-                    <span className={`admin-badge ${STATUS_META[order.status]?.cls ?? "admin-b-staff"}`}>
-                      {STATUS_META[order.status]?.label ?? order.status}
-                    </span>
-                  </td>
-                  <td>{order.work.category} · {order.work.title}</td>
-                  <td>{order.customerName}{order.churchName ? ` (${order.churchName})` : ""}</td>
-                  <td>{order.customerPhone}</td>
-                  <td>{new Date(order.createdAt).toLocaleDateString("ko-KR")}</td>
-                  <td>{order.assignedStaff?.name ?? order.assignedStaff?.email ?? "미배정"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-
-      {selected && (
-        <OrderDetailModal
-          order={selected}
-          staff={staff}
-          onClose={() => setSelected(null)}
-          onPatch={(patchBody) => patch(selected.id, patchBody)}
-        />
-      )}
-    </div>
-  );
-}
-
-function OrderDetailModal({
+export function OrderDetailModal({
   order,
   staff,
   onClose,

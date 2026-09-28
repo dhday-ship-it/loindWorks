@@ -541,8 +541,25 @@ model ArtisanOrder {
   assignedStaffId String?
   assignedStaff   User?   @relation(fields: [assignedStaffId], references: [id], onDelete: SetNull)
 
+  // 로그인한 상태로 접수한 경우에만 채워진다. 비로그인(게스트) 접수도 계속 허용하므로 nullable.
+  customerId String?
+  customer   ArtisanCustomer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// 아티즌 사이트 고객(교회 담당자) 계정. LOIND-WORKSPACE 내부 직원 User와는 완전히 별개 모델.
+model ArtisanCustomer {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String
+  churchName   String? // API 레벨(회원가입)에서는 필수로 받지만, 컬럼 자체는 과거 데이터 호환을 위해 nullable 유지
+  createdAt    DateTime @default(now())
+
+  orders ArtisanOrder[]
 }
 
 model LoginPageImage {

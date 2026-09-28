@@ -47,6 +47,12 @@ export function AppSidebar({
       icon: "calendar",
       match: (p) => !!p?.startsWith("/dashboard/calendar"),
     },
+    {
+      href: "/dashboard/artisan",
+      label: "Artisan",
+      icon: "mail",
+      match: (p) => !!p?.startsWith("/dashboard/artisan"),
+    },
   ];
 
   return (
