@@ -37,18 +37,18 @@ export function LoginForm() {
 
   return (
     <div className="mx-auto w-full max-w-sm">
-      <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+      <h1 className="text-[2.5rem] font-bold leading-[1.1] tracking-tight text-slate-900">
         Welcome back!
       </h1>
-      <p className="mt-3 text-sm leading-relaxed text-slate-400">
-        LOIND Creator Ground 워크스페이스에 오신 것을
+      <p className="mt-3.5 text-sm leading-relaxed text-slate-400">
+        워크스페이스에 오신 것을 환영합니다.
         <br />
-        환영합니다. 계정 정보를 입력해주세요.
+        계정 정보를 입력해 로그인해주세요.
       </p>
 
       <form onSubmit={handleLogin} className="mt-8 flex flex-col gap-3.5">
-        <div className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-5 py-3 transition-all focus-within:border-brand-light">
-          <Icon name="mail" className="h-4 w-4 shrink-0 text-slate-300" />
+        <div className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-slate-50/80 px-5 py-3.5 transition-all focus-within:border-slate-900 focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(15,23,42,0.05)]">
+          <Icon name="mail" className="h-4 w-4 shrink-0 text-slate-400" />
           <input
             type="email"
             required
@@ -56,12 +56,12 @@ export function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="이메일"
             autoComplete="email"
-            className="w-full border-none bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-300"
+            className="w-full border-none bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
           />
         </div>
 
-        <div className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-5 py-3 transition-all focus-within:border-brand-light">
-          <Icon name="lock" className="h-4 w-4 shrink-0 text-slate-300" />
+        <div className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-slate-50/80 px-5 py-3.5 transition-all focus-within:border-slate-900 focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(15,23,42,0.05)]">
+          <Icon name="lock" className="h-4 w-4 shrink-0 text-slate-400" />
           <input
             type={showPassword ? "text" : "password"}
             required
@@ -74,7 +74,7 @@ export function LoginForm() {
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="shrink-0 cursor-pointer text-slate-300 hover:text-slate-500"
+            className="shrink-0 cursor-pointer text-slate-300 transition-colors hover:text-slate-600"
             tabIndex={-1}
           >
             <Icon name={showPassword ? "eyeOff" : "eye"} className="h-4 w-4" />
@@ -90,7 +90,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-2.5 w-full cursor-pointer rounded-full bg-slate-900 py-3.5 text-sm font-bold text-white transition-all hover:bg-slate-800 active:scale-[0.99] disabled:opacity-50"
+          className="mt-3 w-full cursor-pointer rounded-full bg-slate-900 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-900/15 transition-all hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/20 active:scale-[0.99] disabled:opacity-50 disabled:shadow-none"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
