@@ -13,9 +13,6 @@ import { CorporateLedgerPage } from "./CorporateLedgerPage";
 import { LoanAdvancePage } from "./LoanAdvancePage";
 import { BannersPage } from "./BannersPage";
 import { LoginImagePage } from "./LoginImagePage";
-import { ArtisanPage } from "./ArtisanPage";
-import { ArtisanWorksPage } from "./ArtisanWorksPage";
-import { ArtisanAdSlotPage } from "./ArtisanAdSlotPage";
 import type {
   AdminProjectItem,
   AdminStats,
@@ -33,10 +30,7 @@ type Page =
   | "ledger"
   | "loans"
   | "banners"
-  | "loginImage"
-  | "artisan"
-  | "artisanWorks"
-  | "artisanAdSlot";
+  | "loginImage";
 
 export function SuperAdminDashboard({
   currentUserName,
@@ -118,9 +112,6 @@ export function SuperAdminDashboard({
       { id: "loans", label: "대출·가지급금 관리", icon: "landmark" },
       { id: "banners", label: "배너 관리", icon: "image", section: "화면 관리" },
       { id: "loginImage", label: "로그인 화면", icon: "lock", section: "화면 관리" },
-      { id: "artisan", label: "아티즌", icon: "image", section: "아티즌" },
-      { id: "artisanWorks", label: "의뢰 타입 관리", icon: "folder", section: "아티즌" },
-      { id: "artisanAdSlot", label: "광고 배너", icon: "image", section: "아티즌" },
     ];
 
   // 연속으로 같은 section인 항목끼리 묶는다 (섹션 헤더가 항목마다 중복 렌더되는 걸 방지).
@@ -286,15 +277,6 @@ export function SuperAdminDashboard({
             )}
             {page === "banners" && (
               <BannersPage showToast={handleShowToast} />
-            )}
-            {page === "artisan" && (
-              <ArtisanPage showToast={handleShowToast} />
-            )}
-            {page === "artisanWorks" && (
-              <ArtisanWorksPage showToast={handleShowToast} />
-            )}
-            {page === "artisanAdSlot" && (
-              <ArtisanAdSlotPage showToast={handleShowToast} />
             )}
             {page === "loginImage" && (
               <LoginImagePage showToast={handleShowToast} />
