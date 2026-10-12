@@ -34,10 +34,12 @@ export function OrderDetailModal({
   order,
   onClose,
   onPatch,
+  onDelete,
 }: {
   order: ArtisanOrderItem;
   onClose: () => void;
   onPatch: (patch: Record<string, unknown>) => void;
+  onDelete?: () => void;
 }) {
   const extraFieldKeys = (Object.keys(FIELD_LABELS) as StringFieldKey[]).filter((key) => order[key]);
   const hasExtra = extraFieldKeys.length > 0 || order.wantsEditing || order.deliveryType === "PHYSICAL" || order.referenceFileUrl;
@@ -127,6 +129,19 @@ export function OrderDetailModal({
           )}
           <button onClick={onClose} className="admin-btn-ghost flex-1 justify-center">닫기</button>
         </div>
+
+        {onDelete && (
+          <div className="border-t border-slate-100 pt-3">
+            <button
+              onClick={() => {
+                if (window.confirm("이 의뢰를 완전히 삭제할까요? 되돌릴 수 없습니다.")) onDelete();
+              }}
+              className="w-full justify-center text-[12px] font-semibold text-red-500 hover:text-red-600"
+            >
+              의뢰 영구 삭제
+            </button>
+          </div>
+        )}
       </div>
     </Modal>
   );

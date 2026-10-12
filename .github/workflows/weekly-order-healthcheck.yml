@@ -1,0 +1,35 @@
+name: Weekly Order Healthcheck
+
+# 매주 월요일 09:00 KST(= 00:00 UTC)에 아티즌 의뢰 접수 API가 정상 동작하고
+# 메일 알림이 발송되는지 점검한다. 실제 주문 1건을 접수하므로(이름 "[자동점검]"),
+# 쌓인 점검 주문은 관리자 화면에서 수동으로 삭제한다.
+on:
+  schedule:
+    - cron: "0 0 * * 1" # 매주 월요일 00:00 UTC = 09:00 KST
+  workflow_dispatch: {} # 수동 실행도 가능
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 아티즌 의뢰 접수 API 점검
+        run: |
+          echo "주문 접수 요청 전송..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://www.loindworks.com/api/artisan-orders" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "workId": "cmuia2a7j0000vvga3orq23sz",
+              "customerName": "[자동점검] 주간 헬스체크",
+              "customerPhone": "010-0000-0000",
+              "customerEmail": "healthcheck@example.com",
+              "requestText": "[자동점검] 매주 월요일 자동 접수·메일 알림 점검용 주문입니다. 관리자 화면에서 삭제해주세요."
+            }')
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          CODE=$(echo "$RESPONSE" | tail -n1)
+          echo "HTTP $CODE"
+          echo "$BODY"
+          if [ "$CODE" != "201" ]; then
+            echo "::error::의뢰 접수 실패 (HTTP $CODE) — API 또는 메일 알림을 점검하세요."
+            exit 1
+          fi
+          echo "✅ 접수 성공. 메일 알림이 발송되었는지 수신함을 확인하세요."

@@ -57,6 +57,13 @@ export function ArtisanOrderBoard() {
     setSelected((current) => (current && current.id === id ? data.order : current));
   };
 
+  const remove = async (id: string) => {
+    const res = await fetch(`/api/admin/artisan-orders/${id}`, { method: "DELETE" });
+    if (!res.ok) return;
+    setOrders((current) => (current ?? []).filter((o) => o.id !== id));
+    setSelected(null);
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="mb-5 shrink-0">
@@ -121,6 +128,7 @@ export function ArtisanOrderBoard() {
           order={selected}
           onClose={() => setSelected(null)}
           onPatch={(patchBody) => patch(selected.id, patchBody)}
+          onDelete={() => remove(selected.id)}
         />
       )}
     </div>
