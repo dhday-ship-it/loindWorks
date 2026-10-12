@@ -4,21 +4,20 @@ import { useEffect, useMemo, useState } from "react";
 
 import { OrderDetailModal, STATUS_META } from "@/components/artisan/OrderDetailModal";
 import type { ArtisanOrderItem } from "@/components/artisan/types";
-import type { StaffOption } from "@/components/super-admin/types";
 
-type BucketKey = "unassigned" | "wip" | "done";
+type BucketKey = "unassigned" | "wip" | "done" | "cancelled";
 
 const BUCKETS: { key: BucketKey; label: string; statuses: string[] }[] = [
   { key: "unassigned", label: "의뢰", statuses: ["PAID"] },
   { key: "wip", label: "작업중", statuses: ["IN_PRODUCTION", "INTERNAL_REVIEW", "DRAFT_SENT", "REVISION_REQUESTED"] },
   { key: "done", label: "완료", statuses: ["APPROVED", "DELIVERED"] },
+  { key: "cancelled", label: "취소", statuses: ["CANCELLED"] },
 ];
 
 // 워크스테이션 "Artisan" 메뉴의 메인 콘텐츠. 관리자 화면에 있던 "의뢰 접수함"을 그대로
 // 옮겨온 것으로, 상태를 전체 드롭다운 대신 의뢰(미배정)/작업중/완료 3개 탭으로 묶어서 보여준다.
 export function ArtisanOrderBoard() {
   const [orders, setOrders] = useState<ArtisanOrderItem[] | null>(null);
-  const [staff, setStaff] = useState<StaffOption[]>([]);
   const [bucket, setBucket] = useState<BucketKey>("unassigned");
   const [selected, setSelected] = useState<ArtisanOrderItem | null>(null);
 
@@ -30,13 +29,10 @@ export function ArtisanOrderBoard() {
 
   useEffect(() => {
     load();
-    fetch("/api/staff")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setStaff(Array.isArray(data?.staff) ? data.staff : []));
   }, []);
 
   const counts = useMemo(() => {
-    const map: Record<BucketKey, number> = { unassigned: 0, wip: 0, done: 0 };
+    const map: Record<BucketKey, number> = { unassigned: 0, wip: 0, done: 0, cancelled: 0 };
     for (const o of orders ?? []) {
       const b = BUCKETS.find((x) => x.statuses.includes(o.status));
       if (b) map[b.key] += 1;
@@ -99,7 +95,6 @@ export function ArtisanOrderBoard() {
                 <th>고객</th>
                 <th>연락처</th>
                 <th>접수일</th>
-                <th>담당자</th>
               </tr>
             </thead>
             <tbody>
@@ -114,7 +109,6 @@ export function ArtisanOrderBoard() {
                   <td>{order.customerName}{order.churchName ? ` (${order.churchName})` : ""}</td>
                   <td>{order.customerPhone}</td>
                   <td>{new Date(order.createdAt).toLocaleDateString("ko-KR")}</td>
-                  <td>{order.assignedStaff?.name ?? order.assignedStaff?.email ?? "미배정"}</td>
                 </tr>
               ))}
             </tbody>
@@ -125,7 +119,6 @@ export function ArtisanOrderBoard() {
       {selected && (
         <OrderDetailModal
           order={selected}
-          staff={staff}
           onClose={() => setSelected(null)}
           onPatch={(patchBody) => patch(selected.id, patchBody)}
         />

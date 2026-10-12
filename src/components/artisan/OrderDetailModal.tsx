@@ -1,17 +1,16 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 
 import { Modal } from "../super-admin/Modal";
-import type { StaffOption } from "../super-admin/types";
 import type { ArtisanOrderItem } from "./types";
 
 export const STATUS_META: Record<string, { label: string; cls: string }> = {
-  PAID: { label: "접수완료", cls: "admin-b-pending" },
+  PAID: { label: "의뢰", cls: "admin-b-pending" },
   IN_PRODUCTION: { label: "제작중", cls: "admin-b-wip" },
   INTERNAL_REVIEW: { label: "운영진 검수중", cls: "admin-b-wip" },
   DRAFT_SENT: { label: "시안 전달됨", cls: "admin-b-wip" },
-  REVISION_REQUESTED: { label: "수정요청", cls: "admin-b-pending" },
+  REVISION_REQUESTED: { label: "수정작업", cls: "admin-b-pending" },
   APPROVED: { label: "최종승인", cls: "admin-b-done" },
   DELIVERED: { label: "전달완료", cls: "admin-b-done" },
   CANCELLED: { label: "취소", cls: "admin-b-super" },
@@ -31,29 +30,15 @@ const FIELD_LABELS: Record<StringFieldKey, string> = {
   shippingAddress: "배송지",
 };
 
-async function uploadFile(file: File) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("scope", "artisanOrder");
-  const response = await fetch("/api/upload", { method: "POST", body: formData });
-  if (!response.ok) throw new Error("파일 업로드에 실패했습니다.");
-  return (await response.json()).url as string;
-}
-
 export function OrderDetailModal({
   order,
-  staff,
   onClose,
   onPatch,
 }: {
   order: ArtisanOrderItem;
-  staff: StaffOption[];
   onClose: () => void;
   onPatch: (patch: Record<string, unknown>) => void;
 }) {
-  const [uploadingDraft, setUploadingDraft] = useState(false);
-  const [uploadingFinal, setUploadingFinal] = useState(false);
-
   const extraFieldKeys = (Object.keys(FIELD_LABELS) as StringFieldKey[]).filter((key) => order[key]);
   const hasExtra = extraFieldKeys.length > 0 || order.wantsEditing || order.deliveryType === "PHYSICAL" || order.referenceFileUrl;
 
@@ -64,33 +49,18 @@ export function OrderDetailModal({
       onClose={onClose}
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <label className="text-[11px] text-slate-400">
-            진행 상태
-            <select
-              className="mt-1 w-full rounded border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-brand"
-              value={order.status}
-              onChange={(event) => onPatch({ status: event.target.value })}
-            >
-              {STATUS_ORDER.map((s) => (
-                <option key={s} value={s}>{STATUS_META[s].label}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-[11px] text-slate-400">
-            담당자
-            <select
-              className="mt-1 w-full rounded border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-brand"
-              value={order.assignedStaffId ?? ""}
-              onChange={(event) => onPatch({ assignedStaffId: event.target.value || null })}
-            >
-              <option value="">미배정</option>
-              {staff.map((s) => (
-                <option key={s.id} value={s.id}>{s.name ?? s.email}</option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <label className="block text-[11px] text-slate-400">
+          진행 상태
+          <select
+            className="mt-1 w-full rounded border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-brand"
+            value={order.status}
+            onChange={(event) => onPatch({ status: event.target.value })}
+          >
+            {STATUS_ORDER.filter((s) => s !== "CANCELLED").map((s) => (
+              <option key={s} value={s}>{STATUS_META[s].label}</option>
+            ))}
+          </select>
+        </label>
 
         <div className="rounded-xl border border-slate-100 p-4">
           <div className="mb-2 text-xs font-bold text-slate-500">고객 정보</div>
@@ -137,79 +107,27 @@ export function OrderDetailModal({
           </div>
         )}
 
-        <div className="rounded-xl border border-slate-100 p-4">
-          <div className="mb-3 text-xs font-bold text-slate-500">시안 · 최종 파일 전달</div>
-          <div className="space-y-2.5">
-            <FileRow
-              label="시안 파일"
-              url={order.draftFileUrl}
-              uploading={uploadingDraft}
-              onUpload={async (file) => {
-                setUploadingDraft(true);
-                try {
-                  onPatch({ draftFileUrl: await uploadFile(file) });
-                } finally {
-                  setUploadingDraft(false);
-                }
+        <div className="flex gap-2">
+          {order.status === "CANCELLED" ? (
+            <button
+              onClick={() => onPatch({ status: "PAID" })}
+              className="admin-btn-ghost flex-1 justify-center"
+            >
+              취소 해제 (의뢰로 되돌리기)
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                if (window.confirm("이 의뢰를 취소 처리할까요?")) onPatch({ status: "CANCELLED" });
               }}
-              onClear={() => onPatch({ draftFileUrl: null })}
-            />
-            <FileRow
-              label="최종 파일"
-              url={order.finalFileUrl}
-              uploading={uploadingFinal}
-              onUpload={async (file) => {
-                setUploadingFinal(true);
-                try {
-                  onPatch({ finalFileUrl: await uploadFile(file) });
-                } finally {
-                  setUploadingFinal(false);
-                }
-              }}
-              onClear={() => onPatch({ finalFileUrl: null })}
-            />
-          </div>
+              className="admin-btn-ghost flex-1 justify-center text-red-500"
+            >
+              의뢰 취소
+            </button>
+          )}
+          <button onClick={onClose} className="admin-btn-ghost flex-1 justify-center">닫기</button>
         </div>
-
-        <button onClick={onClose} className="admin-btn-ghost w-full justify-center">닫기</button>
       </div>
     </Modal>
-  );
-}
-
-function FileRow({
-  label,
-  url,
-  uploading,
-  onUpload,
-  onClear,
-}: {
-  label: string;
-  url: string | null;
-  uploading: boolean;
-  onUpload: (file: File) => void;
-  onClear: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="w-16 shrink-0 text-[11px] text-slate-400">{label}</span>
-      {url ? (
-        <a href={url} target="_blank" rel="noreferrer" className="flex-1 truncate text-sm text-brand underline">{url}</a>
-      ) : (
-        <span className="flex-1 text-sm text-slate-300">등록되지 않음</span>
-      )}
-      <label className="admin-btn-ghost cursor-pointer shrink-0">
-        {uploading ? "업로드 중..." : "업로드"}
-        <input
-          className="hidden"
-          type="file"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) onUpload(file);
-          }}
-        />
-      </label>
-      {url && <button onClick={onClear} className="shrink-0 text-[11px] text-slate-400 underline">삭제</button>}
-    </div>
   );
 }
