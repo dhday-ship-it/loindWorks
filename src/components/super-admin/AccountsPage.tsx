@@ -19,8 +19,8 @@ export function AccountsPage({
   showToast: (msg: string) => void;
 }) {
   const [showCreate, setShowCreate] = useState(false);
-  const pmUsers = users.filter((u) => u.role === "PM");
-  const staffUsers = users.filter((u) => u.role === "STAFF");
+  // PM은 더 이상 쓰지 않지만, 기존 PM 계정이 남아있을 수 있어 함께 노출한다.
+  const memberUsers = users.filter((u) => u.role === "PM" || u.role === "STAFF");
 
   const deleteUser = async (id: string, name: string) => {
     if (!window.confirm(`${name} 계정을 삭제할까요?`)) return;
@@ -29,19 +29,13 @@ export function AccountsPage({
     if (res.ok) showToast(`${name} 계정이 삭제되었습니다.`);
   };
 
-  const renderTable = (
-    list: AdminUserItem[],
-    badgeClass: string,
-    badgeLabel: string,
-    emptyLabel: string
-  ) => (
+  const renderTable = (list: AdminUserItem[], emptyLabel: string) => (
     <div className="overflow-x-auto">
-      <table className="admin-tbl w-full min-w-[760px] border-collapse">
+      <table className="admin-tbl w-full min-w-[680px] border-collapse">
         <thead>
           <tr>
             <th className="whitespace-nowrap">이름</th>
             <th className="whitespace-nowrap">이메일</th>
-            <th className="whitespace-nowrap">역할</th>
             <th className="whitespace-nowrap">배정 Works</th>
             <th className="whitespace-nowrap">관리</th>
           </tr>
@@ -49,7 +43,7 @@ export function AccountsPage({
         <tbody>
           {list.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-6 text-center text-slate-400">
+              <td colSpan={4} className="py-6 text-center text-slate-400">
                 {emptyLabel}
               </td>
             </tr>
@@ -67,9 +61,6 @@ export function AccountsPage({
                 </div>
               </td>
               <td className="whitespace-nowrap font-mono text-slate-600">{u.email}</td>
-              <td className="whitespace-nowrap">
-                <span className={`admin-badge ${badgeClass}`}>{badgeLabel}</span>
-              </td>
               <td className="min-w-[220px]">
                 <div className="flex flex-wrap gap-1.5">
                   {u.projectMemberships.length === 0 && (
@@ -110,7 +101,7 @@ export function AccountsPage({
             계정 관리
           </div>
           <div className="text-xs text-slate-500">
-            PM 및 Creator 계정을 생성하고 관리합니다.
+            직원 계정을 생성하고 관리합니다.
           </div>
         </div>
         <button
@@ -121,20 +112,12 @@ export function AccountsPage({
         </button>
       </div>
 
-      <div className="admin-sec-card mb-5 p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="text-[13px] font-bold text-slate-800">PM 계정</div>
-          <span className="admin-badge admin-b-pm">{pmUsers.length}명</span>
-        </div>
-        {renderTable(pmUsers, "admin-b-pm", "PM", "PM 계정이 없습니다.")}
-      </div>
-
       <div className="admin-sec-card p-6">
         <div className="mb-4 flex items-center justify-between">
-          <div className="text-[13px] font-bold text-slate-800">Creator 계정</div>
-          <span className="admin-badge admin-b-staff">{staffUsers.length}명</span>
+          <div className="text-[13px] font-bold text-slate-800">직원 계정</div>
+          <span className="admin-badge admin-b-staff">{memberUsers.length}명</span>
         </div>
-        {renderTable(staffUsers, "admin-b-staff", "Creator", "Creator 계정이 없습니다.")}
+        {renderTable(memberUsers, "등록된 계정이 없습니다.")}
       </div>
 
       {showCreate && (

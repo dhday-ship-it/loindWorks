@@ -12,7 +12,6 @@ export function CreateAccountModal({
   onClose: () => void;
   onCreated: (user: AdminUserItem) => void;
 }) {
-  const [role, setRole] = useState<"" | "STAFF">("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +20,7 @@ export function CreateAccountModal({
 
   const submit = async () => {
     setError(null);
-    if (!role || !name.trim() || !email.trim() || !password) {
+    if (!name.trim() || !email.trim() || !password) {
       setError("모든 필드를 입력해주세요.");
       return;
     }
@@ -31,10 +30,11 @@ export function CreateAccountModal({
     }
 
     setSubmitting(true);
+    // 역할은 STAFF 하나로 통합됨 (SUPER_ADMIN은 코드/DB로만 지정).
     const res = await fetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, email, password, role: "STAFF" }),
     });
     setSubmitting(false);
 
@@ -55,20 +55,6 @@ export function CreateAccountModal({
       onClose={onClose}
     >
       <div className="flex flex-col gap-3.5">
-        <div className="flex flex-col gap-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
-            역할 (Role)
-          </span>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as "STAFF")}
-            className="admin-input cursor-pointer"
-          >
-            <option value="">선택...</option>
-            <option value="STAFF">Creator</option>
-          </select>
-        </div>
-
         <div className="grid grid-cols-2 gap-3.5">
           <div className="flex flex-col gap-1.5">
             <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
