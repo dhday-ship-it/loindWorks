@@ -149,7 +149,7 @@ export function WorksSplitView({
         </div>
       </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 p-5 sm:h-full">
+      <div className="scroll-thin flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto rounded-2xl border border-slate-100 p-5 sm:h-full">
         {!selectedId && (
           <div className="py-16 text-center text-sm text-slate-300">
             왼쪽에서 Works를 선택하세요.
@@ -159,9 +159,9 @@ export function WorksSplitView({
           <div className="py-16 text-center text-sm text-slate-300">불러오는 중...</div>
         )}
         {!loading && detail && (
-          <div className="flex min-h-0 flex-1 flex-col gap-5 sm:h-full">
-            <h3 className="shrink-0 text-lg font-bold text-slate-800">{detail.name}</h3>
-            <div className="shrink-0">
+          <div className="flex flex-col gap-5">
+            <h3 className="text-lg font-bold text-slate-800">{detail.name}</h3>
+            <div>
               <div className="mb-2 text-sm font-bold text-slate-700">의뢰서내용</div>
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-500">
                 {detail.summary || "등록된 내용이 없습니다."}

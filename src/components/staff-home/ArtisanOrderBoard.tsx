@@ -68,7 +68,7 @@ export function ArtisanOrderBoard() {
     <div className="flex h-full min-h-0 flex-col">
       <div className="mb-5 shrink-0">
         <div className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-brand-light">
-          LOIND Creator Ground
+          LOIND WORKS
         </div>
         <h1 className="text-2xl font-bold text-slate-800">아티즌 의뢰 접수함</h1>
         <p className="mt-1 text-sm text-slate-400">아티즌 홈페이지에서 접수된 의뢰를 확인하고 진행 상태를 관리하세요.</p>

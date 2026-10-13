@@ -122,7 +122,7 @@ export function RequestFeed({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col border-t border-slate-100 pt-6">
+    <div className="flex flex-col border-t border-slate-100 pt-6">
       <div className="mb-3 flex shrink-0 items-center justify-between">
         <div className="text-sm font-bold text-slate-700">요청사항내용</div>
         <button
@@ -173,7 +173,7 @@ export function RequestFeed({
         </div>
       )}
 
-      <div className="scroll-thin flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pr-3">
+      <div className="scroll-thin flex max-h-[480px] flex-col gap-2.5 overflow-y-auto pr-3">
         {entries.length === 0 && (
           <div className="py-8 text-center text-xs text-slate-300">
             등록된 요청사항이 없습니다.

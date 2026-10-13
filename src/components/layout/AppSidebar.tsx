@@ -17,6 +17,14 @@ const ROLE_LABEL: Record<Role, string> = {
   STAFF: "Creator",
 };
 
+const QUICK_LINKS: { label: string; href: string; icon: IconName }[] = [
+  { label: "홈페이지", href: "https://loind.com/", icon: "globe" },
+  { label: "인스타", href: "https://www.instagram.com/loind_official/", icon: "instagram" },
+  { label: "유튜브", href: "https://www.youtube.com/@loind-youtube", icon: "youtube" },
+  { label: "나스", href: "https://loind.tw2.quickconnect.to/", icon: "server" },
+  { label: "블로그", href: "https://blog.naver.com/loind", icon: "rss" },
+];
+
 export function AppSidebar({
   currentUser,
 }: {
