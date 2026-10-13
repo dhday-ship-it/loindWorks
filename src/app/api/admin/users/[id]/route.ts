@@ -4,7 +4,8 @@ import { requireSuperAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/generated/prisma/enums";
 
-const CHANGEABLE_ROLES: Role[] = ["PM", "STAFF"];
+// 코드 로직에서 PM은 더 이상 할당하지 않는다. (schema enum에는 유지)
+const CHANGEABLE_ROLES: Role[] = ["STAFF"];
 
 const userSelect = {
   id: true,
@@ -28,7 +29,7 @@ export async function PATCH(
 
   if (!CHANGEABLE_ROLES.includes(role)) {
     return NextResponse.json(
-      { error: "역할은 PM 또는 STAFF여야 합니다." },
+      { error: "역할은 STAFF여야 합니다." },
       { status: 400 }
     );
   }

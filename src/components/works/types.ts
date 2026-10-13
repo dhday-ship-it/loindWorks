@@ -7,6 +7,6 @@ export interface RequestEntryItem {
   title: string;
   body: string | null;
   logDate: string;
-  author: Person;
+  author: Person | null;
   projectId: string;
 }

@@ -12,7 +12,7 @@ export function CreateAccountModal({
   onClose: () => void;
   onCreated: (user: AdminUserItem) => void;
 }) {
-  const [role, setRole] = useState<"" | "PM" | "STAFF">("");
+  const [role, setRole] = useState<"" | "STAFF">("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,12 +61,11 @@ export function CreateAccountModal({
           </span>
           <select
             value={role}
-            onChange={(e) => setRole(e.target.value as "PM" | "STAFF")}
+            onChange={(e) => setRole(e.target.value as "STAFF")}
             className="admin-input cursor-pointer"
           >
             <option value="">선택...</option>
-            <option value="PM">PM (Works 생성·관리)</option>
-            <option value="STAFF">Creator (배정된 Works만 접근)</option>
+            <option value="STAFF">Creator</option>
           </select>
         </div>
 

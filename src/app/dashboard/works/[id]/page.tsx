@@ -12,24 +12,12 @@ export default async function WorksDetailPage({
   const user = await requireStaff();
   const { id } = await params;
 
-  const isManager = user.role === "SUPER_ADMIN" || user.role === "PM";
-  if (!isManager) {
-    const membership = await prisma.projectMember.findUnique({
-      where: { projectId_userId: { projectId: id, userId: user.id } },
-    });
-    if (!membership) notFound();
-  }
-
   const project = await prisma.project.findUnique({
     where: { id },
     select: {
       id: true,
       name: true,
       summary: true,
-      calendarEvents: {
-        orderBy: { startAt: "asc" },
-        include: { owner: { select: { id: true, name: true, email: true } } },
-      },
       logs: {
         orderBy: { logDate: "desc" },
         select: {
@@ -59,11 +47,6 @@ export default async function WorksDetailPage({
         name: project.name,
         summary: project.summary,
       }}
-      initialEvents={project.calendarEvents.map((e) => ({
-        ...e,
-        startAt: e.startAt.toISOString(),
-        endAt: e.endAt ? e.endAt.toISOString() : null,
-      }))}
       initialEntries={project.logs.map((l) => ({
         id: l.id,
         title: l.title,

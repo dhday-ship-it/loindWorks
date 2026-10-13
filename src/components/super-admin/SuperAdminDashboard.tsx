@@ -11,8 +11,6 @@ import { ProjectsAdminPage } from "./ProjectsAdminPage";
 import { ProjectRecordsPage } from "./ProjectRecordsPage";
 import { CorporateLedgerPage } from "./CorporateLedgerPage";
 import { LoanAdvancePage } from "./LoanAdvancePage";
-import { BannersPage } from "./BannersPage";
-import { LoginImagePage } from "./LoginImagePage";
 import type {
   AdminProjectItem,
   AdminStats,
@@ -28,9 +26,7 @@ type Page =
   | "projects"
   | "records"
   | "ledger"
-  | "loans"
-  | "banners"
-  | "loginImage";
+  | "loans";
 
 export function SuperAdminDashboard({
   currentUserName,
@@ -110,8 +106,6 @@ export function SuperAdminDashboard({
       { id: "records", label: "프로젝트 장부", icon: "receipt", section: "기록 관리" },
       { id: "ledger", label: "법인 지출 기록부", icon: "wallet" },
       { id: "loans", label: "대출·가지급금 관리", icon: "landmark" },
-      { id: "banners", label: "배너 관리", icon: "image", section: "화면 관리" },
-      { id: "loginImage", label: "로그인 화면", icon: "lock", section: "화면 관리" },
     ];
 
   // 연속으로 같은 section인 항목끼리 묶는다 (섹션 헤더가 항목마다 중복 렌더되는 걸 방지).
@@ -274,12 +268,6 @@ export function SuperAdminDashboard({
             )}
             {page === "loans" && (
               <LoanAdvancePage showToast={handleShowToast} />
-            )}
-            {page === "banners" && (
-              <BannersPage showToast={handleShowToast} />
-            )}
-            {page === "loginImage" && (
-              <LoginImagePage showToast={handleShowToast} />
             )}
           </div>
         </div>

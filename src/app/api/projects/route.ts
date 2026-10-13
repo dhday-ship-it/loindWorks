@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { requireStaff, requirePM } from "@/lib/auth-guards";
+import { requireStaff } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const user = await requireStaff();
+  await requireStaff();
 
-  // Creator(STAFF)는 자신이 멤버로 지정된 Works만 조회 가능
-  const isManager = user.role === "SUPER_ADMIN" || user.role === "PM";
-
+  // 모든 인증 사용자가 전체 Works를 조회할 수 있다.
   const projects = await prisma.project.findMany({
-    where: isManager ? undefined : { members: { some: { userId: user.id } } },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,
@@ -27,8 +24,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  // Works 생성은 SUPER_ADMIN/PM만 가능
-  await requirePM();
+  // Works 생성은 인증된 사용자(STAFF/SUPER_ADMIN) 가능
+  await requireStaff();
   const {
     name,
     status,

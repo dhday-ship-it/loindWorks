@@ -9,9 +9,11 @@ import { LoindLogoFull } from "./LoindLogoFull";
 import { LoindMark } from "./LoindMark";
 import { Icon, type IconName } from "@/components/ui/Icon";
 
+// PM 역할은 코드 로직에서 더 이상 사용하지 않지만, Prisma enum에 남아있어
+// Record<Role, string> 타입을 만족시키기 위해 라벨만 유지한다.
 const ROLE_LABEL: Record<Role, string> = {
   SUPER_ADMIN: "최고관리자",
-  PM: "PM",
+  PM: "Creator",
   STAFF: "Creator",
 };
 
@@ -34,7 +36,13 @@ export function AppSidebar({
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  const navItems: { href: string; label: string; icon: IconName; match: (p: string | null) => boolean }[] = [
+  const navItems: {
+    href: string;
+    label: string;
+    icon: IconName;
+    external?: boolean;
+    match: (p: string | null) => boolean;
+  }[] = [
     {
       href: "/dashboard",
       label: "Overview",
@@ -42,10 +50,11 @@ export function AppSidebar({
       match: (p) => p === "/dashboard" || !!p?.startsWith("/dashboard/works"),
     },
     {
-      href: "/dashboard/calendar",
+      href: "https://calendar.google.com",
       label: "Calendar",
       icon: "calendar",
-      match: (p) => !!p?.startsWith("/dashboard/calendar"),
+      external: true,
+      match: () => false,
     },
     {
       href: "/dashboard/artisan",
@@ -65,19 +74,36 @@ export function AppSidebar({
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => {
             const active = item.match(pathname);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={item.label}
-                className={`flex items-center justify-center gap-2.5 rounded-xl px-2 py-2 text-sm font-medium transition-all sm:justify-start sm:px-3 ${
-                  active
-                    ? "bg-brand-light/12 text-brand"
-                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
-                }`}
-              >
+            const className = `flex items-center justify-center gap-2.5 rounded-xl px-2 py-2 text-sm font-medium transition-all sm:justify-start sm:px-3 ${
+              active
+                ? "bg-brand-light/12 text-brand"
+                : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+            }`;
+            const inner = (
+              <>
                 <Icon name={item.icon} className="h-4 w-4 shrink-0" />
                 <span className="hidden sm:inline">{item.label}</span>
+              </>
+            );
+
+            if (item.external) {
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={item.label}
+                  className={className}
+                >
+                  {inner}
+                </a>
+              );
+            }
+
+            return (
+              <Link key={item.href} href={item.href} title={item.label} className={className}>
+                {inner}
               </Link>
             );
           })}

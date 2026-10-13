@@ -88,7 +88,7 @@ export function RequestFeed({
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const canModify = (entry: RequestEntryItem) =>
-    entry.author.id === currentUser.id || currentUser.role === "SUPER_ADMIN";
+    entry.author?.id === currentUser.id || currentUser.role === "SUPER_ADMIN";
 
   const submit = async () => {
     if (!title.trim()) return;
@@ -202,7 +202,7 @@ export function RequestFeed({
                       {fmtDateTime(e.logDate)}
                     </span>
                     <span className="text-[10px] text-slate-300">
-                      {e.author.name ?? e.author.email}
+                      {e.author?.name ?? e.author?.email ?? "알 수 없음"}
                     </span>
                   </div>
                   <div className="mt-1 text-sm font-semibold text-slate-700">

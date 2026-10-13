@@ -3,21 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Role } from "@/generated/prisma/enums";
-import type { CalendarEventItem } from "@/types/shared";
 import { AppShell } from "@/components/layout/AppShell";
-import { CalendarPanelLight } from "@/components/calendar/CalendarPanelLight";
 import { RequestFeed } from "./RequestFeed";
 import type { RequestEntryItem } from "./types";
 
 export function WorksDetail({
   currentUser,
   work,
-  initialEvents,
   initialEntries,
 }: {
   currentUser: { id: string; name: string | null; email: string; role: Role };
   work: { id: string; name: string; summary: string | null };
-  initialEvents: CalendarEventItem[];
   initialEntries: RequestEntryItem[];
 }) {
   const [entries, setEntries] = useState(initialEntries);
@@ -52,7 +48,6 @@ export function WorksDetail({
           />
         </div>
       }
-      right={<CalendarPanelLight initialEvents={initialEvents} workId={work.id} />}
     />
   );
 }

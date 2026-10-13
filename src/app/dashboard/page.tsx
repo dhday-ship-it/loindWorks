@@ -4,7 +4,7 @@ import { StaffHome } from "@/components/staff-home/StaffHome";
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const { works, events } = await getHomeData(user.id, user.role);
+  const { works } = await getHomeData(user.id, user.role);
 
   return (
     <StaffHome
@@ -15,7 +15,6 @@ export default async function DashboardPage() {
         role: user.role,
       }}
       initialWorks={works}
-      initialEvents={events}
     />
   );
 }

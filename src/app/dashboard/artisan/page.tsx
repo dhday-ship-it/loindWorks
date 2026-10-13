@@ -1,10 +1,8 @@
 import { requireUser } from "@/lib/auth-guards";
-import { getHomeData } from "@/lib/staff-home-data";
 import { ArtisanOrdersWorkstationPage } from "@/components/staff-home/ArtisanOrdersWorkstationPage";
 
 export default async function DashboardArtisanPage() {
   const user = await requireUser();
-  const { events } = await getHomeData(user.id, user.role);
 
   return (
     <ArtisanOrdersWorkstationPage
@@ -14,7 +12,6 @@ export default async function DashboardArtisanPage() {
         email: user.email ?? "",
         role: user.role,
       }}
-      initialEvents={events}
     />
   );
 }

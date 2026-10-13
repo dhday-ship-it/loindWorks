@@ -17,7 +17,8 @@ const userSelect = {
   },
 } as const;
 
-const VALID_ROLES: Role[] = ["PM", "STAFF"];
+// 신규 계정 생성 시 PM은 더 이상 선택할 수 없다. (기존 PM 데이터는 schema에 유지)
+const VALID_ROLES: Role[] = ["STAFF"];
 
 export async function GET() {
   await requireSuperAdmin();
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
 
   if (!VALID_ROLES.includes(role)) {
     return NextResponse.json(
-      { error: "역할은 PM 또는 STAFF여야 합니다." },
+      { error: "역할은 STAFF여야 합니다." },
       { status: 400 }
     );
   }
