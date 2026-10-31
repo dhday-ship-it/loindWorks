@@ -122,14 +122,11 @@ export function SuperAdminDashboard({
 
   return (
     <div
-      className="light-ui font-[family-name:var(--font-dm-sans)] relative flex h-screen w-full flex-col overflow-hidden p-5"
-      style={{
-        background: "linear-gradient(135deg, #f6f8fa 0%, #ebeff4 50%, #ccd2e1 100%)",
-      }}
+      className="light-ui font-[family-name:var(--font-dm-sans)] relative flex h-screen w-full flex-col overflow-hidden bg-white"
     >
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
 
-      <div className="relative z-10 flex flex-1 flex-col overflow-hidden rounded-3xl bg-white shadow-sm shadow-brand/5">
+      <div className="relative z-10 flex flex-1 flex-col overflow-hidden bg-white">
         <div className="flex h-[54px] shrink-0 items-center justify-between border-b border-slate-100 px-6">
           <div className="flex items-center gap-3.5">
             <span

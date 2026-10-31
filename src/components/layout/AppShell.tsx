@@ -9,14 +9,8 @@ export function AppShell({
   main: React.ReactNode;
 }) {
   return (
-    <div
-      className="light-ui flex h-screen w-full justify-center overflow-hidden p-2 sm:p-4 lg:p-6"
-      style={{
-        background:
-          "linear-gradient(135deg, #f6f8fa 0%, #ebeff4 50%, #ccd2e1 100%)",
-      }}
-    >
-      <div className="flex h-full w-full max-w-[1680px] overflow-hidden rounded-2xl bg-white shadow-sm shadow-brand/5 sm:rounded-3xl">
+    <div className="light-ui flex h-screen w-full overflow-hidden bg-white">
+      <div className="flex h-full w-full overflow-hidden">
         <aside className="scroll-thin h-full w-[64px] shrink-0 overflow-y-auto border-r border-slate-100 p-2.5 sm:w-[190px] sm:p-4">
           <AppSidebar currentUser={currentUser} />
         </aside>

@@ -1,4 +1,10 @@
 const ICONS = {
+  home: (
+    <>
+      <path d="M4 11l8-7 8 7" />
+      <path d="M6 9.5V19a1 1 0 0 0 1 1h3.5v-5h3v5H17a1 1 0 0 0 1-1V9.5" />
+    </>
+  ),
   chart: (
     <>
       <path d="M4 19V10" />
